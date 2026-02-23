@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\CommissionType;
+use App\DiscountType;
 use App\Http\Requests\ClientRequest;
 use App\Models\Client;
 use Illuminate\Http\RedirectResponse;
@@ -28,8 +29,9 @@ class ClientController extends Controller
     public function create(): View
     {
         $commissionTypes = CommissionType::cases();
+        $discountTypes = DiscountType::cases();
 
-        return view('clients.create', compact('commissionTypes'));
+        return view('clients.create', compact('commissionTypes', 'discountTypes'));
     }
 
     /**
@@ -62,8 +64,9 @@ class ClientController extends Controller
     public function edit(Client $client): View
     {
         $commissionTypes = CommissionType::cases();
+        $discountTypes = DiscountType::cases();
 
-        return view('clients.edit', compact('client', 'commissionTypes'));
+        return view('clients.edit', compact('client', 'commissionTypes', 'discountTypes'));
     }
 
     /**

@@ -26,6 +26,7 @@
               <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Phone</th>
               <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Contact Person</th>
               <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Commission</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Discount</th>
               <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">Actions</th>
             </tr>
           </thead>
@@ -39,6 +40,13 @@
                 <td class="px-4 py-3 text-sm text-gray-600">
                   @if($client->commission_amount && $client->commission_type)
                     {{ $client->commission_amount }}{{ $client->commission_type->value }}
+                  @else
+                    —
+                  @endif
+                </td>
+                <td class="px-4 py-3 text-sm text-gray-600">
+                  @if($client->discount && $client->discount_type)
+                    {{ $client->discount }}{{ $client->discount_type->value }}
                   @else
                     —
                   @endif
@@ -63,7 +71,7 @@
               </tr>
             @empty
               <tr>
-                <td colspan="6" class="px-4 py-10 text-center text-sm text-gray-500">
+                <td colspan="7" class="px-4 py-10 text-center text-sm text-gray-500">
                   No clients found. Click "Add Client" to create one.
                 </td>
               </tr>

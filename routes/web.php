@@ -4,6 +4,7 @@ use App\Http\Controllers\AgencyController;
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\PlacementController;
+use App\Http\Controllers\PlatformController;
 use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\SalespersonController;
 use App\Http\Controllers\UserController;
@@ -34,6 +35,8 @@ Route::resource('agencies', AgencyController::class);
 Route::resource('clients', ClientController::class);
 
 Route::resource('placements', PlacementController::class);
+
+Route::resource('platforms', PlatformController::class);
 
 Route::resource('reservations', ReservationController::class);
 

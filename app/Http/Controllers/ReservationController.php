@@ -6,6 +6,7 @@ use App\Http\Requests\ReservationRequest;
 use App\Models\Agency;
 use App\Models\Client;
 use App\Models\Placement;
+use App\Models\Platform;
 use App\Models\Reservation;
 use App\Models\Salesperson;
 use Illuminate\Http\RedirectResponse;
@@ -19,7 +20,7 @@ class ReservationController extends Controller
     public function index(): View
     {
         $reservations = Reservation::query()
-            ->with(['client', 'agency', 'placement', 'salesperson'])
+            ->with(['client', 'agency', 'platform', 'placement', 'salesperson'])
             ->latest()
             ->get();
 
@@ -33,12 +34,34 @@ class ReservationController extends Controller
     {
         $clients = Client::query()->orderBy('company_name')->get();
         $agencies = Agency::query()->orderBy('company_name')->get();
+        $platforms = Platform::query()->orderBy('name')->get();
         $placements = Placement::query()->orderBy('name')->get();
         $salespeople = Salesperson::query()->orderBy('first_name')->orderBy('last_name')->get();
         $channels = ['Run of site', 'Home & multimedia'];
         $scopes = ['Mauritius only', 'Worldwide'];
 
-        return view('reservations.create', compact('clients', 'agencies', 'placements', 'salespeople', 'channels', 'scopes'));
+        $placementsJson = $placements->map(fn (Placement $p) => [
+            'id' => $p->id,
+            'name' => $p->name,
+            'platform_id' => $p->platform_id,
+            'price' => $p->price,
+        ]);
+        $clientsJson = $clients->map(fn (Client $c) => [
+            'id' => $c->id,
+            'discount' => $c->discount,
+            'discount_type' => $c->discount_type?->value,
+            'vat_number' => $c->vat_number,
+            'vat_exempt' => $c->vat_exempt,
+        ]);
+        $agenciesJson = $agencies->map(fn (Agency $a) => [
+            'id' => $a->id,
+            'discount' => $a->discount,
+            'discount_type' => $a->discount_type?->value,
+            'commission_amount' => $a->commission_amount,
+            'commission_type' => $a->commission_type?->value,
+        ]);
+
+        return view('reservations.create', compact('clients', 'agencies', 'platforms', 'placements', 'salespeople', 'channels', 'scopes', 'placementsJson', 'clientsJson', 'agenciesJson'));
     }
 
     /**
@@ -59,7 +82,7 @@ class ReservationController extends Controller
      */
     public function show(Reservation $reservation): View
     {
-        $reservation->load(['client', 'agency', 'placement', 'salesperson']);
+        $reservation->load(['client', 'agency', 'platform', 'placement', 'salesperson']);
 
         return view('reservations.show', compact('reservation'));
     }
@@ -71,12 +94,34 @@ class ReservationController extends Controller
     {
         $clients = Client::query()->orderBy('company_name')->get();
         $agencies = Agency::query()->orderBy('company_name')->get();
+        $platforms = Platform::query()->orderBy('name')->get();
         $placements = Placement::query()->orderBy('name')->get();
         $salespeople = Salesperson::query()->orderBy('first_name')->orderBy('last_name')->get();
         $channels = ['Run of site', 'Home & multimedia'];
         $scopes = ['Mauritius only', 'Worldwide'];
 
-        return view('reservations.edit', compact('reservation', 'clients', 'agencies', 'placements', 'salespeople', 'channels', 'scopes'));
+        $placementsJson = $placements->map(fn (Placement $p) => [
+            'id' => $p->id,
+            'name' => $p->name,
+            'platform_id' => $p->platform_id,
+            'price' => $p->price,
+        ]);
+        $clientsJson = $clients->map(fn (Client $c) => [
+            'id' => $c->id,
+            'discount' => $c->discount,
+            'discount_type' => $c->discount_type?->value,
+            'vat_number' => $c->vat_number,
+            'vat_exempt' => $c->vat_exempt,
+        ]);
+        $agenciesJson = $agencies->map(fn (Agency $a) => [
+            'id' => $a->id,
+            'discount' => $a->discount,
+            'discount_type' => $a->discount_type?->value,
+            'commission_amount' => $a->commission_amount,
+            'commission_type' => $a->commission_type?->value,
+        ]);
+
+        return view('reservations.edit', compact('reservation', 'clients', 'agencies', 'platforms', 'placements', 'salespeople', 'channels', 'scopes', 'placementsJson', 'clientsJson', 'agenciesJson'));
     }
 
     /**

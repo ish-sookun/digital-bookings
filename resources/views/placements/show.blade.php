@@ -20,6 +20,11 @@
         </div>
 
         <div>
+          <p class="text-sm font-medium text-gray-700">Platform</p>
+          <p class="mt-1 text-sm text-gray-900">{{ $placement->platform->name ?? '—' }}</p>
+        </div>
+
+        <div>
           <p class="text-sm font-medium text-gray-700">Description</p>
           <p class="mt-1 text-sm text-gray-900">{{ $placement->description ?? '—' }}</p>
         </div>

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\CommissionType;
+use App\DiscountType;
 use App\Http\Requests\AgencyRequest;
 use App\Models\Agency;
 use Illuminate\Http\RedirectResponse;
@@ -28,8 +29,9 @@ class AgencyController extends Controller
     public function create(): View
     {
         $commissionTypes = CommissionType::cases();
+        $discountTypes = DiscountType::cases();
 
-        return view('agencies.create', compact('commissionTypes'));
+        return view('agencies.create', compact('commissionTypes', 'discountTypes'));
     }
 
     /**
@@ -62,8 +64,9 @@ class AgencyController extends Controller
     public function edit(Agency $agency): View
     {
         $commissionTypes = CommissionType::cases();
+        $discountTypes = DiscountType::cases();
 
-        return view('agencies.edit', compact('agency', 'commissionTypes'));
+        return view('agencies.edit', compact('agency', 'commissionTypes', 'discountTypes'));
     }
 
     /**

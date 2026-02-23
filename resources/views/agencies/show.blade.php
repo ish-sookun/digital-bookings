@@ -75,6 +75,17 @@
               <p class="mt-1 text-sm text-gray-900">{{ $agency->commission_type?->value ?? '—' }}</p>
             </div>
           </div>
+
+          <div class="grid grid-cols-2 gap-6">
+            <div>
+              <p class="text-sm font-medium text-gray-700">Discount Amount</p>
+              <p class="mt-1 text-sm text-gray-900">{{ $agency->discount ?? '—' }}</p>
+            </div>
+            <div>
+              <p class="text-sm font-medium text-gray-700">Discount Type</p>
+              <p class="mt-1 text-sm text-gray-900">{{ $agency->discount_type?->value ?? '—' }}</p>
+            </div>
+          </div>
         </div>
 
         {{-- Contact Person --}}

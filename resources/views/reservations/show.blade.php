@@ -52,18 +52,24 @@
 
           <div class="grid grid-cols-2 gap-6">
             <div>
+              <p class="text-sm font-medium text-gray-700">Platform</p>
+              <p class="mt-1 text-sm text-gray-900">{{ $reservation->platform?->name ?? '—' }}</p>
+            </div>
+            <div>
               <p class="text-sm font-medium text-gray-700">Placement</p>
               <p class="mt-1 text-sm text-gray-900">{{ $reservation->placement->name }}</p>
             </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-6">
             <div>
               <p class="text-sm font-medium text-gray-700">Channel</p>
               <p class="mt-1 text-sm text-gray-900">{{ $reservation->channel }}</p>
             </div>
-          </div>
-
-          <div>
-            <p class="text-sm font-medium text-gray-700">Scope</p>
-            <p class="mt-1 text-sm text-gray-900">{{ $reservation->scope }}</p>
+            <div>
+              <p class="text-sm font-medium text-gray-700">Scope</p>
+              <p class="mt-1 text-sm text-gray-900">{{ $reservation->scope }}</p>
+            </div>
           </div>
         </div>
 
@@ -89,8 +95,8 @@
 
           <div class="grid grid-cols-2 gap-6">
             <div>
-              <p class="text-sm font-medium text-gray-700">Amount</p>
-              <p class="mt-1 text-sm text-gray-900">MUR {{ number_format($reservation->amount, 2) }}</p>
+              <p class="text-sm font-medium text-gray-700">Gross Amount</p>
+              <p class="mt-1 text-sm text-gray-900">MUR {{ number_format($reservation->gross_amount, 2) }}</p>
             </div>
             <div>
               <p class="text-sm font-medium text-gray-700">Discount</p>
@@ -118,6 +124,11 @@
               <p class="text-sm font-medium text-gray-700">VAT Exempt</p>
               <p class="mt-1 text-sm text-gray-900">{{ $reservation->vat_exempt ? 'Yes' : 'No' }}</p>
             </div>
+          </div>
+
+          <div>
+            <p class="text-sm font-medium text-gray-700">Total Amount to Pay</p>
+            <p class="mt-1 text-sm text-gray-900">MUR {{ number_format($reservation->total_amount_to_pay, 2) }}</p>
           </div>
         </div>
 

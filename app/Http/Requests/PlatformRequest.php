@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class PlacementRequest extends FormRequest
+class PlatformRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -22,10 +22,8 @@ class PlacementRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:256'],
             'description' => ['nullable', 'string'],
-            'price' => ['required', 'integer', 'min:0'],
-            'platform_id' => ['nullable', 'exists:platforms,id'],
         ];
     }
 
@@ -35,11 +33,7 @@ class PlacementRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'name.required' => 'The placement name is required.',
-            'price.required' => 'The price is required.',
-            'price.integer' => 'The price must be a valid number.',
-            'price.min' => 'The price cannot be negative.',
-            'platform_id.exists' => 'The selected platform is invalid.',
+            'name.required' => 'The platform name is required.',
         ];
     }
 }

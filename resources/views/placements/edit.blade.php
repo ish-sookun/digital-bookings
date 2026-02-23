@@ -40,6 +40,22 @@
         </div>
 
         <div>
+          <label for="platform_id" class="block text-sm font-medium text-gray-700">Platform</label>
+          <div class="mt-2">
+            <select name="platform_id" id="platform_id"
+              class="block w-full rounded-lg border @error('platform_id') border-red-500 @else border-gray-200 @enderror bg-white px-4 py-2.5 text-gray-900 shadow-sm focus:border-gray-300 focus:outline-none focus:ring-4 focus:ring-gray-100">
+              <option value="">— None —</option>
+              @foreach($platforms as $platform)
+                <option value="{{ $platform->id }}" {{ old('platform_id', $placement->platform_id) == $platform->id ? 'selected' : '' }}>{{ $platform->name }}</option>
+              @endforeach
+            </select>
+          </div>
+          @error('platform_id')
+            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+          @enderror
+        </div>
+
+        <div>
           <label for="price" class="block text-sm font-medium text-gray-700">Price (MUR)</label>
           <div class="mt-2">
             <input name="price" id="price" value="{{ old('price', $placement->price) }}" min="0" required

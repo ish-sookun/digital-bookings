@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\PlacementRequest;
 use App\Models\Placement;
+use App\Models\Platform;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
@@ -14,7 +15,7 @@ class PlacementController extends Controller
      */
     public function index(): View
     {
-        $placements = Placement::query()->latest()->get();
+        $placements = Placement::query()->with('platform')->latest()->get();
 
         return view('placements.index', compact('placements'));
     }
@@ -24,7 +25,9 @@ class PlacementController extends Controller
      */
     public function create(): View
     {
-        return view('placements.create');
+        $platforms = Platform::query()->orderBy('name')->get();
+
+        return view('placements.create', compact('platforms'));
     }
 
     /**
@@ -42,6 +45,8 @@ class PlacementController extends Controller
      */
     public function show(Placement $placement): View
     {
+        $placement->load('platform');
+
         return view('placements.show', compact('placement'));
     }
 
@@ -50,7 +55,9 @@ class PlacementController extends Controller
      */
     public function edit(Placement $placement): View
     {
-        return view('placements.edit', compact('placement'));
+        $platforms = Platform::query()->orderBy('name')->get();
+
+        return view('placements.edit', compact('placement', 'platforms'));
     }
 
     /**

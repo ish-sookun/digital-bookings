@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\CommissionType;
+use App\DiscountType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -24,6 +25,8 @@ class Agency extends Model
         'address',
         'commission_amount',
         'commission_type',
+        'discount',
+        'discount_type',
         'contact_person_name',
         'contact_person_email',
         'contact_person_phone',
@@ -37,6 +40,7 @@ class Agency extends Model
         return [
             'vat_exempt' => 'boolean',
             'commission_type' => CommissionType::class,
+            'discount_type' => DiscountType::class,
         ];
     }
 }

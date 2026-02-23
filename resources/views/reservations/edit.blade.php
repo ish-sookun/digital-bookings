@@ -13,7 +13,8 @@
       </div>
       <div class="mt-6 h-px w-full bg-gray-100"></div>
 
-      <form action="{{ route('reservations.update', $reservation) }}" method="POST" class="mt-8 max-w-2xl space-y-8">
+      <form action="{{ route('reservations.update', $reservation) }}" method="POST" class="mt-8 max-w-2xl space-y-8"
+        x-data="bookingForm()" x-init="init()" @dates-changed="datesCount = $event.detail.count; if (initialized) recalculateGrossAmount()">
         @csrf
         @method('PUT')
 
@@ -25,7 +26,7 @@
             <div>
               <label for="client_id" class="block text-sm font-medium text-gray-700">Client <span class="text-red-500">*</span></label>
               <div class="mt-2">
-                <select name="client_id" id="client_id" required
+                <select name="client_id" id="client_id" required x-model="selectedClientId" @change="calculateDiscount(); calculateVat()"
                   class="block w-full rounded-lg border @error('client_id') border-red-500 @else border-gray-200 @enderror bg-white px-4 py-2.5 text-gray-900 shadow-sm focus:border-gray-300 focus:outline-none focus:ring-4 focus:ring-gray-100">
                   <option value="">Select client</option>
                   @foreach($clients as $client)
@@ -41,7 +42,7 @@
             <div>
               <label for="agency_id" class="block text-sm font-medium text-gray-700">Agency</label>
               <div class="mt-2">
-                <select name="agency_id" id="agency_id"
+                <select name="agency_id" id="agency_id" x-model="selectedAgencyId" @change="calculateDiscount(); calculateCommission()"
                   class="block w-full rounded-lg border @error('agency_id') border-red-500 @else border-gray-200 @enderror bg-white px-4 py-2.5 text-gray-900 shadow-sm focus:border-gray-300 focus:outline-none focus:ring-4 focus:ring-gray-100">
                   <option value="">Select agency</option>
                   @foreach($agencies as $agency)
@@ -89,21 +90,39 @@
 
           <div class="grid grid-cols-2 gap-6">
             <div>
+              <label for="platform_id" class="block text-sm font-medium text-gray-700">Platform</label>
+              <div class="mt-2">
+                <select name="platform_id" id="platform_id" x-model="selectedPlatformId" @change="filterPlacements()"
+                  class="block w-full rounded-lg border @error('platform_id') border-red-500 @else border-gray-200 @enderror bg-white px-4 py-2.5 text-gray-900 shadow-sm focus:border-gray-300 focus:outline-none focus:ring-4 focus:ring-gray-100">
+                  <option value="">All platforms</option>
+                  @foreach($platforms as $platform)
+                    <option value="{{ $platform->id }}" {{ old('platform_id', $reservation->platform_id) == $platform->id ? 'selected' : '' }}>{{ $platform->name }}</option>
+                  @endforeach
+                </select>
+              </div>
+              @error('platform_id')
+                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+              @enderror
+            </div>
+
+            <div>
               <label for="placement_id" class="block text-sm font-medium text-gray-700">Placement <span class="text-red-500">*</span></label>
               <div class="mt-2">
-                <select name="placement_id" id="placement_id" required
+                <select name="placement_id" id="placement_id" required x-model="selectedPlacementId" @change="prefillGrossAmount()"
                   class="block w-full rounded-lg border @error('placement_id') border-red-500 @else border-gray-200 @enderror bg-white px-4 py-2.5 text-gray-900 shadow-sm focus:border-gray-300 focus:outline-none focus:ring-4 focus:ring-gray-100">
                   <option value="">Select placement</option>
-                  @foreach($placements as $placement)
-                    <option value="{{ $placement->id }}" {{ old('placement_id', $reservation->placement_id) == $placement->id ? 'selected' : '' }}>{{ $placement->name }}</option>
-                  @endforeach
+                  <template x-for="placement in filteredPlacements" :key="placement.id">
+                    <option :value="placement.id" x-text="placement.name" :selected="placement.id == selectedPlacementId"></option>
+                  </template>
                 </select>
               </div>
               @error('placement_id')
                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
               @enderror
             </div>
+          </div>
 
+          <div class="grid grid-cols-2 gap-6">
             <div>
               <label for="channel" class="block text-sm font-medium text-gray-700">Channel <span class="text-red-500">*</span></label>
               <div class="mt-2">
@@ -119,22 +138,22 @@
                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
               @enderror
             </div>
-          </div>
 
-          <div>
-            <label for="scope" class="block text-sm font-medium text-gray-700">Scope <span class="text-red-500">*</span></label>
-            <div class="mt-2">
-              <select name="scope" id="scope" required
-                class="block w-full rounded-lg border @error('scope') border-red-500 @else border-gray-200 @enderror bg-white px-4 py-2.5 text-gray-900 shadow-sm focus:border-gray-300 focus:outline-none focus:ring-4 focus:ring-gray-100">
-                <option value="">Select scope</option>
-                @foreach($scopes as $scope)
-                  <option value="{{ $scope }}" {{ old('scope', $reservation->scope) === $scope ? 'selected' : '' }}>{{ $scope }}</option>
-                @endforeach
-              </select>
+            <div>
+              <label for="scope" class="block text-sm font-medium text-gray-700">Scope <span class="text-red-500">*</span></label>
+              <div class="mt-2">
+                <select name="scope" id="scope" required
+                  class="block w-full rounded-lg border @error('scope') border-red-500 @else border-gray-200 @enderror bg-white px-4 py-2.5 text-gray-900 shadow-sm focus:border-gray-300 focus:outline-none focus:ring-4 focus:ring-gray-100">
+                  <option value="">Select scope</option>
+                  @foreach($scopes as $scope)
+                    <option value="{{ $scope }}" {{ old('scope', $reservation->scope) === $scope ? 'selected' : '' }}>{{ $scope }}</option>
+                  @endforeach
+                </select>
+              </div>
+              @error('scope')
+                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+              @enderror
             </div>
-            @error('scope')
-              <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-            @enderror
           </div>
         </div>
 
@@ -163,12 +182,12 @@
 
           <div class="grid grid-cols-2 gap-6">
             <div>
-              <label for="amount" class="block text-sm font-medium text-gray-700">Amount (MUR) <span class="text-red-500">*</span></label>
+              <label for="gross_amount" class="block text-sm font-medium text-gray-700">Gross Amount (MUR) <span class="text-red-500">*</span></label>
               <div class="mt-2">
-                <input name="amount" id="amount" value="{{ old('amount', $reservation->amount) }}" required
-                  class="block w-full rounded-lg border @error('amount') border-red-500 @else border-gray-200 @enderror bg-white px-4 py-2.5 text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-gray-300 focus:outline-none focus:ring-4 focus:ring-gray-100" />
+                <input name="gross_amount" id="gross_amount" x-model="grossAmount" @input="calculateDiscount(); calculateCommission()" required
+                  class="block w-full rounded-lg border @error('gross_amount') border-red-500 @else border-gray-200 @enderror bg-white px-4 py-2.5 text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-gray-300 focus:outline-none focus:ring-4 focus:ring-gray-100" />
               </div>
-              @error('amount')
+              @error('gross_amount')
                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
               @enderror
             </div>
@@ -176,9 +195,10 @@
             <div>
               <label for="discount" class="block text-sm font-medium text-gray-700">Discount (MUR)</label>
               <div class="mt-2">
-                <input name="discount" id="discount" value="{{ old('discount', $reservation->discount) }}"
+                <input name="discount" id="discount" x-model="discount" @input="calculateTotalAmountToPay()"
                   class="block w-full rounded-lg border @error('discount') border-red-500 @else border-gray-200 @enderror bg-white px-4 py-2.5 text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-gray-300 focus:outline-none focus:ring-4 focus:ring-gray-100" />
               </div>
+              <p x-show="discountBreakdown" x-text="discountBreakdown" class="mt-1 text-xs text-gray-500"></p>
               @error('discount')
                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
               @enderror
@@ -189,9 +209,10 @@
             <div>
               <label for="commission" class="block text-sm font-medium text-gray-700">Commission (MUR)</label>
               <div class="mt-2">
-                <input name="commission" id="commission" value="{{ old('commission', $reservation->commission) }}"
+                <input name="commission" id="commission" x-model="commission" @input="calculateTotalAmountToPay()"
                   class="block w-full rounded-lg border @error('commission') border-red-500 @else border-gray-200 @enderror bg-white px-4 py-2.5 text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-gray-300 focus:outline-none focus:ring-4 focus:ring-gray-100" />
               </div>
+              <p x-show="commissionBreakdown" x-text="commissionBreakdown" class="mt-1 text-xs text-gray-500"></p>
               @error('commission')
                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
               @enderror
@@ -200,7 +221,7 @@
             <div>
               <label for="cost_of_artwork" class="block text-sm font-medium text-gray-700">Cost of Artwork (MUR)</label>
               <div class="mt-2">
-                <input name="cost_of_artwork" id="cost_of_artwork" value="{{ old('cost_of_artwork', $reservation->cost_of_artwork) }}"
+                <input name="cost_of_artwork" id="cost_of_artwork" x-model="costOfArtwork" @input="calculateVat()"
                   class="block w-full rounded-lg border @error('cost_of_artwork') border-red-500 @else border-gray-200 @enderror bg-white px-4 py-2.5 text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-gray-300 focus:outline-none focus:ring-4 focus:ring-gray-100" />
               </div>
               @error('cost_of_artwork')
@@ -210,24 +231,37 @@
           </div>
 
           <div class="grid grid-cols-2 gap-6">
-            <div>
-              <label for="vat" class="block text-sm font-medium text-gray-700">VAT (MUR)</label>
-              <div class="mt-2">
-                <input name="vat" id="vat" value="{{ old('vat', $reservation->vat) }}"
-                  class="block w-full rounded-lg border @error('vat') border-red-500 @else border-gray-200 @enderror bg-white px-4 py-2.5 text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-gray-300 focus:outline-none focus:ring-4 focus:ring-gray-100" />
+            <div class="space-y-4">
+              <div>
+                <label for="vat" class="block text-sm font-medium text-gray-700">VAT (MUR)</label>
+                <div class="mt-2">
+                  <input name="vat" id="vat" x-model="vat" @input="calculateTotalAmountToPay()"
+                    class="block w-full rounded-lg border @error('vat') border-red-500 @else border-gray-200 @enderror bg-white px-4 py-2.5 text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-gray-300 focus:outline-none focus:ring-4 focus:ring-gray-100" />
+                </div>
+                @error('vat')
+                  <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                @enderror
               </div>
-              @error('vat')
-                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-              @enderror
+
+              <div>
+                <label class="inline-flex items-center gap-2 text-sm text-gray-700">
+                  <input type="hidden" name="vat_exempt" :value="vatExempt ? '1' : '0'" />
+                  <input type="checkbox" :checked="vatExempt" @change="vatExempt = $event.target.checked"
+                    class="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-200" />
+                  VAT Exempt
+                </label>
+              </div>
             </div>
 
-            <div class="flex items-end pb-1">
-              <label class="inline-flex items-center gap-2 text-sm text-gray-700">
-                <input type="hidden" name="vat_exempt" value="0" />
-                <input type="checkbox" name="vat_exempt" value="1" {{ old('vat_exempt', $reservation->vat_exempt) ? 'checked' : '' }}
-                  class="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-200" />
-                VAT Exempt
-              </label>
+            <div>
+              <label for="total_amount_to_pay" class="block text-sm font-medium text-gray-700">Total Amount to Pay (MUR) <span class="text-red-500">*</span></label>
+              <div class="mt-2">
+                <input name="total_amount_to_pay" id="total_amount_to_pay" x-model="totalAmountToPay" readonly
+                  class="block w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-2.5 text-gray-900 shadow-sm focus:outline-none" />
+              </div>
+              @error('total_amount_to_pay')
+                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+              @enderror
             </div>
           </div>
         </div>
@@ -292,6 +326,147 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <script>
+    function bookingForm() {
+      return {
+        allPlacements: @json($placementsJson),
+        allClients: @json($clientsJson),
+        allAgencies: @json($agenciesJson),
+        filteredPlacements: [],
+        selectedPlatformId: '{{ old('platform_id', $reservation->platform_id ?? '') }}',
+        selectedPlacementId: '{{ old('placement_id', $reservation->placement_id ?? '') }}',
+        selectedClientId: '{{ old('client_id', $reservation->client_id ?? '') }}',
+        selectedAgencyId: '{{ old('agency_id', $reservation->agency_id ?? '') }}',
+        grossAmount: '{{ old('gross_amount', $reservation->gross_amount) }}',
+        discount: '{{ old('discount', $reservation->discount) }}',
+        commission: '{{ old('commission', $reservation->commission) }}',
+        costOfArtwork: '{{ old('cost_of_artwork', $reservation->cost_of_artwork) }}',
+        totalAmountToPay: '{{ old('total_amount_to_pay', $reservation->total_amount_to_pay) }}',
+        vat: '{{ old('vat', $reservation->vat) }}',
+        vatExempt: {{ old('vat_exempt', $reservation->vat_exempt) ? 'true' : 'false' }},
+        discountBreakdown: '',
+        commissionBreakdown: '',
+        datesCount: 0,
+        initialized: false,
+        init() {
+          this.filterPlacements();
+          this.calculateTotalAmountToPay();
+          this.$nextTick(() => { this.initialized = true; });
+        },
+        filterPlacements() {
+          if (this.selectedPlatformId) {
+            this.filteredPlacements = this.allPlacements.filter(p => p.platform_id == this.selectedPlatformId);
+          } else {
+            this.filteredPlacements = this.allPlacements;
+          }
+          if (!this.filteredPlacements.find(p => p.id == this.selectedPlacementId)) {
+            this.selectedPlacementId = '';
+          }
+        },
+        recalculateGrossAmount() {
+          const placement = this.allPlacements.find(p => p.id == this.selectedPlacementId);
+          if (placement && placement.price && this.datesCount > 0) {
+            this.grossAmount = (parseFloat(placement.price) * this.datesCount).toFixed(2);
+            this.calculateDiscount();
+            this.calculateCommission();
+          }
+        },
+        prefillGrossAmount() {
+          this.recalculateGrossAmount();
+        },
+        calculateDiscount() {
+          const gross = parseFloat(this.grossAmount) || 0;
+          const parts = [];
+          let total = 0;
+
+          const client = this.allClients.find(c => c.id == this.selectedClientId);
+          if (client && client.discount && client.discount_type) {
+            if (client.discount_type === '%') {
+              const value = Math.round((client.discount * gross / 100) * 100) / 100;
+              parts.push('Client: ' + client.discount + '% of MUR ' + this.formatNumber(gross) + ' = MUR ' + this.formatNumber(value));
+              total += value;
+            } else {
+              const value = parseFloat(client.discount);
+              parts.push('Client: MUR ' + this.formatNumber(value));
+              total += value;
+            }
+          }
+
+          const agency = this.allAgencies.find(a => a.id == this.selectedAgencyId);
+          if (agency && agency.discount && agency.discount_type) {
+            if (agency.discount_type === '%') {
+              const value = Math.round((agency.discount * gross / 100) * 100) / 100;
+              parts.push('Agency: ' + agency.discount + '% of MUR ' + this.formatNumber(gross) + ' = MUR ' + this.formatNumber(value));
+              total += value;
+            } else {
+              const value = parseFloat(agency.discount);
+              parts.push('Agency: MUR ' + this.formatNumber(value));
+              total += value;
+            }
+          }
+
+          if (parts.length > 0) {
+            this.discount = total.toFixed(2);
+            if (parts.length > 1) {
+              this.discountBreakdown = parts.join(' + ') + ' = Total: MUR ' + this.formatNumber(total);
+            } else {
+              this.discountBreakdown = parts[0];
+            }
+          } else {
+            this.discountBreakdown = '';
+          }
+
+          this.calculateVat();
+        },
+        calculateCommission() {
+          const gross = parseFloat(this.grossAmount) || 0;
+          const agency = this.allAgencies.find(a => a.id == this.selectedAgencyId);
+
+          if (agency && agency.commission_amount && agency.commission_type) {
+            if (agency.commission_type === '%') {
+              const value = Math.round((agency.commission_amount * gross / 100) * 100) / 100;
+              this.commission = value.toFixed(2);
+              this.commissionBreakdown = 'Agency: ' + agency.commission_amount + '% of MUR ' + this.formatNumber(gross) + ' = MUR ' + this.formatNumber(value);
+            } else {
+              const value = parseFloat(agency.commission_amount);
+              this.commission = value.toFixed(2);
+              this.commissionBreakdown = 'Agency: MUR ' + this.formatNumber(value);
+            }
+          } else {
+            this.commissionBreakdown = '';
+          }
+
+          this.calculateVat();
+        },
+        calculateVat() {
+          const client = this.allClients.find(c => c.id == this.selectedClientId);
+          if (client && client.vat_number && !client.vat_exempt) {
+            this.vatExempt = false;
+            const gross = parseFloat(this.grossAmount) || 0;
+            const disc = parseFloat(this.discount) || 0;
+            const comm = parseFloat(this.commission) || 0;
+            const artwork = parseFloat(this.costOfArtwork) || 0;
+            const subtotal = Math.max(0, gross - disc - comm + artwork);
+            this.vat = (subtotal * 0.15).toFixed(2);
+          } else {
+            this.vatExempt = true;
+            this.vat = '0.00';
+          }
+          this.calculateTotalAmountToPay();
+        },
+        calculateTotalAmountToPay() {
+          const gross = parseFloat(this.grossAmount) || 0;
+          const disc = parseFloat(this.discount) || 0;
+          const comm = parseFloat(this.commission) || 0;
+          const artwork = parseFloat(this.costOfArtwork) || 0;
+          const vat = parseFloat(this.vat) || 0;
+          this.totalAmountToPay = Math.max(0, gross - disc - comm + artwork + vat).toFixed(2);
+        },
+        formatNumber(num) {
+          return Number(num).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+      }
+    }
+
     function datePicker() {
       return {
         dates: [],
@@ -301,6 +476,7 @@
           const oldDates = @json(old('dates_booked') ? json_decode(old('dates_booked')) : null);
           this.dates = oldDates || existingDates || [];
           this.datesJson = JSON.stringify(this.dates);
+          this.$dispatch('dates-changed', { count: this.dates.length });
 
           flatpickr(this.$refs.datepicker, {
             mode: 'multiple',
@@ -314,6 +490,7 @@
                 return `${year}-${month}-${day}`;
               });
               this.datesJson = JSON.stringify(this.dates);
+              this.$dispatch('dates-changed', { count: this.dates.length });
             }
           });
         }

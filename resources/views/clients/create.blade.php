@@ -133,6 +133,35 @@
               @enderror
             </div>
           </div>
+
+          <div class="grid grid-cols-2 gap-6">
+            <div>
+              <label for="discount" class="block text-sm font-medium text-gray-700">Discount Amount</label>
+              <div class="mt-2">
+                <input name="discount" id="discount" value="{{ old('discount') }}" min="0"
+                  class="block w-full rounded-lg border @error('discount') border-red-500 @else border-gray-200 @enderror bg-white px-4 py-2.5 text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-gray-300 focus:outline-none focus:ring-4 focus:ring-gray-100" />
+              </div>
+              @error('discount')
+                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+              @enderror
+            </div>
+
+            <div>
+              <label for="discount_type" class="block text-sm font-medium text-gray-700">Discount Type</label>
+              <div class="mt-2">
+                <select name="discount_type" id="discount_type"
+                  class="block w-full rounded-lg border @error('discount_type') border-red-500 @else border-gray-200 @enderror bg-white px-4 py-2.5 text-gray-900 shadow-sm focus:border-gray-300 focus:outline-none focus:ring-4 focus:ring-gray-100">
+                  <option value="">Select type</option>
+                  @foreach($discountTypes as $type)
+                    <option value="{{ $type->value }}" {{ old('discount_type') === $type->value ? 'selected' : '' }}>{{ $type->value }}</option>
+                  @endforeach
+                </select>
+              </div>
+              @error('discount_type')
+                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+              @enderror
+            </div>
+          </div>
         </div>
 
         {{-- Contact Person --}}

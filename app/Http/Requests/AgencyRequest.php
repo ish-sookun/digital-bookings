@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\CommissionType;
+use App\DiscountType;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -33,6 +34,8 @@ class AgencyRequest extends FormRequest
             'address' => ['required', 'string', 'max:255'],
             'commission_amount' => ['nullable', 'integer', 'min:0'],
             'commission_type' => ['nullable', Rule::enum(CommissionType::class)],
+            'discount' => ['nullable', 'integer', 'min:0'],
+            'discount_type' => ['nullable', Rule::enum(DiscountType::class)],
             'contact_person_name' => ['nullable', 'string', 'max:255'],
             'contact_person_email' => ['nullable', 'email', 'max:255'],
             'contact_person_phone' => ['nullable', 'string', 'max:255'],

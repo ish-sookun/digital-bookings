@@ -19,11 +19,13 @@ class Reservation extends Model
         'agency_id',
         'salesperson_id',
         'product',
+        'platform_id',
         'placement_id',
         'channel',
         'scope',
         'dates_booked',
-        'amount',
+        'gross_amount',
+        'total_amount_to_pay',
         'discount',
         'commission',
         'cost_of_artwork',
@@ -41,7 +43,8 @@ class Reservation extends Model
     {
         return [
             'dates_booked' => 'array',
-            'amount' => 'decimal:2',
+            'gross_amount' => 'decimal:2',
+            'total_amount_to_pay' => 'decimal:2',
             'discount' => 'decimal:2',
             'commission' => 'decimal:2',
             'cost_of_artwork' => 'decimal:2',
@@ -72,6 +75,14 @@ class Reservation extends Model
     public function salesperson(): BelongsTo
     {
         return $this->belongsTo(Salesperson::class);
+    }
+
+    /**
+     * @return BelongsTo<Platform, $this>
+     */
+    public function platform(): BelongsTo
+    {
+        return $this->belongsTo(Platform::class);
     }
 
     /**

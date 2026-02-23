@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\CommissionType;
+use App\DiscountType;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -26,6 +27,8 @@ class AgencyFactory extends Factory
             'address' => fake()->address(),
             'commission_amount' => fake()->optional()->numberBetween(1, 100),
             'commission_type' => fake()->optional()->randomElement(CommissionType::cases()),
+            'discount' => fake()->optional()->numberBetween(1, 100),
+            'discount_type' => fake()->optional()->randomElement(DiscountType::cases()),
             'contact_person_name' => fake()->optional()->name(),
             'contact_person_email' => fake()->optional()->safeEmail(),
             'contact_person_phone' => fake()->optional()->phoneNumber(),
