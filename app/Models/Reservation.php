@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -15,6 +16,7 @@ class Reservation extends Model
      * @var list<string>
      */
     protected $fillable = [
+        'reference',
         'client_id',
         'agency_id',
         'salesperson_id',
@@ -36,6 +38,16 @@ class Reservation extends Model
         'remark',
     ];
 
+    protected static function booted(): void
+    {
+        static::creating(function (Reservation $reservation): void {
+            if (empty($reservation->reference)) {
+                $now = Carbon::now();
+                $reservation->reference = $now->timestamp.'-'.$now->format('Ymd');
+            }
+        });
+    }
+
     /**
      * @return array<string, string>
      */
@@ -51,6 +63,47 @@ class Reservation extends Model
             'vat' => 'decimal:2',
             'vat_exempt' => 'boolean',
         ];
+    }
+
+    /**
+     * Format booked dates into consecutive ranges.
+     *
+     * @return list<string>
+     */
+    public function formattedDateRanges(): array
+    {
+        $dates = collect($this->dates_booked)
+            ->map(fn (string $date) => Carbon::parse($date))
+            ->sort()
+            ->values();
+
+        if ($dates->isEmpty()) {
+            return [];
+        }
+
+        $ranges = [];
+        $rangeStart = $dates->first();
+        $rangeEnd = $dates->first();
+
+        for ($i = 1; $i < $dates->count(); $i++) {
+            $current = $dates[$i];
+
+            if ((int) abs($current->diffInDays($rangeEnd)) === 1) {
+                $rangeEnd = $current;
+            } else {
+                $ranges[] = $rangeStart->eq($rangeEnd)
+                    ? $rangeStart->format('d F Y')
+                    : $rangeStart->format('d F Y').' — '.$rangeEnd->format('d F Y');
+                $rangeStart = $current;
+                $rangeEnd = $current;
+            }
+        }
+
+        $ranges[] = $rangeStart->eq($rangeEnd)
+            ? $rangeStart->format('d F Y')
+            : $rangeStart->format('d F Y').' — '.$rangeEnd->format('d F Y');
+
+        return $ranges;
     }
 
     /**

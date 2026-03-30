@@ -9,7 +9,9 @@ use App\Models\Placement;
 use App\Models\Platform;
 use App\Models\Reservation;
 use App\Models\Salesperson;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Response;
 use Illuminate\View\View;
 
 class ReservationController extends Controller
@@ -135,6 +137,23 @@ class ReservationController extends Controller
         $reservation->update($data);
 
         return redirect()->route('reservations.index')->with('success', 'Booking updated successfully.');
+    }
+
+    /**
+     * Download a PDF reservation order for the specified reservation.
+     */
+    public function downloadPdf(Reservation $reservation): Response
+    {
+        $reservation->load(['client', 'agency', 'platform', 'placement', 'salesperson']);
+
+        $logoPath = public_path('lsl-blue-2x.png');
+
+        $pdf = Pdf::loadView('reservations.pdf', compact('reservation', 'logoPath'))
+            ->setPaper('a4', 'portrait');
+
+        $filename = 'RO-'.str_replace(' ', '-', $reservation->product).'-'.$reservation->created_at->format('d.m.Y').'.pdf';
+
+        return $pdf->download($filename);
     }
 
     /**

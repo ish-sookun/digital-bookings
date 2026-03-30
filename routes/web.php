@@ -39,6 +39,7 @@ Route::resource('placements', PlacementController::class);
 Route::resource('platforms', PlatformController::class);
 
 Route::resource('reservations', ReservationController::class);
+Route::get('reservations/{reservation}/pdf', [ReservationController::class, 'downloadPdf'])->name('reservations.pdf');
 
 Route::get('/calendar', [CalendarController::class, 'index'])->name('calendar.index');
 
