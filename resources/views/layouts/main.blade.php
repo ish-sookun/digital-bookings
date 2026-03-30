@@ -176,7 +176,7 @@
             <div class="flex-1"></div>
 
             <!-- Support / Changelog -->
-            <div class="px-3 pb-3">
+            <div class="px-3 pb-3 hidden">
               <ul class="space-y-1">
                 <li>
                   <a href="#" class="flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-gray-700 hover:bg-white/70">
