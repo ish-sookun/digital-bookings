@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="csrf-token" content="{{ csrf_token() }}" />
     <link rel="icon" href="/favicon.ico" sizes="any">
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
@@ -87,6 +88,7 @@
                   </a>
                 </li>
 
+                @can('manage-clients')
                 {{-- Clients --}}
                 <li>
                   <a href="{{ route('clients.index') }}" class="flex items-center gap-3 rounded-xl px-3 py-2 text-sm {{ request()->routeIs('clients.*') ? 'font-semibold text-gray-900 bg-white shadow-sm ring-1 ring-gray-200' : 'text-gray-700 hover:bg-white/70' }}">
@@ -96,7 +98,9 @@
                     Clients
                   </a>
                 </li>
+                @endcan
 
+                @can('manage-agencies')
                 {{-- Agencies --}}
                 <li>
                   <a href="{{ route('agencies.index') }}" class="flex items-center gap-3 rounded-xl px-3 py-2 text-sm {{ request()->routeIs('agencies.*') ? 'font-semibold text-gray-900 bg-white shadow-sm ring-1 ring-gray-200' : 'text-gray-700 hover:bg-white/70' }}">
@@ -106,7 +110,9 @@
                     Agencies
                   </a>
                 </li>
+                @endcan
 
+                @can('manage-placements')
                 {{-- Placements --}}
                 <li>
                   <a href="{{ route('placements.index') }}" class="flex items-center gap-3 rounded-xl px-3 py-2 text-sm {{ request()->routeIs('placements.*') ? 'font-semibold text-gray-900 bg-white shadow-sm ring-1 ring-gray-200' : 'text-gray-700 hover:bg-white/70' }}">
@@ -116,7 +122,9 @@
                     Placements
                   </a>
                 </li>
+                @endcan
 
+                @can('manage-platforms')
                 {{-- Platforms --}}
                 <li>
                   <a href="{{ route('platforms.index') }}" class="flex items-center gap-3 rounded-xl px-3 py-2 text-sm {{ request()->routeIs('platforms.*') ? 'font-semibold text-gray-900 bg-white shadow-sm ring-1 ring-gray-200' : 'text-gray-700 hover:bg-white/70' }}">
@@ -126,7 +134,9 @@
                     Platforms
                   </a>
                 </li>
+                @endcan
 
+                @can('manage-salespeople')
                 {{-- Salespersons --}}
                 <li>
                   <a href="{{ route('salespeople.index') }}" class="flex items-center gap-3 rounded-xl px-3 py-2 text-sm {{ request()->routeIs('salespeople.*') ? 'font-semibold text-gray-900 bg-white shadow-sm ring-1 ring-gray-200' : 'text-gray-700 hover:bg-white/70' }}">
@@ -136,6 +146,19 @@
                     Salespersons
                   </a>
                 </li>
+                @endcan
+
+                @can('manage-users')
+                {{-- Users --}}
+                <li>
+                  <a href="{{ route('users.index') }}" class="flex items-center gap-3 rounded-xl px-3 py-2 text-sm {{ request()->routeIs('users.*') ? 'font-semibold text-gray-900 bg-white shadow-sm ring-1 ring-gray-200' : 'text-gray-700 hover:bg-white/70' }}">
+                    <svg class="h-5 w-5 {{ request()->routeIs('users.*') ? 'text-gray-900' : 'text-gray-400' }}" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                      <path d="M10 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM3.465 14.493a1.23 1.23 0 0 0 .41 1.412A9.957 9.957 0 0 0 10 18c2.31 0 4.438-.784 6.131-2.1.43-.333.604-.903.408-1.41a7.002 7.002 0 0 0-13.074.003Z" />
+                    </svg>
+                    Users
+                  </a>
+                </li>
+                @endcan
 
                 {{-- Calendar --}}
                 <li>

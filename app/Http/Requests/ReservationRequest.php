@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\UserRole;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -40,9 +41,28 @@ class ReservationRequest extends FormRequest
             'vat' => ['nullable', 'numeric', 'min:0'],
             'vat_exempt' => ['boolean'],
             'purchase_order_no' => ['nullable', 'string', 'max:255'],
+            'purchase_order_file' => ['nullable', 'file', 'mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png,gif,webp', 'max:10240'],
             'invoice_no' => ['nullable', 'string', 'max:255'],
+            'invoice_file' => ['nullable', 'file', 'mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png,gif,webp', 'max:10240'],
+            'signed_ro_file' => ['nullable', 'file', 'mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png,gif,webp', 'max:10240'],
             'remark' => ['nullable', 'string'],
         ];
+    }
+
+    /**
+     * Strip discount and commission fields for salesperson users.
+     *
+     * @return array<string, mixed>
+     */
+    public function validated($key = null, $default = null): mixed
+    {
+        $validated = parent::validated($key, $default);
+
+        if ($key === null && $this->user()->role === UserRole::Salesperson) {
+            unset($validated['discount'], $validated['commission']);
+        }
+
+        return $validated;
     }
 
     /**

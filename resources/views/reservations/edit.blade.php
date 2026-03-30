@@ -195,8 +195,8 @@
             <div>
               <label for="discount" class="block text-sm font-medium text-gray-700">Discount (MUR)</label>
               <div class="mt-2">
-                <input name="discount" id="discount" x-model="discount" @input="calculateTotalAmountToPay()"
-                  class="block w-full rounded-lg border @error('discount') border-red-500 @else border-gray-200 @enderror bg-white px-4 py-2.5 text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-gray-300 focus:outline-none focus:ring-4 focus:ring-gray-100" />
+                <input name="discount" id="discount" x-model="discount" @can('edit-financials') @input="calculateTotalAmountToPay()" @else readonly @endcan
+                  class="block w-full rounded-lg border @error('discount') border-red-500 @else border-gray-200 @enderror bg-white px-4 py-2.5 text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-gray-300 focus:outline-none focus:ring-4 focus:ring-gray-100 @cannot('edit-financials') bg-gray-50 text-gray-500 pointer-events-none @endcannot" />
               </div>
               <p x-show="discountBreakdown" x-text="discountBreakdown" class="mt-1 text-xs text-gray-500"></p>
               @error('discount')
@@ -209,8 +209,8 @@
             <div>
               <label for="commission" class="block text-sm font-medium text-gray-700">Commission (MUR)</label>
               <div class="mt-2">
-                <input name="commission" id="commission" x-model="commission" @input="calculateTotalAmountToPay()"
-                  class="block w-full rounded-lg border @error('commission') border-red-500 @else border-gray-200 @enderror bg-white px-4 py-2.5 text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-gray-300 focus:outline-none focus:ring-4 focus:ring-gray-100" />
+                <input name="commission" id="commission" x-model="commission" @can('edit-financials') @input="calculateTotalAmountToPay()" @else readonly @endcan
+                  class="block w-full rounded-lg border @error('commission') border-red-500 @else border-gray-200 @enderror bg-white px-4 py-2.5 text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-gray-300 focus:outline-none focus:ring-4 focus:ring-gray-100 @cannot('edit-financials') bg-gray-50 text-gray-500 pointer-events-none @endcannot" />
               </div>
               <p x-show="commissionBreakdown" x-text="commissionBreakdown" class="mt-1 text-xs text-gray-500"></p>
               @error('commission')
@@ -265,20 +265,46 @@
             </div>
           </div>
 
-          <div class="pt-2">
-            <a href="{{ route('reservations.pdf', $reservation) }}" class="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-4 focus:ring-gray-100">
-              <svg class="h-4 w-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
-              </svg>
-              Download Reservation Order
-            </a>
-          </div>
         </div>
 
-        {{-- Reference Numbers --}}
+        {{-- Documents --}}
         <div class="space-y-6">
-          <h2 class="text-lg font-medium text-gray-900">Reference Numbers</h2>
+          <h2 class="text-lg font-medium text-gray-900">Documents</h2>
 
+          {{-- Reservation Order --}}
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Reservation Order</label>
+            <div class="flex items-center gap-3" x-data="documentUploader('signed_ro', '{{ route('reservations.upload-document', $reservation) }}', '{{ $reservation->signed_ro_path ? route('reservations.document', [$reservation, 'signed-ro']) : '' }}')">
+              <a href="{{ route('reservations.pdf', $reservation) }}" class="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-4 focus:ring-gray-100">
+                <svg class="h-4 w-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                </svg>
+                Download RO
+              </a>
+              <button type="button" @click="$refs.fileInput.click()" class="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-4 focus:ring-gray-100">
+                <svg class="h-4 w-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+                </svg>
+                Upload Signed RO
+              </button>
+              <input type="file" x-ref="fileInput" @change="upload($event)" class="hidden" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.webp" />
+              <a x-show="downloadUrl" :href="downloadUrl" class="inline-flex items-center rounded-lg border border-gray-200 bg-white p-2.5 text-gray-500 shadow-sm hover:bg-gray-50 hover:text-gray-700" title="Download Signed RO">
+                <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                </svg>
+              </a>
+              <div x-show="uploading" class="flex items-center gap-2 text-sm text-gray-500">
+                <div class="h-2 w-32 overflow-hidden rounded-full bg-gray-200">
+                  <div class="h-full rounded-full bg-gray-900 transition-all" :style="'width: ' + progress + '%'"></div>
+                </div>
+                <span x-text="progress + '%'"></span>
+              </div>
+              <span x-show="success" class="text-sm text-green-600" x-transition>Saved</span>
+              <span x-show="error" class="text-sm text-red-600" x-text="error" x-transition></span>
+            </div>
+          </div>
+
+          {{-- Reference Numbers with Upload --}}
           <div class="grid grid-cols-2 gap-6">
             <div>
               <label for="purchase_order_no" class="block text-sm font-medium text-gray-700">Purchase Order No.</label>
@@ -289,6 +315,28 @@
               @error('purchase_order_no')
                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
               @enderror
+              <div class="mt-2 flex items-center gap-2" x-data="documentUploader('purchase_order', '{{ route('reservations.upload-document', $reservation) }}', '{{ $reservation->purchase_order_path ? route('reservations.document', [$reservation, 'purchase-order']) : '' }}')">
+                <button type="button" @click="$refs.fileInput.click()" class="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 shadow-sm hover:bg-gray-50">
+                  <svg class="h-3.5 w-3.5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+                  </svg>
+                  Upload PO
+                </button>
+                <input type="file" x-ref="fileInput" @change="upload($event)" class="hidden" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.webp" />
+                <a x-show="downloadUrl" :href="downloadUrl" class="inline-flex items-center rounded-lg border border-gray-200 bg-white p-1.5 text-gray-500 shadow-sm hover:bg-gray-50 hover:text-gray-700" title="Download PO">
+                  <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                  </svg>
+                </a>
+                <div x-show="uploading" class="flex items-center gap-2 text-xs text-gray-500">
+                  <div class="h-1.5 w-24 overflow-hidden rounded-full bg-gray-200">
+                    <div class="h-full rounded-full bg-gray-900 transition-all" :style="'width: ' + progress + '%'"></div>
+                  </div>
+                  <span x-text="progress + '%'"></span>
+                </div>
+                <span x-show="success" class="text-xs text-green-600" x-transition>Saved</span>
+                <span x-show="error" class="text-xs text-red-600" x-text="error" x-transition></span>
+              </div>
             </div>
 
             <div>
@@ -300,6 +348,28 @@
               @error('invoice_no')
                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
               @enderror
+              <div class="mt-2 flex items-center gap-2" x-data="documentUploader('invoice', '{{ route('reservations.upload-document', $reservation) }}', '{{ $reservation->invoice_path ? route('reservations.document', [$reservation, 'invoice']) : '' }}')">
+                <button type="button" @click="$refs.fileInput.click()" class="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 shadow-sm hover:bg-gray-50">
+                  <svg class="h-3.5 w-3.5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+                  </svg>
+                  Upload Invoice
+                </button>
+                <input type="file" x-ref="fileInput" @change="upload($event)" class="hidden" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.webp" />
+                <a x-show="downloadUrl" :href="downloadUrl" class="inline-flex items-center rounded-lg border border-gray-200 bg-white p-1.5 text-gray-500 shadow-sm hover:bg-gray-50 hover:text-gray-700" title="Download Invoice">
+                  <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                  </svg>
+                </a>
+                <div x-show="uploading" class="flex items-center gap-2 text-xs text-gray-500">
+                  <div class="h-1.5 w-24 overflow-hidden rounded-full bg-gray-200">
+                    <div class="h-full rounded-full bg-gray-900 transition-all" :style="'width: ' + progress + '%'"></div>
+                  </div>
+                  <span x-text="progress + '%'"></span>
+                </div>
+                <span x-show="success" class="text-xs text-green-600" x-transition>Saved</span>
+                <span x-show="error" class="text-xs text-red-600" x-text="error" x-transition></span>
+              </div>
             </div>
           </div>
         </div>
@@ -472,6 +542,62 @@
         },
         formatNumber(num) {
           return Number(num).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+      }
+    }
+
+    function documentUploader(type, uploadUrl, existingDownloadUrl) {
+      return {
+        uploading: false,
+        progress: 0,
+        success: false,
+        error: '',
+        downloadUrl: existingDownloadUrl || '',
+        upload(event) {
+          const file = event.target.files[0];
+          if (!file) return;
+
+          this.uploading = true;
+          this.progress = 0;
+          this.success = false;
+          this.error = '';
+
+          const formData = new FormData();
+          formData.append('file', file);
+          formData.append('type', type);
+          formData.append('_token', document.querySelector('meta[name="csrf-token"]')?.content || document.querySelector('input[name="_token"]').value);
+
+          const xhr = new XMLHttpRequest();
+
+          xhr.upload.addEventListener('progress', (e) => {
+            if (e.lengthComputable) {
+              this.progress = Math.round((e.loaded / e.total) * 100);
+            }
+          });
+
+          xhr.addEventListener('load', () => {
+            this.uploading = false;
+            if (xhr.status === 200) {
+              const response = JSON.parse(xhr.responseText);
+              this.downloadUrl = response.download_url;
+              this.success = true;
+              setTimeout(() => { this.success = false; }, 3000);
+            } else {
+              this.error = 'Upload failed. Please try again.';
+              setTimeout(() => { this.error = ''; }, 5000);
+            }
+          });
+
+          xhr.addEventListener('error', () => {
+            this.uploading = false;
+            this.error = 'Upload failed. Please try again.';
+            setTimeout(() => { this.error = ''; }, 5000);
+          });
+
+          xhr.open('POST', uploadUrl);
+          xhr.send(formData);
+
+          event.target.value = '';
         }
       }
     }

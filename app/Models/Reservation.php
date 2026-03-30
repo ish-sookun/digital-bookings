@@ -34,7 +34,10 @@ class Reservation extends Model
         'vat',
         'vat_exempt',
         'purchase_order_no',
+        'purchase_order_path',
         'invoice_no',
+        'invoice_path',
+        'signed_ro_path',
         'remark',
     ];
 

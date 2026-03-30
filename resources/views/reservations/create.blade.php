@@ -13,7 +13,7 @@
       </div>
       <div class="mt-6 h-px w-full bg-gray-100"></div>
 
-      <form action="{{ route('reservations.store') }}" method="POST" class="mt-8 max-w-2xl space-y-8"
+      <form action="{{ route('reservations.store') }}" method="POST" enctype="multipart/form-data" class="mt-8 max-w-2xl space-y-8"
         x-data="bookingForm()" x-init="init()" @dates-changed="datesCount = $event.detail.count; recalculateGrossAmount()">
         @csrf
 
@@ -194,8 +194,8 @@
             <div>
               <label for="discount" class="block text-sm font-medium text-gray-700">Discount (MUR)</label>
               <div class="mt-2">
-                <input name="discount" id="discount" x-model="discount" @input="calculateTotalAmountToPay()"
-                  class="block w-full rounded-lg border @error('discount') border-red-500 @else border-gray-200 @enderror bg-white px-4 py-2.5 text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-gray-300 focus:outline-none focus:ring-4 focus:ring-gray-100" />
+                <input name="discount" id="discount" x-model="discount" @can('edit-financials') @input="calculateTotalAmountToPay()" @else readonly @endcan
+                  class="block w-full rounded-lg border @error('discount') border-red-500 @else border-gray-200 @enderror bg-white px-4 py-2.5 text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-gray-300 focus:outline-none focus:ring-4 focus:ring-gray-100 @cannot('edit-financials') bg-gray-50 text-gray-500 pointer-events-none @endcannot" />
               </div>
               <p x-show="discountBreakdown" x-text="discountBreakdown" class="mt-1 text-xs text-gray-500"></p>
               @error('discount')
@@ -208,8 +208,8 @@
             <div>
               <label for="commission" class="block text-sm font-medium text-gray-700">Commission (MUR)</label>
               <div class="mt-2">
-                <input name="commission" id="commission" x-model="commission" @input="calculateTotalAmountToPay()"
-                  class="block w-full rounded-lg border @error('commission') border-red-500 @else border-gray-200 @enderror bg-white px-4 py-2.5 text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-gray-300 focus:outline-none focus:ring-4 focus:ring-gray-100" />
+                <input name="commission" id="commission" x-model="commission" @can('edit-financials') @input="calculateTotalAmountToPay()" @else readonly @endcan
+                  class="block w-full rounded-lg border @error('commission') border-red-500 @else border-gray-200 @enderror bg-white px-4 py-2.5 text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-gray-300 focus:outline-none focus:ring-4 focus:ring-gray-100 @cannot('edit-financials') bg-gray-50 text-gray-500 pointer-events-none @endcannot" />
               </div>
               <p x-show="commissionBreakdown" x-text="commissionBreakdown" class="mt-1 text-xs text-gray-500"></p>
               @error('commission')
@@ -265,9 +265,9 @@
           </div>
         </div>
 
-        {{-- Reference Numbers --}}
+        {{-- Documents --}}
         <div class="space-y-6">
-          <h2 class="text-lg font-medium text-gray-900">Reference Numbers</h2>
+          <h2 class="text-lg font-medium text-gray-900">Documents</h2>
 
           <div class="grid grid-cols-2 gap-6">
             <div>
@@ -279,6 +279,15 @@
               @error('purchase_order_no')
                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
               @enderror
+              <div class="mt-2">
+                <label class="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 shadow-sm hover:bg-gray-50 cursor-pointer">
+                  <svg class="h-3.5 w-3.5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+                  </svg>
+                  Upload PO
+                  <input type="file" name="purchase_order_file" class="hidden" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.webp" />
+                </label>
+              </div>
             </div>
 
             <div>
@@ -290,6 +299,15 @@
               @error('invoice_no')
                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
               @enderror
+              <div class="mt-2">
+                <label class="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 shadow-sm hover:bg-gray-50 cursor-pointer">
+                  <svg class="h-3.5 w-3.5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+                  </svg>
+                  Upload Invoice
+                  <input type="file" name="invoice_file" class="hidden" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.webp" />
+                </label>
+              </div>
             </div>
           </div>
         </div>

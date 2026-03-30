@@ -131,28 +131,56 @@
             <p class="mt-1 text-sm text-gray-900">MUR {{ number_format($reservation->total_amount_to_pay, 2) }}</p>
           </div>
 
-          <div class="pt-2">
-            <a href="{{ route('reservations.pdf', $reservation) }}" class="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-4 focus:ring-gray-100">
-              <svg class="h-4 w-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
-              </svg>
-              Download Reservation Order
-            </a>
-          </div>
         </div>
 
-        {{-- Reference Numbers --}}
+        {{-- Documents --}}
         <div class="space-y-6">
-          <h2 class="text-lg font-medium text-gray-900">Reference Numbers</h2>
+          <h2 class="text-lg font-medium text-gray-900">Documents</h2>
+
+          <div>
+            <p class="text-sm font-medium text-gray-700 mb-2">Reservation Order</p>
+            <div class="flex items-center gap-3">
+              <a href="{{ route('reservations.pdf', $reservation) }}" class="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-4 focus:ring-gray-100">
+                <svg class="h-4 w-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                </svg>
+                Download RO
+              </a>
+              @if($reservation->signed_ro_path)
+                <a href="{{ route('reservations.document', [$reservation, 'signed-ro']) }}" class="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-4 focus:ring-gray-100">
+                  <svg class="h-4 w-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                  </svg>
+                  Download Signed RO
+                </a>
+              @endif
+            </div>
+          </div>
 
           <div class="grid grid-cols-2 gap-6">
             <div>
               <p class="text-sm font-medium text-gray-700">Purchase Order No.</p>
               <p class="mt-1 text-sm text-gray-900">{{ $reservation->purchase_order_no ?? '—' }}</p>
+              @if($reservation->purchase_order_path)
+                <a href="{{ route('reservations.document', [$reservation, 'purchase-order']) }}" class="mt-1 inline-flex items-center gap-1.5 text-xs font-medium text-gray-600 hover:text-gray-900">
+                  <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                  </svg>
+                  Download PO
+                </a>
+              @endif
             </div>
             <div>
               <p class="text-sm font-medium text-gray-700">Invoice No.</p>
               <p class="mt-1 text-sm text-gray-900">{{ $reservation->invoice_no ?? '—' }}</p>
+              @if($reservation->invoice_path)
+                <a href="{{ route('reservations.document', [$reservation, 'invoice']) }}" class="mt-1 inline-flex items-center gap-1.5 text-xs font-medium text-gray-600 hover:text-gray-900">
+                  <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                  </svg>
+                  Download Invoice
+                </a>
+              @endif
             </div>
           </div>
         </div>
