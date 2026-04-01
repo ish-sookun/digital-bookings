@@ -7,19 +7,32 @@
         <h1 class="text-2xl font-semibold text-gray-900">{{ $currentDate->format('F Y') }}</h1>
 
         <div class="flex items-center gap-4">
+          {{-- Placement Filter --}}
+          <div>
+            <select x-data @change="window.location.href = '{{ route('calendar.index', ['year' => $currentDate->year, 'month' => $currentDate->month]) }}' + ($event.target.value ? '&placement_id=' + $event.target.value : '')"
+              class="block w-full h-10 rounded-lg border-0 py-0 pl-3 pr-10 text-gray-900 ring-1 ring-inset ring-gray-200 focus:ring-2 focus:ring-gray-900 sm:text-sm sm:leading-6">
+              <option value="">All Placements</option>
+              @foreach($placements as $placement)
+                <option value="{{ $placement->id }}" {{ (int) $placementId === $placement->id ? 'selected' : '' }}>
+                  {{ $placement->name }}
+                </option>
+              @endforeach
+            </select>
+          </div>
+
           {{-- Navigation --}}
           <div class="flex items-center rounded-lg border border-gray-200 bg-white">
-            <a href="{{ route('calendar.index', ['year' => $prevMonth->year, 'month' => $prevMonth->month]) }}"
+            <a href="{{ route('calendar.index', ['year' => $prevMonth->year, 'month' => $prevMonth->month, 'placement_id' => $placementId]) }}"
               class="flex h-10 w-10 items-center justify-center rounded-l-lg border-r border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-700">
               <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                 <path fill-rule="evenodd" d="M11.78 5.22a.75.75 0 0 1 0 1.06L8.06 10l3.72 3.72a.75.75 0 1 1-1.06 1.06l-4.25-4.25a.75.75 0 0 1 0-1.06l4.25-4.25a.75.75 0 0 1 1.06 0Z" clip-rule="evenodd" />
               </svg>
             </a>
-            <a href="{{ route('calendar.index', ['year' => now()->year, 'month' => now()->month]) }}"
+            <a href="{{ route('calendar.index', ['year' => now()->year, 'month' => now()->month, 'placement_id' => $placementId]) }}"
               class="flex h-10 items-center justify-center px-4 text-sm font-medium text-gray-700 hover:bg-gray-50">
               Today
             </a>
-            <a href="{{ route('calendar.index', ['year' => $nextMonth->year, 'month' => $nextMonth->month]) }}"
+            <a href="{{ route('calendar.index', ['year' => $nextMonth->year, 'month' => $nextMonth->month, 'placement_id' => $placementId]) }}"
               class="flex h-10 w-10 items-center justify-center rounded-r-lg border-l border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-700">
               <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                 <path fill-rule="evenodd" d="M8.22 5.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />

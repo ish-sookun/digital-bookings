@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Placement;
 use App\Models\Reservation;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -13,6 +14,7 @@ class CalendarController extends Controller
     {
         $year = $request->input('year', now()->year);
         $month = $request->input('month', now()->month);
+        $placementId = $request->input('placement_id');
 
         $currentDate = Carbon::createFromDate($year, $month, 1);
         $startOfMonth = $currentDate->copy()->startOfMonth();
@@ -21,6 +23,9 @@ class CalendarController extends Controller
         // Get all reservations that have dates in this month
         $reservations = Reservation::query()
             ->with(['client', 'placement'])
+            ->when($placementId, function ($query, $placementId) {
+                $query->where('placement_id', $placementId);
+            })
             ->get()
             ->filter(function ($reservation) use ($startOfMonth, $endOfMonth) {
                 foreach ($reservation->dates_booked as $date) {
@@ -74,6 +79,8 @@ class CalendarController extends Controller
         $prevMonth = $currentDate->copy()->subMonth();
         $nextMonth = $currentDate->copy()->addMonth();
 
-        return view('calendar.index', compact('currentDate', 'weeks', 'prevMonth', 'nextMonth'));
+        $placements = Placement::orderBy('name')->get();
+
+        return view('calendar.index', compact('currentDate', 'weeks', 'prevMonth', 'nextMonth', 'placements', 'placementId'));
     }
 }
