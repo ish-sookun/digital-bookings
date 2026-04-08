@@ -23,6 +23,7 @@
             <tr>
               <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Name</th>
               <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Platform</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Type</th>
               <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Description</th>
               <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Price</th>
               <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">Actions</th>
@@ -33,6 +34,7 @@
               <tr class="hover:bg-gray-50">
                 <td class="px-4 py-3 text-sm text-gray-900">{{ $placement->name }}</td>
                 <td class="px-4 py-3 text-sm text-gray-600">{{ $placement->platform->name ?? '—' }}</td>
+                <td class="px-4 py-3 text-sm text-gray-600">{{ $placement->type?->label() ?? '—' }}</td>
                 <td class="px-4 py-3 text-sm text-gray-600">{{ Str::limit($placement->description, 50) ?? '—' }}</td>
                 <td class="px-4 py-3 text-sm text-gray-600">MUR {{ number_format($placement->price) }}</td>
                 <td class="px-4 py-3 text-right">
@@ -55,7 +57,7 @@
               </tr>
             @empty
               <tr>
-                <td colspan="5" class="px-4 py-10 text-center text-sm text-gray-500">
+                <td colspan="6" class="px-4 py-10 text-center text-sm text-gray-500">
                   No placements found. Click "Add Placement" to create one.
                 </td>
               </tr>

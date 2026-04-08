@@ -4,16 +4,18 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\BudgetRequest;
 use App\Models\Budget;
+use App\Models\Platform;
 use App\Models\Salesperson;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\View\View;
 
 class BudgetController extends Controller
 {
     /**
-     * Display monthly budgets for a financial year.
+     * Display monthly budgets for a financial year, grouped by platform.
      */
     public function index(Request $request): View
     {
@@ -23,13 +25,21 @@ class BudgetController extends Controller
         $this->validateFinancialYearStart($financialYearStart);
 
         $months = Budget::financialYearMonths($financialYearStart);
+        $platforms = Platform::query()->orderBy('id')->get();
 
         $budgets = Budget::forFinancialYear($financialYearStart)
             ->with('salespersonTargets')
             ->get()
-            ->keyBy(fn (Budget $budget) => $budget->year.'-'.$budget->month);
+            ->groupBy('platform_id')
+            ->map(fn (Collection $platformBudgets) => $platformBudgets->keyBy(
+                fn (Budget $budget) => $budget->year.'-'.$budget->month
+            ));
 
-        $yearlyTotal = $budgets->sum('amount');
+        $yearlyTotalsByPlatform = $platforms->mapWithKeys(fn (Platform $platform) => [
+            $platform->id => (float) ($budgets->get($platform->id)?->sum('amount') ?? 0),
+        ]);
+        $yearlyTotal = (float) $yearlyTotalsByPlatform->sum();
+
         $financialYearLabel = Budget::financialYearLabel($financialYearStart);
         $isCurrentFinancialYear = $financialYearStart === $currentFinancialYearStart;
         $previousFinancialYearStart = $financialYearStart - 1;
@@ -38,7 +48,9 @@ class BudgetController extends Controller
         return view('budgets.index', compact(
             'budgets',
             'months',
+            'platforms',
             'yearlyTotal',
+            'yearlyTotalsByPlatform',
             'financialYearLabel',
             'financialYearStart',
             'currentFinancialYearStart',
@@ -49,13 +61,17 @@ class BudgetController extends Controller
     }
 
     /**
-     * Show the form for editing a specific month's budget.
+     * Show the form for editing a specific month's budget for a platform.
      */
-    public function edit(int $year, int $month): View
+    public function edit(Platform $platform, int $year, int $month): View
     {
         $this->validateYearMonth($year, $month);
 
-        $budget = Budget::query()->firstOrNew(['year' => $year, 'month' => $month]);
+        $budget = Budget::query()->firstOrNew([
+            'platform_id' => $platform->id,
+            'year' => $year,
+            'month' => $month,
+        ]);
         $budget->loadMissing('salespersonTargets');
 
         $salespeople = Salesperson::query()->orderBy('first_name')->get();
@@ -64,18 +80,22 @@ class BudgetController extends Controller
         $monthLabel = Carbon::create($year, $month, 1)->format('F Y');
         $financialYearStart = Budget::financialYearStartYear(Carbon::create($year, $month, 1));
 
-        return view('budgets.edit', compact('budget', 'salespeople', 'existingTargets', 'year', 'month', 'monthLabel', 'financialYearStart'));
+        return view('budgets.edit', compact('budget', 'platform', 'salespeople', 'existingTargets', 'year', 'month', 'monthLabel', 'financialYearStart'));
     }
 
     /**
-     * Update the specified month's budget and salesperson targets.
+     * Update the specified month's budget and salesperson targets for a platform.
      */
-    public function update(BudgetRequest $request, int $year, int $month): RedirectResponse
+    public function update(BudgetRequest $request, Platform $platform, int $year, int $month): RedirectResponse
     {
         $this->validateYearMonth($year, $month);
 
         $budget = Budget::query()->updateOrCreate(
-            ['year' => $year, 'month' => $month],
+            [
+                'platform_id' => $platform->id,
+                'year' => $year,
+                'month' => $month,
+            ],
             ['amount' => $request->validated('amount')],
         );
 

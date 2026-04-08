@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Budget extends Model
@@ -19,6 +20,7 @@ class Budget extends Model
      * @var list<string>
      */
     protected $fillable = [
+        'platform_id',
         'year',
         'month',
         'amount',
@@ -30,10 +32,19 @@ class Budget extends Model
     protected function casts(): array
     {
         return [
+            'platform_id' => 'integer',
             'year' => 'integer',
             'month' => 'integer',
             'amount' => 'decimal:2',
         ];
+    }
+
+    /**
+     * @return BelongsTo<Platform, $this>
+     */
+    public function platform(): BelongsTo
+    {
+        return $this->belongsTo(Platform::class);
     }
 
     /**

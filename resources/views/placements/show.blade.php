@@ -25,6 +25,11 @@
         </div>
 
         <div>
+          <p class="text-sm font-medium text-gray-700">Type</p>
+          <p class="mt-1 text-sm text-gray-900">{{ $placement->type?->label() ?? '—' }}</p>
+        </div>
+
+        <div>
           <p class="text-sm font-medium text-gray-700">Description</p>
           <p class="mt-1 text-sm text-gray-900">{{ $placement->description ?? '—' }}</p>
         </div>

@@ -74,7 +74,7 @@
                     <svg class="h-5 w-5 {{ request()->routeIs('home') ? 'text-gray-900' : 'text-gray-400' }}" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                       <path d="M9.293 2.293a1 1 0 0 1 1.414 0l6 6A1 1 0 0 1 16 10h-1v6a2 2 0 0 1-2 2h-2a1 1 0 0 1-1-1v-4H10v4a1 1 0 0 1-1 1H7a2 2 0 0 1-2-2v-6H4a1 1 0 0 1-.707-1.707l6-6Z" />
                     </svg>
-                    Home
+                    Dashboard
                   </a>
                 </li>
 

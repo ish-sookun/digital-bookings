@@ -39,10 +39,10 @@ Route::middleware('auth')->group(function () {
         Route::resource('users', UserManagementController::class)->except(['show']);
 
         Route::get('budgets', [BudgetController::class, 'index'])->name('budgets.index');
-        Route::get('budgets/{year}/{month}/edit', [BudgetController::class, 'edit'])
+        Route::get('budgets/{platform}/{year}/{month}/edit', [BudgetController::class, 'edit'])
             ->whereNumber(['year', 'month'])
             ->name('budgets.edit');
-        Route::put('budgets/{year}/{month}', [BudgetController::class, 'update'])
+        Route::put('budgets/{platform}/{year}/{month}', [BudgetController::class, 'update'])
             ->whereNumber(['year', 'month'])
             ->name('budgets.update');
     });

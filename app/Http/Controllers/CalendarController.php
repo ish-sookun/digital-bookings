@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Placement;
+use App\Models\Platform;
 use App\Models\Reservation;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -14,7 +15,8 @@ class CalendarController extends Controller
     {
         $year = $request->input('year', now()->year);
         $month = $request->input('month', now()->month);
-        $placementId = $request->input('placement_id');
+        $platformId = $request->filled('platform_id') ? (int) $request->input('platform_id') : null;
+        $placementId = $request->filled('placement_id') ? (int) $request->input('placement_id') : null;
 
         $currentDate = Carbon::createFromDate($year, $month, 1);
         $startOfMonth = $currentDate->copy()->startOfMonth();
@@ -23,9 +25,8 @@ class CalendarController extends Controller
         // Get all reservations that have dates in this month
         $reservations = Reservation::query()
             ->with(['client', 'placement'])
-            ->when($placementId, function ($query, $placementId) {
-                $query->where('placement_id', $placementId);
-            })
+            ->when($platformId, fn ($query, $platformId) => $query->where('platform_id', $platformId))
+            ->when($placementId, fn ($query, $placementId) => $query->where('placement_id', $placementId))
             ->get()
             ->filter(function ($reservation) use ($startOfMonth, $endOfMonth) {
                 foreach ($reservation->dates_booked as $date) {
@@ -79,8 +80,27 @@ class CalendarController extends Controller
         $prevMonth = $currentDate->copy()->subMonth();
         $nextMonth = $currentDate->copy()->addMonth();
 
-        $placements = Placement::orderBy('name')->get();
+        $platforms = Platform::query()->orderBy('id')->get();
 
-        return view('calendar.index', compact('currentDate', 'weeks', 'prevMonth', 'nextMonth', 'placements', 'placementId'));
+        $placements = Placement::query()
+            ->when($platformId, fn ($query, $platformId) => $query->where('platform_id', $platformId))
+            ->orderBy('name')
+            ->get();
+
+        // Reset selected placement if it no longer belongs to the selected platform.
+        if ($placementId !== null && $placements->firstWhere('id', $placementId) === null) {
+            $placementId = null;
+        }
+
+        return view('calendar.index', compact(
+            'currentDate',
+            'weeks',
+            'prevMonth',
+            'nextMonth',
+            'platforms',
+            'placements',
+            'platformId',
+            'placementId',
+        ));
     }
 }

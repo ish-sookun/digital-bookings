@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\PlacementType;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -19,6 +20,7 @@ class PlacementFactory extends Factory
         return [
             'name' => fake()->words(3, true),
             'description' => fake()->optional()->paragraph(),
+            'type' => fake()->randomElement(PlacementType::cases()),
             'price' => fake()->numberBetween(1000, 100000),
         ];
     }

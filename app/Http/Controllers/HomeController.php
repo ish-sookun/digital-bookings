@@ -6,6 +6,7 @@ use App\Models\Budget;
 use App\Models\Platform;
 use App\Models\Reservation;
 use App\Models\Salesperson;
+use App\PlacementType;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\View\View;
@@ -13,7 +14,7 @@ use Illuminate\View\View;
 class HomeController extends Controller
 {
     /**
-     * Show the dashboard with budget and sales KPIs.
+     * Show the dashboard with per-platform budget and sales KPIs.
      */
     public function index(): View
     {
@@ -26,14 +27,52 @@ class HomeController extends Controller
         $financialYearLabel = Budget::financialYearLabel($financialYearStart);
         $previousFinancialYearLabel = Budget::financialYearLabel($financialYearStart - 1);
 
-        $yearlyBudget = (float) Budget::forFinancialYear($financialYearStart)->sum('amount');
+        $platforms = Platform::query()->orderBy('id')->get();
+
+        $platformStats = $platforms->map(fn (Platform $platform) => $this->statsForPlatform(
+            $platform,
+            $now,
+            $financialYearStart,
+            $financialYearStartDate,
+            $financialYearEndDate,
+            $previousFinancialYearStartDate,
+            $previousFinancialYearEndDate,
+        ))->all();
+
+        return view('home', compact(
+            'financialYearLabel',
+            'previousFinancialYearLabel',
+            'financialYearStartDate',
+            'platformStats',
+        ));
+    }
+
+    /**
+     * Compute all dashboard metrics for a single platform.
+     *
+     * @return array<string, mixed>
+     */
+    private function statsForPlatform(
+        Platform $platform,
+        Carbon $now,
+        int $financialYearStart,
+        Carbon $fyStart,
+        Carbon $fyEnd,
+        Carbon $prevFyStart,
+        Carbon $prevFyEnd,
+    ): array {
+        $yearlyBudget = (float) Budget::forFinancialYear($financialYearStart)
+            ->where('platform_id', $platform->id)
+            ->sum('amount');
 
         $currentMonthBudget = (float) Budget::query()
+            ->where('platform_id', $platform->id)
             ->where('year', $now->year)
             ->where('month', $now->month)
             ->value('amount');
 
         $currentMonthSales = (float) Reservation::query()
+            ->where('platform_id', $platform->id)
             ->whereBetween('created_at', [$now->copy()->startOfMonth(), $now->copy()->endOfMonth()])
             ->sum('gross_amount');
 
@@ -42,79 +81,82 @@ class HomeController extends Controller
             : 0;
 
         $cumulatedSales = (float) Reservation::query()
-            ->where('created_at', '>=', $financialYearStartDate)
-            ->where('created_at', '<=', $now)
+            ->where('platform_id', $platform->id)
+            ->whereBetween('created_at', [$fyStart, $now])
             ->sum('gross_amount');
 
         $yearlyPercentage = $yearlyBudget > 0
             ? ($cumulatedSales / $yearlyBudget) * 100
             : 0;
 
-        $salespersonStats = $this->salespersonStats($financialYearStartDate, $financialYearEndDate);
+        $salespersonStats = $this->salespersonStats($platform, $fyStart, $fyEnd);
 
         $monthlySalesComparison = $this->monthlySalesComparison(
+            $platform,
             $financialYearStart,
-            $financialYearStartDate,
-            $financialYearEndDate,
-            $previousFinancialYearStartDate,
-            $previousFinancialYearEndDate,
+            $fyStart,
+            $fyEnd,
+            $prevFyStart,
+            $prevFyEnd,
         );
 
-        $platformComparison = $this->platformComparison(
-            $financialYearStartDate,
-            $financialYearEndDate,
-            $previousFinancialYearStartDate,
-            $previousFinancialYearEndDate,
-        );
+        $monthlySalesMax = 0;
+        foreach ($monthlySalesComparison as $row) {
+            $monthlySalesMax = max($monthlySalesMax, $row['current'], $row['previous']);
+        }
 
-        return view('home', compact(
-            'yearlyBudget',
-            'currentMonthBudget',
-            'currentMonthSales',
-            'currentMonthPercentage',
-            'cumulatedSales',
-            'yearlyPercentage',
-            'financialYearLabel',
-            'previousFinancialYearLabel',
-            'financialYearStartDate',
-            'salespersonStats',
-            'monthlySalesComparison',
-            'platformComparison',
-        ));
+        $placementEarnings = $this->placementEarnings($platform, $fyStart, $fyEnd);
+
+        return [
+            'platform' => $platform,
+            'yearlyBudget' => $yearlyBudget,
+            'currentMonthBudget' => $currentMonthBudget,
+            'currentMonthSales' => $currentMonthSales,
+            'currentMonthPercentage' => $currentMonthPercentage,
+            'cumulatedSales' => $cumulatedSales,
+            'yearlyPercentage' => $yearlyPercentage,
+            'salespersonStats' => $salespersonStats,
+            'monthlySalesComparison' => $monthlySalesComparison,
+            'monthlySalesMax' => $monthlySalesMax,
+            'placementEarnings' => $placementEarnings,
+        ];
     }
 
     /**
-     * Bookings and sales totals per salesperson for the current financial year.
+     * Bookings and sales totals per salesperson on a platform within the current financial year.
      *
      * @return Collection<int, Salesperson>
      */
-    private function salespersonStats(Carbon $fyStart, Carbon $fyEnd): Collection
+    private function salespersonStats(Platform $platform, Carbon $fyStart, Carbon $fyEnd): Collection
     {
         return Salesperson::query()
-            ->withCount(['reservations as bookings_count' => function ($query) use ($fyStart, $fyEnd) {
-                $query->whereBetween('created_at', [$fyStart, $fyEnd]);
+            ->withCount(['reservations as bookings_count' => function ($query) use ($platform, $fyStart, $fyEnd) {
+                $query->where('platform_id', $platform->id)
+                    ->whereBetween('created_at', [$fyStart, $fyEnd]);
             }])
-            ->withSum(['reservations as sales_total' => function ($query) use ($fyStart, $fyEnd) {
-                $query->whereBetween('created_at', [$fyStart, $fyEnd]);
+            ->withSum(['reservations as sales_total' => function ($query) use ($platform, $fyStart, $fyEnd) {
+                $query->where('platform_id', $platform->id)
+                    ->whereBetween('created_at', [$fyStart, $fyEnd]);
             }], 'gross_amount')
             ->orderByDesc('sales_total')
             ->get();
     }
 
     /**
-     * Monthly sales for the current and previous financial years, aligned by FY month index.
+     * Monthly sales on a platform for the current and previous FYs, aligned by FY month index.
      *
      * @return list<array{label: string, current: float, previous: float}>
      */
     private function monthlySalesComparison(
+        Platform $platform,
         int $financialYearStart,
         Carbon $fyStart,
         Carbon $fyEnd,
         Carbon $prevFyStart,
         Carbon $prevFyEnd,
     ): array {
-        $currentByYearMonth = $this->monthlyTotals($fyStart, $fyEnd);
-        $previousByYearMonth = $this->monthlyTotals($prevFyStart, $prevFyEnd);
+        $currentByYearMonth = $this->monthlyTotals($platform, $fyStart, $fyEnd);
+        $previousByYearMonth = $this->monthlyTotals($platform, $prevFyStart, $prevFyEnd);
 
         $rows = [];
         for ($i = 0; $i < 12; $i++) {
@@ -132,13 +174,14 @@ class HomeController extends Controller
     }
 
     /**
-     * Group reservation gross_amount totals by year-month within a date range.
+     * Group reservation gross_amount totals by year-month for a platform within a range.
      *
      * @return array<string, float>
      */
-    private function monthlyTotals(Carbon $start, Carbon $end): array
+    private function monthlyTotals(Platform $platform, Carbon $start, Carbon $end): array
     {
         return Reservation::query()
+            ->where('platform_id', $platform->id)
             ->whereBetween('created_at', [$start, $end])
             ->selectRaw("strftime('%Y', created_at) as y, strftime('%m', created_at) as m, SUM(gross_amount) as total")
             ->groupBy('y', 'm')
@@ -148,40 +191,25 @@ class HomeController extends Controller
     }
 
     /**
-     * Sales totals per platform for the current and previous financial years.
+     * Sum of reservation earnings grouped by placement type (Web / Social Media) for a platform.
      *
-     * @return list<array{name: string, current: float, previous: float}>
+     * @return array<string, float>
      */
-    private function platformComparison(
-        Carbon $fyStart,
-        Carbon $fyEnd,
-        Carbon $prevFyStart,
-        Carbon $prevFyEnd,
-    ): array {
-        $platforms = Platform::query()->orderBy('name')->get();
-
-        $currentTotals = $this->platformTotals($fyStart, $fyEnd);
-        $previousTotals = $this->platformTotals($prevFyStart, $prevFyEnd);
-
-        return $platforms->map(fn (Platform $platform) => [
-            'name' => $platform->name,
-            'current' => (float) ($currentTotals[$platform->id] ?? 0),
-            'previous' => (float) ($previousTotals[$platform->id] ?? 0),
-        ])->all();
-    }
-
-    /**
-     * @return array<int, float>
-     */
-    private function platformTotals(Carbon $start, Carbon $end): array
+    private function placementEarnings(Platform $platform, Carbon $fyStart, Carbon $fyEnd): array
     {
-        return Reservation::query()
-            ->whereBetween('created_at', [$start, $end])
-            ->whereNotNull('platform_id')
-            ->selectRaw('platform_id, SUM(gross_amount) as total')
-            ->groupBy('platform_id')
-            ->pluck('total', 'platform_id')
+        $totals = Reservation::query()
+            ->join('placements', 'reservations.placement_id', '=', 'placements.id')
+            ->where('reservations.platform_id', $platform->id)
+            ->whereBetween('reservations.created_at', [$fyStart, $fyEnd])
+            ->selectRaw('placements.type as type, SUM(reservations.gross_amount) as total')
+            ->groupBy('placements.type')
+            ->pluck('total', 'type')
             ->map(fn ($total) => (float) $total)
             ->all();
+
+        return [
+            PlacementType::Web->value => (float) ($totals[PlacementType::Web->value] ?? 0),
+            PlacementType::SocialMedia->value => (float) ($totals[PlacementType::SocialMedia->value] ?? 0),
+        ];
     }
 }

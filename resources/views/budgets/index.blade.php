@@ -55,49 +55,63 @@
         </div>
       @endif
 
-      <div class="mt-6">
-        <table class="min-w-full divide-y divide-gray-200">
-          <thead>
-            <tr>
-              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Month</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Monthly Budget</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Salesperson Targets</th>
-              <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">Actions</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-gray-100">
-            @foreach($months as $month)
-              @php
-                $key = $month['year'].'-'.$month['month'];
-                $budget = $budgets->get($key);
-                $targetCount = $budget?->salespersonTargets->count() ?? 0;
-              @endphp
-              <tr class="hover:bg-gray-50">
-                <td class="px-4 py-3 text-sm font-medium text-gray-900">{{ $month['label'] }}</td>
-                <td class="px-4 py-3 text-sm text-gray-600">
-                  @if($budget)
-                    MUR {{ number_format((float) $budget->amount) }}
-                  @else
-                    <span class="text-gray-400">—</span>
-                  @endif
-                </td>
-                <td class="px-4 py-3 text-sm text-gray-600">
-                  @if($targetCount > 0)
-                    {{ $targetCount }} {{ Str::plural('target', $targetCount) }} set
-                  @else
-                    <span class="text-gray-400">No targets set</span>
-                  @endif
-                </td>
-                <td class="px-4 py-3 text-right">
-                  <a href="{{ route('budgets.edit', ['year' => $month['year'], 'month' => $month['month']]) }}" class="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50">
-                    Set Budget
-                  </a>
-                </td>
-              </tr>
-            @endforeach
-          </tbody>
-        </table>
-      </div>
+      @forelse($platforms as $platform)
+        @php
+          $platformBudgets = $budgets->get($platform->id) ?? collect();
+          $platformYearlyTotal = (float) ($yearlyTotalsByPlatform[$platform->id] ?? 0);
+        @endphp
+        <div class="mt-10">
+          <div class="flex items-center justify-between">
+            <h2 class="text-lg font-semibold text-gray-900">{{ $platform->name }}</h2>
+            <p class="text-sm text-gray-500">Yearly Budget: <span class="font-semibold text-gray-900">MUR {{ number_format($platformYearlyTotal) }}</span></p>
+          </div>
+          <div class="mt-4">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead>
+                <tr>
+                  <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Month</th>
+                  <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Monthly Budget</th>
+                  <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Salesperson Targets</th>
+                  <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100">
+                @foreach($months as $month)
+                  @php
+                    $key = $month['year'].'-'.$month['month'];
+                    $budget = $platformBudgets->get($key);
+                    $targetCount = $budget?->salespersonTargets->count() ?? 0;
+                  @endphp
+                  <tr class="hover:bg-gray-50">
+                    <td class="px-4 py-3 text-sm font-medium text-gray-900">{{ $month['label'] }}</td>
+                    <td class="px-4 py-3 text-sm text-gray-600">
+                      @if($budget)
+                        MUR {{ number_format((float) $budget->amount) }}
+                      @else
+                        <span class="text-gray-400">—</span>
+                      @endif
+                    </td>
+                    <td class="px-4 py-3 text-sm text-gray-600">
+                      @if($targetCount > 0)
+                        {{ $targetCount }} {{ Str::plural('target', $targetCount) }} set
+                      @else
+                        <span class="text-gray-400">No targets set</span>
+                      @endif
+                    </td>
+                    <td class="px-4 py-3 text-right">
+                      <a href="{{ route('budgets.edit', ['platform' => $platform, 'year' => $month['year'], 'month' => $month['month']]) }}" class="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50">
+                        Set Budget
+                      </a>
+                    </td>
+                  </tr>
+                @endforeach
+              </tbody>
+            </table>
+          </div>
+        </div>
+      @empty
+        <p class="mt-8 text-sm text-gray-500">No platforms available. Add a platform before setting budgets.</p>
+      @endforelse
     </div>
   </main>
 @endsection

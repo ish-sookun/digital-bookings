@@ -56,6 +56,24 @@
         </div>
 
         <div>
+          <label for="type" class="block text-sm font-medium text-gray-700">Type</label>
+          <div class="mt-2">
+            @php
+              $currentType = old('type', $placement->type?->value);
+            @endphp
+            <select name="type" id="type" required
+              class="block w-full rounded-lg border @error('type') border-red-500 @else border-gray-200 @enderror bg-white px-4 py-2.5 text-gray-900 shadow-sm focus:border-gray-300 focus:outline-none focus:ring-4 focus:ring-gray-100">
+              @foreach(\App\PlacementType::cases() as $type)
+                <option value="{{ $type->value }}" {{ $currentType === $type->value ? 'selected' : '' }}>{{ $type->label() }}</option>
+              @endforeach
+            </select>
+          </div>
+          @error('type')
+            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+          @enderror
+        </div>
+
+        <div>
           <label for="price" class="block text-sm font-medium text-gray-700">Price (MUR)</label>
           <div class="mt-2">
             <input name="price" id="price" value="{{ old('price', $placement->price) }}" min="0" required

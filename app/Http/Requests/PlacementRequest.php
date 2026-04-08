@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\PlacementType;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class PlacementRequest extends FormRequest
 {
@@ -24,6 +26,7 @@ class PlacementRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
+            'type' => ['required', Rule::enum(PlacementType::class)],
             'price' => ['required', 'integer', 'min:0'],
             'platform_id' => ['nullable', 'exists:platforms,id'],
         ];
@@ -36,6 +39,8 @@ class PlacementRequest extends FormRequest
     {
         return [
             'name.required' => 'The placement name is required.',
+            'type.required' => 'The placement type is required.',
+            'type.enum' => 'The placement type must be either Web or Social Media.',
             'price.required' => 'The price is required.',
             'price.integer' => 'The price must be a valid number.',
             'price.min' => 'The price cannot be negative.',

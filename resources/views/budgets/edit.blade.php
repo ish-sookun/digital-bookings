@@ -9,11 +9,14 @@
             <path fill-rule="evenodd" d="M17 10a.75.75 0 0 1-.75.75H5.612l4.158 3.96a.75.75 0 1 1-1.04 1.08l-5.5-5.25a.75.75 0 0 1 0-1.08l5.5-5.25a.75.75 0 0 1 1.04 1.08L5.612 9.25H16.25A.75.75 0 0 1 17 10Z" clip-rule="evenodd" />
           </svg>
         </a>
-        <h1 class="text-2xl font-semibold text-gray-900">Set Budget — {{ $monthLabel }}</h1>
+        <div>
+          <h1 class="text-2xl font-semibold text-gray-900">Set Budget — {{ $monthLabel }}</h1>
+          <p class="mt-1 text-sm text-gray-500">Platform: <span class="font-medium text-gray-900">{{ $platform->name }}</span></p>
+        </div>
       </div>
       <div class="mt-6 h-px w-full bg-gray-100"></div>
 
-      <form action="{{ route('budgets.update', ['year' => $year, 'month' => $month]) }}" method="POST" class="mt-8 max-w-2xl space-y-6">
+      <form action="{{ route('budgets.update', ['platform' => $platform, 'year' => $year, 'month' => $month]) }}" method="POST" class="mt-8 max-w-2xl space-y-6">
         @csrf
         @method('PUT')
 
