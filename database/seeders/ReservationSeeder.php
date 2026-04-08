@@ -5,10 +5,13 @@ namespace Database\Seeders;
 use App\Models\Agency;
 use App\Models\Client;
 use App\Models\Placement;
+use App\Models\Platform;
 use App\Models\Reservation;
 use App\Models\Salesperson;
+use App\ReservationStatus;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class ReservationSeeder extends Seeder
@@ -50,6 +53,11 @@ class ReservationSeeder extends Seeder
     private array $scopes = ['Mauritius only', 'Worldwide'];
 
     /**
+     * Share of monthly reservations allocated to lexpress.mu (vs 5plus.mu).
+     */
+    private const LEXPRESS_SHARE = 0.65;
+
+    /**
      * Run the database seeds.
      */
     public function run(): void
@@ -65,33 +73,62 @@ class ReservationSeeder extends Seeder
         /** @var list<int> $salespersonIds */
         $salespersonIds = Salesperson::query()->pluck('id')->all();
 
-        $placements = Placement::query()->whereNotNull('platform_id')->get();
+        $lexpress = Platform::query()->where('name', 'lexpress.mu')->first();
+        $fivePlus = Platform::query()->where('name', '5plus.mu')->first();
 
-        if ($placements->isEmpty() || $salespersonIds === [] || $clientIds === []) {
+        if ($lexpress === null || $fivePlus === null || $salespersonIds === [] || $clientIds === []) {
+            return;
+        }
+
+        /** @var Collection<int, Placement> $lexpressPlacements */
+        $lexpressPlacements = Placement::query()->where('platform_id', $lexpress->id)->get();
+
+        /** @var Collection<int, Placement> $fivePlusPlacements */
+        $fivePlusPlacements = Placement::query()->where('platform_id', $fivePlus->id)->get();
+
+        if ($lexpressPlacements->isEmpty() || $fivePlusPlacements->isEmpty()) {
             return;
         }
 
         $startDate = Carbon::now()->subYears(3)->startOfMonth();
         $endDate = Carbon::now()->endOfMonth();
 
-        DB::transaction(function () use ($startDate, $endDate, $placements, $clientIds, $agencyIds, $salespersonIds): void {
+        DB::transaction(function () use (
+            $startDate,
+            $endDate,
+            $lexpressPlacements,
+            $fivePlusPlacements,
+            $clientIds,
+            $agencyIds,
+            $salespersonIds,
+        ): void {
             $current = $startDate->copy();
             $counter = 0;
 
             while ($current <= $endDate) {
                 $monthsFromStart = (int) $startDate->diffInMonths($current);
-                $count = $this->monthlyReservationCount($current->month, $monthsFromStart);
+                $total = $this->monthlyReservationCount($current->month, $monthsFromStart);
 
-                for ($i = 0; $i < $count; $i++) {
-                    $counter++;
-                    $this->createReservation(
-                        month: $current,
-                        counter: $counter,
-                        placement: $placements->random(),
-                        clientIds: $clientIds,
-                        agencyIds: $agencyIds,
-                        salespersonIds: $salespersonIds,
-                    );
+                $lexpressCount = (int) round($total * self::LEXPRESS_SHARE);
+                $fivePlusCount = max(1, $total - $lexpressCount);
+
+                $allocations = [
+                    [$lexpressCount, $lexpressPlacements],
+                    [$fivePlusCount, $fivePlusPlacements],
+                ];
+
+                foreach ($allocations as [$count, $platformPlacements]) {
+                    for ($i = 0; $i < $count; $i++) {
+                        $counter++;
+                        $this->createReservation(
+                            month: $current,
+                            counter: $counter,
+                            placement: $platformPlacements->random(),
+                            clientIds: $clientIds,
+                            agencyIds: $agencyIds,
+                            salespersonIds: $salespersonIds,
+                        );
+                    }
                 }
 
                 $current->addMonth();
@@ -167,6 +204,9 @@ class ReservationSeeder extends Seeder
 
         $reference = $createdAt->timestamp.'-'.str_pad((string) $counter, 6, '0', STR_PAD_LEFT);
 
+        $firstDate = Carbon::parse($dates[0]);
+        $status = $this->pickStatus($firstDate);
+
         $reservation = new Reservation;
         $reservation->fill([
             'reference' => $reference,
@@ -186,6 +226,7 @@ class ReservationSeeder extends Seeder
             'cost_of_artwork' => $costOfArtwork,
             'vat' => $vat,
             'vat_exempt' => $vatExempt,
+            'status' => $status,
             'purchase_order_no' => 'PO-'.str_pad((string) random_int(1000, 9999), 4, '0', STR_PAD_LEFT),
             'invoice_no' => 'INV-'.str_pad((string) random_int(1000, 9999), 4, '0', STR_PAD_LEFT),
         ]);
@@ -193,5 +234,30 @@ class ReservationSeeder extends Seeder
         $reservation->created_at = $createdAt;
         $reservation->updated_at = $createdAt;
         $reservation->save();
+    }
+
+    /**
+     * Pick a status biased by whether the booking's first date is in the past or future.
+     *
+     * Past bookings tend to be already Confirmed (with some Canceled), while future
+     * bookings are more likely to still be Options.
+     */
+    private function pickStatus(Carbon $firstBookingDate): ReservationStatus
+    {
+        $roll = random_int(1, 100);
+
+        if ($firstBookingDate->isPast()) {
+            return match (true) {
+                $roll <= 75 => ReservationStatus::Confirmed,
+                $roll <= 90 => ReservationStatus::Canceled,
+                default => ReservationStatus::Option,
+            };
+        }
+
+        return match (true) {
+            $roll <= 50 => ReservationStatus::Option,
+            $roll <= 90 => ReservationStatus::Confirmed,
+            default => ReservationStatus::Canceled,
+        };
     }
 }
