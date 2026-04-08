@@ -25,7 +25,7 @@
             <div>
               <label for="client_id" class="block text-sm font-medium text-gray-700">Client <span class="text-red-500">*</span></label>
               <div class="mt-2">
-                <select name="client_id" id="client_id" required x-model="selectedClientId" @change="calculateDiscount(); calculateVat()"
+                <select name="client_id" id="client_id" required x-model="selectedClientId" @change="calculateDiscount(); syncVatExemptFromClient()"
                   class="block w-full rounded-lg border @error('client_id') border-red-500 @else border-gray-200 @enderror bg-white px-4 py-2.5 text-gray-900 shadow-sm focus:border-gray-300 focus:outline-none focus:ring-4 focus:ring-gray-100">
                   <option value="">Select client</option>
                   @foreach($clients as $client)
@@ -245,7 +245,7 @@
               <div>
                 <label class="inline-flex items-center gap-2 text-sm text-gray-700">
                   <input type="hidden" name="vat_exempt" :value="vatExempt ? '1' : '0'" />
-                  <input type="checkbox" :checked="vatExempt" @change="vatExempt = $event.target.checked"
+                  <input type="checkbox" :checked="vatExempt" @change="vatExempt = $event.target.checked; calculateVat()"
                     class="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-200" />
                   VAT Exempt
                 </label>
@@ -453,19 +453,21 @@
 
           this.calculateVat();
         },
-        calculateVat() {
+        syncVatExemptFromClient() {
           const client = this.allClients.find(c => c.id == this.selectedClientId);
-          if (client && client.vat_number && !client.vat_exempt) {
-            this.vatExempt = false;
+          this.vatExempt = !(client && client.vat_number && !client.vat_exempt);
+          this.calculateVat();
+        },
+        calculateVat() {
+          if (this.vatExempt) {
+            this.vat = '0.00';
+          } else {
             const gross = parseFloat(this.grossAmount) || 0;
             const disc = parseFloat(this.discount) || 0;
             const comm = parseFloat(this.commission) || 0;
             const artwork = parseFloat(this.costOfArtwork) || 0;
             const subtotal = Math.max(0, gross - disc - comm + artwork);
             this.vat = (subtotal * 0.15).toFixed(2);
-          } else {
-            this.vatExempt = true;
-            this.vat = '0.00';
           }
           this.calculateTotalAmountToPay();
         },
