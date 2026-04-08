@@ -101,6 +101,7 @@
           </div>
         </div>
 
+        @can('edit-financials')
         {{-- Commission --}}
         <div class="space-y-6">
           <h2 class="text-lg font-medium text-gray-900">Commission</h2>
@@ -163,6 +164,7 @@
             </div>
           </div>
         </div>
+        @endcan
 
         {{-- Contact Person --}}
         <div class="space-y-6">

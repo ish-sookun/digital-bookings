@@ -59,13 +59,15 @@
                     <a href="{{ route('agencies.edit', $agency) }}" class="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50">
                       Edit
                     </a>
-                    <form action="{{ route('agencies.destroy', $agency) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this agency?')">
-                      @csrf
-                      @method('DELETE')
-                      <button type="submit" class="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50">
-                        Delete
-                      </button>
-                    </form>
+                    @can('delete-agencies')
+                      <form action="{{ route('agencies.destroy', $agency) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this agency?')">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50">
+                          Delete
+                        </button>
+                      </form>
+                    @endcan
                   </div>
                 </td>
               </tr>

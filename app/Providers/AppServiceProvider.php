@@ -26,9 +26,13 @@ class AppServiceProvider extends ServiceProvider
 
         Gate::define('manage-budgets', fn (User $user) => $user->isSuperAdmin());
 
-        Gate::define('manage-clients', fn (User $user) => $user->hasRole(UserRole::SuperAdmin, UserRole::Admin));
+        Gate::define('manage-clients', fn (User $user) => true);
 
-        Gate::define('manage-agencies', fn (User $user) => $user->hasRole(UserRole::SuperAdmin, UserRole::Admin));
+        Gate::define('manage-agencies', fn (User $user) => true);
+
+        Gate::define('delete-clients', fn (User $user) => $user->hasRole(UserRole::SuperAdmin, UserRole::Admin));
+
+        Gate::define('delete-agencies', fn (User $user) => $user->hasRole(UserRole::SuperAdmin, UserRole::Admin));
 
         Gate::define('manage-salespeople', fn (User $user) => $user->hasRole(UserRole::SuperAdmin, UserRole::Admin));
 

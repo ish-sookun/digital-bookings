@@ -18,6 +18,22 @@ class ClientRequest extends FormRequest
     }
 
     /**
+     * Strip financial fields for users who lack the edit-financials gate
+     * so salespeople cannot set commission or discount via crafted requests.
+     */
+    protected function prepareForValidation(): void
+    {
+        if ($this->user()?->can('edit-financials')) {
+            return;
+        }
+
+        $this->request->remove('commission_amount');
+        $this->request->remove('commission_type');
+        $this->request->remove('discount');
+        $this->request->remove('discount_type');
+    }
+
+    /**
      * Get the validation rules that apply to the request.
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>

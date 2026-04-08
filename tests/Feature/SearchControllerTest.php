@@ -58,26 +58,28 @@ it('finds agencies by company name for admins', function () {
         ->assertDontSee('Umbrella Agency');
 });
 
-it('downgrades client search to reservation for salespeople', function () {
+it('lets salespeople search clients by company name', function () {
     $user = User::factory()->salesperson()->create();
     Client::factory()->create(['company_name' => 'Acme Industries Ltd']);
+    Client::factory()->create(['company_name' => 'Globex Corporation']);
 
     $this->actingAs($user)
         ->get(route('search.index', ['q' => 'Acme', 'type' => 'client']))
         ->assertOk()
-        ->assertSee('Reservation Reference')
-        ->assertDontSee('Acme Industries Ltd');
+        ->assertSee('Acme Industries Ltd')
+        ->assertDontSee('Globex Corporation');
 });
 
-it('downgrades agency search to reservation for salespeople', function () {
+it('lets salespeople search agencies by company name', function () {
     $user = User::factory()->salesperson()->create();
     Agency::factory()->create(['company_name' => 'Initech Media']);
+    Agency::factory()->create(['company_name' => 'Umbrella Agency']);
 
     $this->actingAs($user)
         ->get(route('search.index', ['q' => 'Initech', 'type' => 'agency']))
         ->assertOk()
-        ->assertSee('Reservation Reference')
-        ->assertDontSee('Initech Media');
+        ->assertSee('Initech Media')
+        ->assertDontSee('Umbrella Agency');
 });
 
 it('shows a no results message when nothing matches', function () {

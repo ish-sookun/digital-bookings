@@ -48,16 +48,18 @@ Route::middleware('auth')->group(function () {
             ->name('budgets.update');
     });
 
-    // Admin & Super Admin: manage clients, agencies, salespeople, platforms, placements
+    // Admin & Super Admin: manage salespeople, platforms, placements, and delete clients/agencies
     Route::middleware('role:super_admin,admin')->group(function () {
         Route::resource('salespeople', SalespersonController::class)->except(['show']);
-        Route::resource('agencies', AgencyController::class);
-        Route::resource('clients', ClientController::class);
         Route::resource('placements', PlacementController::class);
         Route::resource('platforms', PlatformController::class);
+        Route::delete('clients/{client}', [ClientController::class, 'destroy'])->name('clients.destroy');
+        Route::delete('agencies/{agency}', [AgencyController::class, 'destroy'])->name('agencies.destroy');
     });
 
-    // All roles: reservations and calendar
+    // All roles: reservations, calendar, and creating/editing clients & agencies
+    Route::resource('clients', ClientController::class)->except(['destroy']);
+    Route::resource('agencies', AgencyController::class)->except(['destroy']);
     Route::resource('reservations', ReservationController::class);
     Route::get('reservations/{reservation}/pdf', [ReservationController::class, 'downloadPdf'])->name('reservations.pdf');
     Route::get('reservations/{reservation}/document/{type}', [ReservationController::class, 'downloadDocument'])->name('reservations.document');

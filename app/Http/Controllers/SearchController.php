@@ -27,14 +27,6 @@ class SearchController extends Controller
             $type = 'reservation';
         }
 
-        if ($type === 'client' && ! $request->user()?->can('manage-clients')) {
-            $type = 'reservation';
-        }
-
-        if ($type === 'agency' && ! $request->user()?->can('manage-agencies')) {
-            $type = 'reservation';
-        }
-
         $results = $query === ''
             ? null
             : $this->search($type, $query);
