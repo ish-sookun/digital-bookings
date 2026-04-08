@@ -262,6 +262,75 @@ it('shows the second row of dashboard cards on the home page', function () {
         ->assertSee('MUR '.number_format(6789));
 });
 
+it('colours the yearly target based on actual vs expected progress', function (float $sales, string $expectedClass) {
+    $this->travelTo(Carbon::create(2026, 1, 1));
+
+    $user = User::factory()->create(['role' => UserRole::Admin]);
+    $platform = Platform::factory()->create(['name' => 'lexpress.mu']);
+    Budget::factory()->create([
+        'platform_id' => $platform->id,
+        'year' => 2025,
+        'month' => 7,
+        'amount' => 12_000_000,
+    ]);
+
+    if ($sales > 0) {
+        $reservation = Reservation::factory()->create([
+            'platform_id' => $platform->id,
+            'gross_amount' => $sales,
+        ]);
+        $reservation->created_at = Carbon::create(2025, 9, 15);
+        $reservation->updated_at = Carbon::create(2025, 9, 15);
+        $reservation->saveQuietly();
+    }
+
+    $this->actingAs($user)
+        ->get(route('home'))
+        ->assertOk()
+        ->assertSee($expectedClass, false);
+})->with([
+    'realisable (on pace)' => [6_000_000, 'text-green-600'],
+    'below average' => [4_500_000, 'text-amber-600'],
+    'unrealistic' => [2_500_000, 'text-red-600'],
+]);
+
+it('uses brand colours for the lexpress.mu monthly sales comparison chart', function () {
+    $user = User::factory()->create(['role' => UserRole::Admin]);
+    Platform::factory()->create(['name' => 'lexpress.mu']);
+
+    $this->actingAs($user)
+        ->get(route('home'))
+        ->assertOk()
+        ->assertSee('#5e8ef4', false)
+        ->assertSee('#b0e2f0', false);
+});
+
+it('uses brand colours for the 5plus.mu monthly sales comparison chart', function () {
+    $user = User::factory()->create(['role' => UserRole::Admin]);
+    Platform::factory()->create(['name' => '5plus.mu']);
+
+    $this->actingAs($user)
+        ->get(route('home'))
+        ->assertOk()
+        ->assertSee('#c84670', false)
+        ->assertSee('#ffbb55', false);
+});
+
+it('leaves the yearly target neutral when no budget has been set', function () {
+    $this->travelTo(Carbon::create(2026, 1, 1));
+
+    $user = User::factory()->create(['role' => UserRole::Admin]);
+    Platform::factory()->create(['name' => '5plus.mu']);
+
+    $this->actingAs($user)
+        ->get(route('home'))
+        ->assertOk()
+        ->assertSee('Achieved')
+        ->assertDontSee('text-green-600', false)
+        ->assertDontSee('text-amber-600', false)
+        ->assertDontSee('text-red-600', false);
+});
+
 it('splits placement earnings by web and social media type', function () {
     $user = User::factory()->create(['role' => UserRole::Admin]);
     $fyStart = Budget::financialYearStartYear();

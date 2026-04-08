@@ -41,12 +41,24 @@
   <div class="rounded-2xl bg-white p-5 ring-1 ring-gray-200 shadow-sm">
     <p class="text-xs font-medium uppercase tracking-wider text-gray-500">Yearly Target</p>
     @php
-      $yearPctClass = $stats['yearlyPercentage'] >= 100 ? 'text-green-600' : ($stats['yearlyPercentage'] >= 75 ? 'text-amber-600' : 'text-gray-900');
+      $yearlyState = $stats['yearlyTargetState'] ?? 'neutral';
+      $yearPctClass = match ($yearlyState) {
+          'realisable' => 'text-green-600',
+          'below_average' => 'text-amber-600',
+          'unrealistic' => 'text-red-600',
+          default => 'text-gray-900',
+      };
+      $yearBarClass = match ($yearlyState) {
+          'realisable' => 'bg-green-600',
+          'below_average' => 'bg-amber-600',
+          'unrealistic' => 'bg-red-600',
+          default => 'bg-gray-900',
+      };
     @endphp
     <p class="mt-2 text-2xl font-semibold {{ $yearPctClass }}">{{ number_format($stats['yearlyPercentage'], 1) }}%</p>
-    <p class="mt-1 text-xs text-gray-400">Achieved</p>
+    <p class="mt-1 text-xs {{ $yearPctClass }}">Achieved</p>
     <div class="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
-      <div class="h-full bg-gray-900" style="width: {{ min(100, $stats['yearlyPercentage']) }}%"></div>
+      <div class="h-full {{ $yearBarClass }}" style="width: {{ min(100, $stats['yearlyPercentage']) }}%"></div>
     </div>
   </div>
 </div>
@@ -85,11 +97,11 @@
       </div>
       <div class="flex items-center gap-3 text-xs text-gray-500">
         <span class="flex items-center gap-1.5">
-          <span class="inline-block h-2.5 w-2.5 rounded-sm bg-gray-900"></span>
+          <span class="inline-block h-2.5 w-2.5 rounded-sm" style="background-color: {{ $stats['monthlySalesCurrentColor'] }};"></span>
           {{ $financialYearLabel }}
         </span>
         <span class="flex items-center gap-1.5">
-          <span class="inline-block h-2.5 w-2.5 rounded-sm bg-gray-300"></span>
+          <span class="inline-block h-2.5 w-2.5 rounded-sm" style="background-color: {{ $stats['monthlySalesPreviousColor'] }};"></span>
           {{ $previousFinancialYearLabel }}
         </span>
       </div>
@@ -104,13 +116,13 @@
         <div class="flex h-full flex-col items-center justify-end">
           <div class="flex h-full w-full items-end justify-center gap-0.5">
             <div
-              class="w-1/2 rounded-t bg-gray-900"
-              style="height: {{ $currentHeight }}%;"
+              class="w-1/2 rounded-t"
+              style="height: {{ $currentHeight }}%; background-color: {{ $stats['monthlySalesCurrentColor'] }};"
               title="{{ $monthRow['label'] }} {{ $financialYearLabel }}: MUR {{ number_format($monthRow['current']) }}"
             ></div>
             <div
-              class="w-1/2 rounded-t bg-gray-300"
-              style="height: {{ $previousHeight }}%;"
+              class="w-1/2 rounded-t"
+              style="height: {{ $previousHeight }}%; background-color: {{ $stats['monthlySalesPreviousColor'] }};"
               title="{{ $monthRow['label'] }} {{ $previousFinancialYearLabel }}: MUR {{ number_format($monthRow['previous']) }}"
             ></div>
           </div>

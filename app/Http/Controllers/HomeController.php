@@ -14,6 +14,22 @@ use Illuminate\View\View;
 class HomeController extends Controller
 {
     /**
+     * Hex colours for each platform's monthly sales comparison chart, keyed by
+     * platform name. Platforms without an entry fall back to neutral grays.
+     *
+     * @var array<string, array{current: string, previous: string}>
+     */
+    private const MONTHLY_SALES_CHART_COLORS = [
+        'lexpress.mu' => ['current' => '#5e8ef4', 'previous' => '#b0e2f0'],
+        '5plus.mu' => ['current' => '#c84670', 'previous' => '#ffbb55'],
+    ];
+
+    private const MONTHLY_SALES_CHART_DEFAULT_COLORS = [
+        'current' => '#111827',
+        'previous' => '#d1d5db',
+    ];
+
+    /**
      * Show the dashboard with per-platform budget and sales KPIs.
      */
     public function index(): View
@@ -89,6 +105,9 @@ class HomeController extends Controller
             ? ($cumulatedSales / $yearlyBudget) * 100
             : 0;
 
+        $expectedYearlyPercentage = $this->expectedYearlyPercentage($fyStart, $fyEnd, $now);
+        $yearlyTargetState = $this->yearlyTargetState($yearlyBudget, $yearlyPercentage, $expectedYearlyPercentage);
+
         $salespersonStats = $this->salespersonStats($platform, $fyStart, $fyEnd);
 
         $monthlySalesComparison = $this->monthlySalesComparison(
@@ -107,6 +126,9 @@ class HomeController extends Controller
 
         $placementEarnings = $this->placementEarnings($platform, $fyStart, $fyEnd);
 
+        $monthlySalesColors = self::MONTHLY_SALES_CHART_COLORS[$platform->name]
+            ?? self::MONTHLY_SALES_CHART_DEFAULT_COLORS;
+
         return [
             'platform' => $platform,
             'yearlyBudget' => $yearlyBudget,
@@ -115,9 +137,12 @@ class HomeController extends Controller
             'currentMonthPercentage' => $currentMonthPercentage,
             'cumulatedSales' => $cumulatedSales,
             'yearlyPercentage' => $yearlyPercentage,
+            'yearlyTargetState' => $yearlyTargetState,
             'salespersonStats' => $salespersonStats,
             'monthlySalesComparison' => $monthlySalesComparison,
             'monthlySalesMax' => $monthlySalesMax,
+            'monthlySalesCurrentColor' => $monthlySalesColors['current'],
+            'monthlySalesPreviousColor' => $monthlySalesColors['previous'],
             'placementEarnings' => $placementEarnings,
         ];
     }
@@ -211,5 +236,43 @@ class HomeController extends Controller
             PlacementType::Web->value => (float) ($totals[PlacementType::Web->value] ?? 0),
             PlacementType::SocialMedia->value => (float) ($totals[PlacementType::SocialMedia->value] ?? 0),
         ];
+    }
+
+    /**
+     * Share of the financial year that has elapsed as of $now, expressed as a percentage.
+     */
+    private function expectedYearlyPercentage(Carbon $fyStart, Carbon $fyEnd, Carbon $now): float
+    {
+        $fyTotalDays = max(1, (int) round($fyStart->diffInDays($fyStart->copy()->addYear())));
+        $daysElapsed = (int) round($fyStart->diffInDays($now));
+        $daysElapsed = max(0, min($fyTotalDays, $daysElapsed));
+
+        return ($daysElapsed / $fyTotalDays) * 100;
+    }
+
+    /**
+     * Classify the yearly target as realisable, below average, or unrealistic,
+     * based on actual progress vs the share of the FY that has elapsed. When no
+     * budget has been set, the state is neutral — there is nothing to measure
+     * against yet.
+     */
+    private function yearlyTargetState(float $yearlyBudget, float $yearlyPercentage, float $expectedYearlyPercentage): string
+    {
+        if ($yearlyBudget <= 0) {
+            return 'neutral';
+        }
+
+        // Within the first few weeks of the FY there isn't enough signal to judge.
+        if ($expectedYearlyPercentage < 5) {
+            return 'realisable';
+        }
+
+        $ratio = $yearlyPercentage / $expectedYearlyPercentage;
+
+        return match (true) {
+            $ratio >= 0.9 => 'realisable',
+            $ratio >= 0.6 => 'below_average',
+            default => 'unrealistic',
+        };
     }
 }
