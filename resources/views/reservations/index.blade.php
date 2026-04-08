@@ -27,8 +27,6 @@
               <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Product</th>
               <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Platform</th>
               <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Placement</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Channel</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Gross Amount</th>
               <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Total to Pay</th>
               <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">Actions</th>
             </tr>
@@ -51,8 +49,6 @@
                 <td class="px-4 py-3 text-sm text-gray-600">{{ $reservation->product }}</td>
                 <td class="px-4 py-3 text-sm text-gray-600">{{ $reservation->platform?->name ?? '—' }}</td>
                 <td class="px-4 py-3 text-sm text-gray-600">{{ $reservation->placement->name }}</td>
-                <td class="px-4 py-3 text-sm text-gray-600">{{ $reservation->channel }}</td>
-                <td class="px-4 py-3 text-sm text-gray-600">MUR {{ number_format($reservation->gross_amount, 2) }}</td>
                 <td class="px-4 py-3 text-sm text-gray-600">MUR {{ number_format($reservation->total_amount_to_pay, 2) }}</td>
                 <td class="px-4 py-3 text-right">
                   <div class="flex items-center justify-end gap-2">
@@ -74,7 +70,7 @@
               </tr>
             @empty
               <tr>
-                <td colspan="10" class="px-4 py-10 text-center text-sm text-gray-500">
+                <td colspan="8" class="px-4 py-10 text-center text-sm text-gray-500">
                   No reservations found. Click "Add Reservation" to create one.
                 </td>
               </tr>
