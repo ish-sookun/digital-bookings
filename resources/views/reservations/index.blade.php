@@ -22,6 +22,7 @@
           <thead>
             <tr>
               <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Reference</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Status</th>
               <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Client</th>
               <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Product</th>
               <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Platform</th>
@@ -35,7 +36,17 @@
           <tbody class="divide-y divide-gray-100">
             @forelse($reservations as $reservation)
               <tr class="hover:bg-gray-50">
-                <td class="px-4 py-3 text-sm font-mono text-gray-600">{{ $reservation->reference }}</td>
+                <td class="px-4 py-3 text-sm">
+                  <span class="inline-flex items-center rounded-md px-2 py-1 font-mono text-xs font-medium ring-1 ring-inset {{ $reservation->status->referenceClasses() }}">
+                    {{ $reservation->reference }}
+                  </span>
+                </td>
+                <td class="px-4 py-3 text-sm text-gray-600">
+                  <span class="inline-flex items-center gap-2">
+                    <span class="inline-block h-2.5 w-2.5 rounded-full {{ $reservation->status->dotClasses() }}"></span>
+                    {{ $reservation->status->label() }}
+                  </span>
+                </td>
                 <td class="px-4 py-3 text-sm text-gray-900">{{ $reservation->client->company_name }}</td>
                 <td class="px-4 py-3 text-sm text-gray-600">{{ $reservation->product }}</td>
                 <td class="px-4 py-3 text-sm text-gray-600">{{ $reservation->platform?->name ?? '—' }}</td>
@@ -63,7 +74,7 @@
               </tr>
             @empty
               <tr>
-                <td colspan="9" class="px-4 py-10 text-center text-sm text-gray-500">
+                <td colspan="10" class="px-4 py-10 text-center text-sm text-gray-500">
                   No reservations found. Click "Add Reservation" to create one.
                 </td>
               </tr>

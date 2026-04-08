@@ -9,6 +9,7 @@ use App\Models\Placement;
 use App\Models\Platform;
 use App\Models\Reservation;
 use App\Models\Salesperson;
+use App\ReservationStatus;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -45,6 +46,7 @@ class ReservationController extends Controller
         $salespeople = Salesperson::query()->orderBy('first_name')->orderBy('last_name')->get();
         $channels = ['Run of site', 'Home & multimedia'];
         $scopes = ['Mauritius only', 'Worldwide'];
+        $statuses = ReservationStatus::cases();
 
         $placementsJson = $placements->map(fn (Placement $p) => [
             'id' => $p->id,
@@ -67,7 +69,7 @@ class ReservationController extends Controller
             'commission_type' => $a->commission_type?->value,
         ]);
 
-        return view('reservations.create', compact('clients', 'agencies', 'platforms', 'placements', 'salespeople', 'channels', 'scopes', 'placementsJson', 'clientsJson', 'agenciesJson'));
+        return view('reservations.create', compact('clients', 'agencies', 'platforms', 'placements', 'salespeople', 'channels', 'scopes', 'statuses', 'placementsJson', 'clientsJson', 'agenciesJson'));
     }
 
     /**
@@ -106,6 +108,7 @@ class ReservationController extends Controller
         $salespeople = Salesperson::query()->orderBy('first_name')->orderBy('last_name')->get();
         $channels = ['Run of site', 'Home & multimedia'];
         $scopes = ['Mauritius only', 'Worldwide'];
+        $statuses = ReservationStatus::cases();
 
         $placementsJson = $placements->map(fn (Placement $p) => [
             'id' => $p->id,
@@ -128,7 +131,7 @@ class ReservationController extends Controller
             'commission_type' => $a->commission_type?->value,
         ]);
 
-        return view('reservations.edit', compact('reservation', 'clients', 'agencies', 'platforms', 'placements', 'salespeople', 'channels', 'scopes', 'placementsJson', 'clientsJson', 'agenciesJson'));
+        return view('reservations.edit', compact('reservation', 'clients', 'agencies', 'platforms', 'placements', 'salespeople', 'channels', 'scopes', 'statuses', 'placementsJson', 'clientsJson', 'agenciesJson'));
     }
 
     /**

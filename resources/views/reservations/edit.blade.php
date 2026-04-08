@@ -62,20 +62,38 @@
             </div>
           </div>
 
-          <div>
-            <label for="salesperson_id" class="block text-sm font-medium text-gray-700">Salesperson</label>
-            <div class="mt-2">
-              <select name="salesperson_id" id="salesperson_id"
-                class="block w-full rounded-lg border @error('salesperson_id') border-red-500 @else border-gray-200 @enderror bg-white px-4 py-2.5 text-gray-900 shadow-sm focus:border-gray-300 focus:outline-none focus:ring-4 focus:ring-gray-100">
-                <option value="">Select salesperson</option>
-                @foreach($salespeople as $salesperson)
-                  <option value="{{ $salesperson->id }}" {{ old('salesperson_id', $reservation->salesperson_id) == $salesperson->id ? 'selected' : '' }}>{{ $salesperson->first_name }} {{ $salesperson->last_name }}</option>
-                @endforeach
-              </select>
+          <div class="grid grid-cols-2 gap-6">
+            <div>
+              <label for="salesperson_id" class="block text-sm font-medium text-gray-700">Salesperson</label>
+              <div class="mt-2">
+                <select name="salesperson_id" id="salesperson_id"
+                  class="block w-full rounded-lg border @error('salesperson_id') border-red-500 @else border-gray-200 @enderror bg-white px-4 py-2.5 text-gray-900 shadow-sm focus:border-gray-300 focus:outline-none focus:ring-4 focus:ring-gray-100">
+                  <option value="">Select salesperson</option>
+                  @foreach($salespeople as $salesperson)
+                    <option value="{{ $salesperson->id }}" {{ old('salesperson_id', $reservation->salesperson_id) == $salesperson->id ? 'selected' : '' }}>{{ $salesperson->first_name }} {{ $salesperson->last_name }}</option>
+                  @endforeach
+                </select>
+              </div>
+              @error('salesperson_id')
+                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+              @enderror
             </div>
-            @error('salesperson_id')
-              <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-            @enderror
+
+            <div>
+              <label for="status" class="block text-sm font-medium text-gray-700">Status <span class="text-red-500">*</span></label>
+              <div class="mt-2 flex items-center gap-3">
+                <span class="inline-block h-3 w-3 shrink-0 rounded-full" :class="statusDotClass"></span>
+                <select name="status" id="status" required x-model="status"
+                  class="block w-full rounded-lg border @error('status') border-red-500 @else border-gray-200 @enderror bg-white px-4 py-2.5 text-gray-900 shadow-sm focus:border-gray-300 focus:outline-none focus:ring-4 focus:ring-gray-100">
+                  @foreach($statuses as $statusOption)
+                    <option value="{{ $statusOption->value }}" {{ old('status', $reservation->status->value) === $statusOption->value ? 'selected' : '' }}>{{ $statusOption->label() }}</option>
+                  @endforeach
+                </select>
+              </div>
+              @error('status')
+                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+              @enderror
+            </div>
           </div>
         </div>
 
@@ -428,10 +446,18 @@
         totalAmountToPay: '{{ old('total_amount_to_pay', $reservation->total_amount_to_pay) }}',
         vat: '{{ old('vat', $reservation->vat) }}',
         vatExempt: {{ old('vat_exempt', $reservation->vat_exempt) ? 'true' : 'false' }},
+        status: '{{ old('status', $reservation->status->value) }}',
         discountBreakdown: '',
         commissionBreakdown: '',
         datesCount: 0,
         initialized: false,
+        get statusDotClass() {
+          return {
+            'option': 'bg-amber-500',
+            'confirmed': 'bg-green-500',
+            'canceled': 'bg-red-500',
+          }[this.status] || 'bg-gray-300';
+        },
         init() {
           this.filterPlacements();
           this.calculateTotalAmountToPay();

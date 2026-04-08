@@ -202,6 +202,7 @@ it('uploads documents via the reservation update form', function () {
         'gross_amount' => $this->reservation->gross_amount,
         'total_amount_to_pay' => $this->reservation->total_amount_to_pay,
         'vat_exempt' => $this->reservation->vat_exempt ? '1' : '0',
+        'status' => $this->reservation->status->value,
         'purchase_order_file' => $poFile,
         'invoice_file' => $invoiceFile,
     ];

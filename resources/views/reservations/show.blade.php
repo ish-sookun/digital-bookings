@@ -14,10 +14,23 @@
       <div class="mt-6 h-px w-full bg-gray-100"></div>
 
       <div class="mt-8 max-w-2xl space-y-8">
-        {{-- Reference --}}
-        <div>
-          <p class="text-sm font-medium text-gray-700">Reference</p>
-          <p class="mt-1 font-mono text-sm text-gray-900">{{ $reservation->reference }}</p>
+        {{-- Reference & Status --}}
+        <div class="grid grid-cols-2 gap-6">
+          <div>
+            <p class="text-sm font-medium text-gray-700">Reference</p>
+            <p class="mt-1">
+              <span class="inline-flex items-center rounded-md px-2 py-1 font-mono text-xs font-medium ring-1 ring-inset {{ $reservation->status->referenceClasses() }}">
+                {{ $reservation->reference }}
+              </span>
+            </p>
+          </div>
+          <div>
+            <p class="text-sm font-medium text-gray-700">Status</p>
+            <p class="mt-1 inline-flex items-center gap-2 text-sm text-gray-900">
+              <span class="inline-block h-2.5 w-2.5 rounded-full {{ $reservation->status->dotClasses() }}"></span>
+              {{ $reservation->status->label() }}
+            </p>
+          </div>
         </div>
 
         {{-- Client & Agency --}}

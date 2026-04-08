@@ -6,6 +6,7 @@ use App\Models\Agency;
 use App\Models\Client;
 use App\Models\Placement;
 use App\Models\Salesperson;
+use App\ReservationStatus;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -42,6 +43,7 @@ class ReservationFactory extends Factory
             'cost_of_artwork' => fake()->randomFloat(2, 0, 2000),
             'vat' => fake()->randomFloat(2, 0, 5000),
             'vat_exempt' => fake()->boolean(20),
+            'status' => fake()->randomElement(ReservationStatus::cases()),
             'purchase_order_no' => fake()->optional()->numerify('PO-####'),
             'invoice_no' => fake()->optional()->numerify('INV-####'),
             'remark' => fake()->optional()->sentence(),

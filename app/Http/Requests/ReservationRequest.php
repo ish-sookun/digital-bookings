@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\ReservationStatus;
 use App\UserRole;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -40,6 +41,7 @@ class ReservationRequest extends FormRequest
             'cost_of_artwork' => ['nullable', 'numeric', 'min:0'],
             'vat' => ['nullable', 'numeric', 'min:0'],
             'vat_exempt' => ['boolean'],
+            'status' => ['required', Rule::enum(ReservationStatus::class)],
             'purchase_order_no' => ['nullable', 'string', 'max:255'],
             'purchase_order_file' => ['nullable', 'file', 'mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png,gif,webp', 'max:10240'],
             'invoice_no' => ['nullable', 'string', 'max:255'],
@@ -89,6 +91,8 @@ class ReservationRequest extends FormRequest
             'total_amount_to_pay.required' => 'The total amount to pay is required.',
             'total_amount_to_pay.numeric' => 'The total amount to pay must be a valid number.',
             'total_amount_to_pay.min' => 'The total amount to pay cannot be negative.',
+            'status.required' => 'Please select a reservation status.',
+            'status.enum' => 'The selected status is invalid.',
         ];
     }
 }

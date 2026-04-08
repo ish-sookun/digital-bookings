@@ -91,7 +91,7 @@
                   <div class="mt-1 space-y-1">
                     @foreach(array_slice($day['reservations'], 0, 3) as $reservation)
                       <a href="{{ route('reservations.show', $reservation) }}"
-                        class="group block truncate rounded px-1.5 py-0.5 text-xs font-medium {{ $day['isCurrentMonth'] ? 'bg-gray-100 text-gray-700 hover:bg-gray-200' : 'bg-gray-100 text-gray-500' }}">
+                        class="group block truncate rounded px-1.5 py-0.5 text-xs font-medium {{ $day['isCurrentMonth'] ? $reservation->status->calendarClasses() : 'bg-gray-100 text-gray-500' }}">
                         <span class="truncate">{{ $reservation->product }}</span>
                       </a>
                     @endforeach

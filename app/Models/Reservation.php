@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\ReservationStatus;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -33,6 +34,7 @@ class Reservation extends Model
         'cost_of_artwork',
         'vat',
         'vat_exempt',
+        'status',
         'purchase_order_no',
         'purchase_order_path',
         'invoice_no',
@@ -65,6 +67,7 @@ class Reservation extends Model
             'cost_of_artwork' => 'decimal:2',
             'vat' => 'decimal:2',
             'vat_exempt' => 'boolean',
+            'status' => ReservationStatus::class,
         ];
     }
 
