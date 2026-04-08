@@ -63,48 +63,163 @@
 
       <div class="mt-6 h-px w-full bg-gray-100"></div>
 
-      {{-- Calendar Grid --}}
-      <div class="mt-6 overflow-hidden rounded-lg border border-gray-200">
-        {{-- Header --}}
-        <div class="grid grid-cols-7 border-b border-gray-200 bg-gray-50">
-          @foreach(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as $dayName)
-            <div class="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-gray-500">
-              {{ $dayName }}
-            </div>
-          @endforeach
+      @php
+        // Skeleton sections used by the modal when a clicked day has no bookings.
+        $emptyModalSections = collect(['lexpress.mu', '5plus.mu'])
+          ->map(fn (string $name) => [
+            'name' => $name,
+            'groups' => [
+              ['type' => 'Web', 'reservations' => []],
+              ['type' => 'Social Media', 'reservations' => []],
+            ],
+          ])
+          ->all();
+      @endphp
+
+      {{-- Calendar Grid (with day-detail modal) --}}
+      <div
+        x-data="{
+          dayModalOpen: false,
+          selectedDateLabel: '',
+          selectedDatePlatforms: [],
+          emptyDay: @js($emptyModalSections),
+          bookingsByDate: @js($bookingsByDate),
+          openDay(key, label) {
+            this.selectedDateLabel = label;
+            this.selectedDatePlatforms = this.bookingsByDate[key] ?? this.emptyDay;
+            this.dayModalOpen = true;
+          },
+          totalReservations(platforms) {
+            let total = 0;
+            for (const p of platforms) {
+              for (const g of p.groups) {
+                total += g.reservations.length;
+              }
+            }
+            return total;
+          },
+        }"
+      >
+        <div class="mt-6 overflow-hidden rounded-lg border border-gray-200">
+          {{-- Header --}}
+          <div class="grid grid-cols-7 border-b border-gray-200 bg-gray-50">
+            @foreach(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as $dayName)
+              <div class="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-gray-500">
+                {{ $dayName }}
+              </div>
+            @endforeach
+          </div>
+
+          {{-- Weeks --}}
+          <div class="divide-y divide-gray-200">
+            @foreach($weeks as $week)
+              <div class="grid grid-cols-7 divide-x divide-gray-200">
+                @foreach($week as $day)
+                  @php
+                    $dayKey = $day['date']->format('Y-m-d');
+                    $dayLabel = $day['date']->format('l, j F Y');
+                  @endphp
+                  <div
+                    role="button"
+                    tabindex="0"
+                    aria-label="View bookings for {{ $dayLabel }}"
+                    @click="openDay('{{ $dayKey }}', '{{ $dayLabel }}')"
+                    @keydown.enter.prevent="openDay('{{ $dayKey }}', '{{ $dayLabel }}')"
+                    @keydown.space.prevent="openDay('{{ $dayKey }}', '{{ $dayLabel }}')"
+                    class="min-h-[120px] cursor-pointer {{ $day['isCurrentMonth'] ? 'bg-white hover:bg-gray-50' : 'bg-gray-50 hover:bg-gray-100' }} p-2 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-gray-900"
+                  >
+                    {{-- Day number --}}
+                    <div class="flex items-start justify-between">
+                      <span class="inline-flex h-7 w-7 items-center justify-center rounded-full text-sm {{ $day['isToday'] ? 'bg-gray-900 font-semibold text-white' : ($day['isCurrentMonth'] ? 'text-gray-900' : 'text-gray-400') }}">
+                        {{ $day['date']->day }}
+                      </span>
+                    </div>
+
+                    {{-- Reservations --}}
+                    <div class="mt-1 space-y-1">
+                      @foreach(array_slice($day['reservations'], 0, 3) as $reservation)
+                        <a href="{{ route('reservations.show', $reservation) }}"
+                          @click.stop
+                          class="group block truncate rounded px-1.5 py-0.5 text-xs font-medium {{ $day['isCurrentMonth'] ? $reservation->status->calendarClasses() : 'bg-gray-100 text-gray-500' }}">
+                          <span class="truncate">{{ $reservation->product }}</span>
+                        </a>
+                      @endforeach
+                      @if(count($day['reservations']) > 3)
+                        <span class="block px-1.5 text-xs text-gray-500">
+                          +{{ count($day['reservations']) - 3 }} more
+                        </span>
+                      @endif
+                    </div>
+                  </div>
+                @endforeach
+              </div>
+            @endforeach
+          </div>
         </div>
 
-        {{-- Weeks --}}
-        <div class="divide-y divide-gray-200">
-          @foreach($weeks as $week)
-            <div class="grid grid-cols-7 divide-x divide-gray-200">
-              @foreach($week as $day)
-                <div class="min-h-[120px] {{ $day['isCurrentMonth'] ? 'bg-white' : 'bg-gray-50' }} p-2">
-                  {{-- Day number --}}
-                  <div class="flex items-start justify-between">
-                    <span class="inline-flex h-7 w-7 items-center justify-center rounded-full text-sm {{ $day['isToday'] ? 'bg-gray-900 font-semibold text-white' : ($day['isCurrentMonth'] ? 'text-gray-900' : 'text-gray-400') }}">
-                      {{ $day['date']->day }}
-                    </span>
-                  </div>
+        {{-- Day Detail Modal --}}
+        <div x-show="dayModalOpen" x-cloak @keydown.escape.window="dayModalOpen = false" class="fixed inset-0 z-50 flex items-start justify-center px-4 pt-24" style="display: none;">
+          <div class="fixed inset-0 bg-gray-900/40" @click="dayModalOpen = false"></div>
 
-                  {{-- Reservations --}}
-                  <div class="mt-1 space-y-1">
-                    @foreach(array_slice($day['reservations'], 0, 3) as $reservation)
-                      <a href="{{ route('reservations.show', $reservation) }}"
-                        class="group block truncate rounded px-1.5 py-0.5 text-xs font-medium {{ $day['isCurrentMonth'] ? $reservation->status->calendarClasses() : 'bg-gray-100 text-gray-500' }}">
-                        <span class="truncate">{{ $reservation->product }}</span>
-                      </a>
-                    @endforeach
-                    @if(count($day['reservations']) > 3)
-                      <span class="block px-1.5 text-xs text-gray-500">
-                        +{{ count($day['reservations']) - 3 }} more
-                      </span>
-                    @endif
-                  </div>
-                </div>
-              @endforeach
+          <div x-show="dayModalOpen" x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0" class="relative w-full max-w-2xl rounded-2xl bg-white shadow-xl ring-1 ring-gray-200">
+            <div class="flex items-start justify-between border-b border-gray-100 px-6 py-4">
+              <div>
+                <h2 class="text-base font-semibold text-gray-900" x-text="selectedDateLabel"></h2>
+                <p class="mt-1 text-xs text-gray-500">
+                  <span x-text="totalReservations(selectedDatePlatforms)"></span>
+                  <span x-text="totalReservations(selectedDatePlatforms) === 1 ? 'reservation' : 'reservations'"></span>
+                </p>
+              </div>
+              <button type="button" @click="dayModalOpen = false" class="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600">
+                <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                  <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
+                </svg>
+              </button>
             </div>
-          @endforeach
+
+            <div class="max-h-[60vh] space-y-6 overflow-y-auto px-6 py-5">
+              <template x-for="platform in selectedDatePlatforms" :key="platform.name">
+                <section>
+                  <h3 class="text-sm font-semibold uppercase tracking-wider text-gray-900" x-text="platform.name"></h3>
+
+                  <div class="mt-3 space-y-4">
+                    <template x-for="group in platform.groups" :key="group.type">
+                      <div>
+                        <h4 class="text-xs font-semibold uppercase tracking-wider text-gray-500" x-text="group.type"></h4>
+
+                        <ul class="mt-2 space-y-2">
+                          <template x-for="reservation in group.reservations" :key="reservation.id">
+                            <li>
+                              <a :href="reservation.url" class="block rounded-lg border border-gray-200 px-3 py-2 hover:bg-gray-50">
+                                <div class="flex items-center justify-between gap-3">
+                                  <span class="font-mono text-xs text-gray-600" x-text="reservation.reference"></span>
+                                  <span class="inline-flex items-center gap-1.5 text-xs text-gray-700">
+                                    <span class="inline-block h-2 w-2 rounded-full" :class="reservation.status_dot_class"></span>
+                                    <span x-text="reservation.status_label"></span>
+                                  </span>
+                                </div>
+                                <p class="mt-1 text-sm font-medium text-gray-900" x-text="reservation.product"></p>
+                                <p class="text-xs text-gray-500">
+                                  <span x-text="reservation.client"></span>
+                                  <span> &middot; </span>
+                                  <span x-text="reservation.placement"></span>
+                                </p>
+                              </a>
+                            </li>
+                          </template>
+                          <template x-if="group.reservations.length === 0">
+                            <li class="rounded-lg border border-dashed border-gray-200 px-3 py-2 text-xs text-gray-400">
+                              No bookings
+                            </li>
+                          </template>
+                        </ul>
+                      </div>
+                    </template>
+                  </div>
+                </section>
+              </template>
+            </div>
+          </div>
         </div>
       </div>
     </div>

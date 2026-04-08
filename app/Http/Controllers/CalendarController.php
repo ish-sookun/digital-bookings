@@ -5,12 +5,20 @@ namespace App\Http\Controllers;
 use App\Models\Placement;
 use App\Models\Platform;
 use App\Models\Reservation;
+use App\PlacementType;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class CalendarController extends Controller
 {
+    /**
+     * Platforms (in display order) that the day-detail modal categorizes bookings by.
+     *
+     * @var list<string>
+     */
+    private const MODAL_PLATFORMS = ['lexpress.mu', '5plus.mu'];
+
     public function index(Request $request): View
     {
         $year = $request->input('year', now()->year);
@@ -24,7 +32,7 @@ class CalendarController extends Controller
 
         // Get all reservations that have dates in this month
         $reservations = Reservation::query()
-            ->with(['client', 'placement'])
+            ->with(['client', 'placement', 'platform'])
             ->when($platformId, fn ($query, $platformId) => $query->where('platform_id', $platformId))
             ->when($placementId, fn ($query, $placementId) => $query->where('placement_id', $placementId))
             ->get()
@@ -52,6 +60,12 @@ class CalendarController extends Controller
                     $reservationsByDate[$dateKey][] = $reservation;
                 }
             }
+        }
+
+        // Build per-day grouped bookings (platform → placement type) for the day modal
+        $bookingsByDate = [];
+        foreach ($reservationsByDate as $dateKey => $dateReservations) {
+            $bookingsByDate[$dateKey] = $this->groupReservationsForModal($dateReservations);
         }
 
         // Calculate calendar grid
@@ -101,6 +115,73 @@ class CalendarController extends Controller
             'placements',
             'platformId',
             'placementId',
+            'bookingsByDate',
         ));
+    }
+
+    /**
+     * Group a day's reservations into the structure consumed by the calendar day modal.
+     *
+     * The output always contains a section for each platform in {@see self::MODAL_PLATFORMS}
+     * (filtered to the active platform filter when set), and within each section a Web and a
+     * Social Media group, so the modal layout stays consistent across days.
+     *
+     * @param  list<Reservation>  $reservations
+     * @return list<array{name: string, groups: list<array{type: string, reservations: list<array<string, mixed>>}>}>
+     */
+    private function groupReservationsForModal(array $reservations): array
+    {
+        $sections = [];
+
+        foreach (self::MODAL_PLATFORMS as $platformName) {
+            $platformReservations = array_filter(
+                $reservations,
+                fn (Reservation $reservation) => $reservation->platform?->name === $platformName,
+            );
+
+            $sections[] = [
+                'name' => $platformName,
+                'groups' => [
+                    [
+                        'type' => PlacementType::Web->label(),
+                        'reservations' => $this->serializeReservations($platformReservations, PlacementType::Web),
+                    ],
+                    [
+                        'type' => PlacementType::SocialMedia->label(),
+                        'reservations' => $this->serializeReservations($platformReservations, PlacementType::SocialMedia),
+                    ],
+                ],
+            ];
+        }
+
+        return $sections;
+    }
+
+    /**
+     * @param  iterable<Reservation>  $reservations
+     * @return list<array<string, mixed>>
+     */
+    private function serializeReservations(iterable $reservations, PlacementType $type): array
+    {
+        $serialized = [];
+
+        foreach ($reservations as $reservation) {
+            if ($reservation->placement?->type !== $type) {
+                continue;
+            }
+
+            $serialized[] = [
+                'id' => $reservation->id,
+                'reference' => $reservation->reference,
+                'product' => $reservation->product,
+                'client' => $reservation->client?->company_name,
+                'placement' => $reservation->placement?->name,
+                'status_label' => $reservation->status->label(),
+                'status_dot_class' => $reservation->status->dotClasses(),
+                'url' => route('reservations.show', $reservation),
+            ];
+        }
+
+        return $serialized;
     }
 }
