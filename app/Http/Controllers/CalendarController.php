@@ -30,9 +30,10 @@ class CalendarController extends Controller
         $startOfMonth = $currentDate->copy()->startOfMonth();
         $endOfMonth = $currentDate->copy()->endOfMonth();
 
-        // Get all reservations that have dates in this month
+        // Get all reservations that have dates in this month (excluding programmatic placements)
         $reservations = Reservation::query()
             ->with(['client', 'placement', 'platform'])
+            ->whereHas('placement', fn ($query) => $query->where('type', '!=', PlacementType::Programmatic))
             ->when($platformId, fn ($query, $platformId) => $query->where('platform_id', $platformId))
             ->when($placementId, fn ($query, $placementId) => $query->where('placement_id', $placementId))
             ->get()
@@ -97,6 +98,7 @@ class CalendarController extends Controller
         $platforms = Platform::query()->orderBy('id')->get();
 
         $placements = Placement::query()
+            ->where('type', '!=', PlacementType::Programmatic)
             ->when($platformId, fn ($query, $platformId) => $query->where('platform_id', $platformId))
             ->orderBy('name')
             ->get();

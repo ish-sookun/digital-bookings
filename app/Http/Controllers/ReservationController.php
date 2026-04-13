@@ -11,6 +11,7 @@ use App\Models\Reservation;
 use App\Models\Salesperson;
 use App\ReservationStatus;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -82,7 +83,15 @@ class ReservationController extends Controller
         $data['dates_booked'] = json_decode($data['dates_booked'], true);
         $data = $this->handleDocumentUploads($request, $data);
 
-        Reservation::create($data);
+        $reservationDate = $data['reservation_date'] ?? null;
+        unset($data['reservation_date']);
+
+        $reservation = Reservation::create($data);
+
+        if ($reservationDate) {
+            $reservation->created_at = Carbon::parse($reservationDate)->setTimeFrom($reservation->created_at);
+            $reservation->saveQuietly();
+        }
 
         return redirect()->route('reservations.index')->with('success', 'Reservation created successfully.');
     }
@@ -145,7 +154,15 @@ class ReservationController extends Controller
         $data['dates_booked'] = json_decode($data['dates_booked'], true);
         $data = $this->handleDocumentUploads($request, $data, $reservation);
 
+        $reservationDate = $data['reservation_date'] ?? null;
+        unset($data['reservation_date']);
+
         $reservation->update($data);
+
+        if ($reservationDate) {
+            $reservation->created_at = Carbon::parse($reservationDate)->setTimeFrom($reservation->created_at);
+            $reservation->saveQuietly();
+        }
 
         return redirect()->route('reservations.index')->with('success', 'Reservation updated successfully.');
     }

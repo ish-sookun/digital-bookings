@@ -55,7 +55,12 @@ class ClientController extends Controller
      */
     public function show(Client $client): View
     {
-        return view('clients.show', compact('client'));
+        $reservations = $client->reservations()
+            ->with(['platform', 'placement', 'salesperson'])
+            ->latest()
+            ->paginate(10);
+
+        return view('clients.show', compact('client', 'reservations'));
     }
 
     /**

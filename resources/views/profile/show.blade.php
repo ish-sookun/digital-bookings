@@ -124,6 +124,7 @@
                 <input type="password" name="password" id="password" required
                   class="block w-full rounded-lg border @error('password') border-red-500 @else border-gray-200 @enderror bg-white px-4 py-2.5 text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-gray-300 focus:outline-none focus:ring-4 focus:ring-gray-100" />
               </div>
+              <p class="mt-1 text-xs text-gray-500">Minimum 8 characters, including an uppercase letter, a number, and a symbol (.,$,_,!,#).</p>
               @error('password')
                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
               @enderror

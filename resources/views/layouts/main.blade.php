@@ -4,10 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="csrf-token" content="{{ csrf_token() }}" />
-    <link rel="icon" href="/favicon.ico" sizes="any">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="apple-touch-icon" href="/favicon.png">
     <title>Login • Digital Bookings</title>
 
     {{-- Styles / Scripts --}}
@@ -24,16 +22,7 @@
             <!-- Workspace header -->
             <div class="px-4 py-4">
               <div class="flex items-center gap-3 px-1 py-2">
-                <span class="inline-flex h-8 w-8 items-center justify-center text-gray-900">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" fill="none" role="img" aria-label="Digital Bookings Icon">
-                    <g stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
-                      <rect x="14" y="18" width="52" height="34" rx="8" />
-                      <path d="M30 62h20" />
-                      <path d="M40 52v10" />
-                      <path d="M26 36l8 8 18-18" />
-                    </g>
-                  </svg>
-                </span>
+                <img src="/digital-bookings-logo.svg" alt="Digital Bookings" class="h-8 w-8" />
 
                 <div class="min-w-0 flex-1">
                   <p class="truncate text-sm font-semibold text-gray-900">Digital Bookings</p>
@@ -46,7 +35,7 @@
             <nav class="px-3 pb-3" x-data="{ open: false }">
               <ul class="space-y-1">
                 <li>
-                  <button type="button" @click="open = true; $nextTick(() => $refs.searchInput.focus())" class="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm text-gray-700 hover:bg-white/70">
+                  <button type="button" @click="open = true; $nextTick(() => $refs.searchInput.focus())" class="flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2 text-sm text-gray-700 hover:bg-white/70">
                     <svg class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                       <path
                         fill-rule="evenodd"

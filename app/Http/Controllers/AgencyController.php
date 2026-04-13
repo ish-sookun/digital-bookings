@@ -55,7 +55,12 @@ class AgencyController extends Controller
      */
     public function show(Agency $agency): View
     {
-        return view('agencies.show', compact('agency'));
+        $reservations = $agency->reservations()
+            ->with(['client', 'platform', 'placement', 'salesperson'])
+            ->latest()
+            ->paginate(10);
+
+        return view('agencies.show', compact('agency', 'reservations'));
     }
 
     /**

@@ -4,12 +4,14 @@ namespace App\Models;
 
 use App\CommissionType;
 use App\DiscountType;
+use Database\Factories\ClientFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Client extends Model
 {
-    /** @use HasFactory<\Database\Factories\ClientFactory> */
+    /** @use HasFactory<ClientFactory> */
     use HasFactory;
 
     /**
@@ -42,5 +44,13 @@ class Client extends Model
             'commission_type' => CommissionType::class,
             'discount_type' => DiscountType::class,
         ];
+    }
+
+    /**
+     * @return HasMany<Reservation, $this>
+     */
+    public function reservations(): HasMany
+    {
+        return $this->hasMany(Reservation::class);
     }
 }

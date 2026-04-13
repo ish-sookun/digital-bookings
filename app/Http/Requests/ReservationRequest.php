@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\ReservationStatus;
 use App\UserRole;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -20,7 +21,7 @@ class ReservationRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
@@ -47,6 +48,7 @@ class ReservationRequest extends FormRequest
             'invoice_no' => ['nullable', 'string', 'max:255'],
             'invoice_file' => ['nullable', 'file', 'mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png,gif,webp', 'max:10240'],
             'signed_ro_file' => ['nullable', 'file', 'mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png,gif,webp', 'max:10240'],
+            'reservation_date' => ['nullable', 'date'],
             'remark' => ['nullable', 'string'],
         ];
     }

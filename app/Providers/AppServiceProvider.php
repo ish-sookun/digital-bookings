@@ -6,6 +6,7 @@ use App\Models\User;
 use App\UserRole;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Validation\Rules\Password;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -22,6 +23,13 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Password::defaults(fn () => Password::min(8)
+            ->letters()
+            ->mixedCase()
+            ->numbers()
+            ->symbols()
+        );
+
         Gate::define('manage-users', fn (User $user) => $user->isSuperAdmin());
 
         Gate::define('manage-budgets', fn (User $user) => $user->isSuperAdmin());

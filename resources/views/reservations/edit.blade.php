@@ -403,6 +403,18 @@
           <h2 class="text-lg font-medium text-gray-900">Additional Information</h2>
 
           <div>
+            <label for="reservation_date" class="block text-sm font-medium text-gray-700">Reservation Date</label>
+            <div class="mt-2">
+              <input type="date" name="reservation_date" id="reservation_date" value="{{ old('reservation_date', $reservation->created_at->format('Y-m-d')) }}"
+                class="block w-full rounded-lg border @error('reservation_date') border-red-500 @else border-gray-200 @enderror bg-white px-4 py-2.5 text-gray-900 shadow-sm focus:border-gray-300 focus:outline-none focus:ring-4 focus:ring-gray-100" />
+            </div>
+            <p class="mt-1 text-xs text-gray-500">Change this to backdate the reservation.</p>
+            @error('reservation_date')
+              <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+            @enderror
+          </div>
+
+          <div>
             <label for="remark" class="block text-sm font-medium text-gray-700">Remark</label>
             <div class="mt-2">
               <textarea name="remark" id="remark" rows="4"
@@ -653,6 +665,7 @@
           flatpickr(this.$refs.datepicker, {
             mode: 'multiple',
             dateFormat: 'Y-m-d',
+            minDate: null,
             defaultDate: this.dates,
             onChange: (selectedDates, dateStr) => {
               this.dates = selectedDates.map(date => {

@@ -4,10 +4,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" href="/favicon.ico" sizes="any">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="apple-touch-icon" href="/favicon.png">
     <title>Login • Digital Bookings</title>
 
     {{-- Styles / Scripts --}}
@@ -17,21 +15,9 @@
   <body class="min-h-screen bg-white">
     <main class="min-h-screen flex items-center justify-center px-6 py-16">
       <div class="w-full max-w-md">
-        <div class="flex items-center justify-center gap-1">
-          <span class="inline-flex h-10 w-10 items-center justify-center">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" fill="none" role="img" aria-label="Digital Bookings Icon">
-                <g stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
-                    <!-- stylized billboard frame -->
-                    <rect x="14" y="18" width="52" height="34" rx="8"/>
-                    <!-- stand -->
-                    <path d="M30 62h20"/>
-                    <path d="M40 52v10"/>
-                    <!-- "booking" check mark -->
-                    <path d="M26 36l8 8 18-18"/>
-                </g>
-            </svg>
-          </span>
-          <span class="-mt-1 -ml-1 text-xl font-bold tracking-tight text-gray-900">Digital Bookings</span>
+        <div class="flex items-center justify-center gap-3">
+          <img src="/digital-bookings-logo.svg" alt="Digital Bookings" class="h-10 w-10" />
+          <span class="text-xl font-bold tracking-tight text-gray-900">Digital Bookings</span>
         </div>
 
         {{-- Card starts --}}

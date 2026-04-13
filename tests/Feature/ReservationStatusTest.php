@@ -4,6 +4,7 @@ use App\Models\Client;
 use App\Models\Placement;
 use App\Models\Reservation;
 use App\Models\User;
+use App\PlacementType;
 use App\ReservationStatus;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -135,9 +136,12 @@ it('shows the status pill on the index page', function () {
 });
 
 it('colors calendar entries by status', function () {
+    $placement = Placement::factory()->create(['type' => PlacementType::Web]);
     Reservation::factory()->create([
         'product' => 'Calendar Test',
         'status' => ReservationStatus::Canceled,
+        'placement_id' => $placement->id,
+        'platform_id' => $placement->platform_id,
         'dates_booked' => [now()->startOfMonth()->format('Y-m-d')],
     ]);
 
