@@ -293,21 +293,19 @@
 
   {{-- Monthly sales comparison bar chart --}}
   <div class="rounded-2xl bg-white p-5 ring-1 ring-gray-200 shadow-sm lg:col-span-2">
-    <div class="flex items-start justify-between gap-3">
-      <div>
-        <p class="text-xs font-medium uppercase tracking-wider text-gray-500">Monthly Sales Comparison</p>
-        <p class="mt-1 text-xs text-gray-400">FY {{ $financialYearLabel }} vs FY {{ $previousFinancialYearLabel }}</p>
-      </div>
-      <div class="flex items-center gap-3 text-xs text-gray-500">
-        <span class="flex items-center gap-1.5">
-          <span class="inline-block h-2.5 w-2.5 rounded-sm" style="background-color: {{ $stats['monthlySalesCurrentColor'] }};"></span>
-          {{ $financialYearLabel }}
+    <div>
+      <p class="text-xs font-medium uppercase tracking-wider text-gray-500">Monthly Sales Comparison</p>
+      <p class="mt-1 text-xs text-gray-400">
+        <span class="inline-flex items-center gap-1.5">
+          <span class="inline-block h-2 w-2 rounded-sm" style="background-color: {{ $stats['monthlySalesCurrentColor'] }};"></span>
+          FY {{ $financialYearLabel }}
         </span>
-        <span class="flex items-center gap-1.5">
-          <span class="inline-block h-2.5 w-2.5 rounded-sm" style="background-color: {{ $stats['monthlySalesPreviousColor'] }};"></span>
-          {{ $previousFinancialYearLabel }}
+        <span class="mx-1">vs</span>
+        <span class="inline-flex items-center gap-1.5">
+          <span class="inline-block h-2 w-2 rounded-sm" style="background-color: {{ $stats['monthlySalesPreviousColor'] }};"></span>
+          FY {{ $previousFinancialYearLabel }}
         </span>
-      </div>
+      </p>
     </div>
 
     <div class="mt-6 grid grid-cols-12 items-end gap-2" style="height: 180px;">
