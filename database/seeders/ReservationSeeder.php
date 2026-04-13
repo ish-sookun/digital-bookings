@@ -8,6 +8,7 @@ use App\Models\Placement;
 use App\Models\Platform;
 use App\Models\Reservation;
 use App\Models\Salesperson;
+use App\PlacementType;
 use App\ReservationStatus;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
@@ -188,7 +189,9 @@ class ReservationSeeder extends Seeder
             $dates[] = $month->copy()->day($startDay + $d)->format('Y-m-d');
         }
 
-        $grossAmount = round((float) $placement->price * $numDates * (0.9 + (random_int(0, 30) / 100)), 2);
+        $grossAmount = $placement->type === PlacementType::Programmatic
+            ? round((float) random_int(5000, 50000) * (0.9 + (random_int(0, 30) / 100)), 2)
+            : round((float) $placement->price * $numDates * (0.9 + (random_int(0, 30) / 100)), 2);
         $discount = round($grossAmount * (random_int(0, 15) / 100), 2);
         $commission = round($grossAmount * (random_int(5, 12) / 100), 2);
         $costOfArtwork = random_int(0, 3) === 0 ? (float) random_int(1000, 5000) : 0.0;

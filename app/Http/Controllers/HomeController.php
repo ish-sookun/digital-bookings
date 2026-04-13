@@ -129,6 +129,10 @@ class HomeController extends Controller
         $monthlySalesColors = self::MONTHLY_SALES_CHART_COLORS[$platform->name]
             ?? self::MONTHLY_SALES_CHART_DEFAULT_COLORS;
 
+        $salespersonTargets = $this->salespersonTargets($platform, $financialYearStart, $fyStart, $fyEnd);
+
+        $monthlySalesVsBudget = $this->monthlySalesVsBudget($platform, $financialYearStart, $fyStart, $fyEnd);
+
         return [
             'platform' => $platform,
             'yearlyBudget' => $yearlyBudget,
@@ -139,6 +143,8 @@ class HomeController extends Controller
             'yearlyPercentage' => $yearlyPercentage,
             'yearlyTargetState' => $yearlyTargetState,
             'salespersonStats' => $salespersonStats,
+            'salespersonTargets' => $salespersonTargets,
+            'monthlySalesVsBudget' => $monthlySalesVsBudget,
             'monthlySalesComparison' => $monthlySalesComparison,
             'monthlySalesMax' => $monthlySalesMax,
             'monthlySalesCurrentColor' => $monthlySalesColors['current'],
@@ -165,6 +171,122 @@ class HomeController extends Controller
             }], 'gross_amount')
             ->orderByDesc('sales_total')
             ->get();
+    }
+
+    /**
+     * Individual monthly targets, sales, and reservation counts per salesperson for a platform.
+     *
+     * @return array{months: list<array{label: string}>, salespersons: list<array{salesperson: Salesperson, months: list<array{target: float, sales: float, reservations: int}>, totals: array{target: float, sales: float, reservations: int, percentage: float}}>}
+     */
+    private function salespersonTargets(Platform $platform, int $financialYearStart, Carbon $fyStart, Carbon $fyEnd): array
+    {
+        $fyMonths = Budget::financialYearMonths($financialYearStart);
+
+        // Per-month targets keyed by "salesperson_id-year-month"
+        $budgets = Budget::forFinancialYear($financialYearStart)
+            ->where('platform_id', $platform->id)
+            ->with('salespersonTargets')
+            ->get();
+
+        $targetsByKey = [];
+        foreach ($budgets as $budget) {
+            foreach ($budget->salespersonTargets as $st) {
+                $targetsByKey[$st->salesperson_id.'-'.$budget->year.'-'.$budget->month] = (float) $st->amount;
+            }
+        }
+
+        // Per-month sales and reservations keyed by "salesperson_id-year-month"
+        $monthlySales = Reservation::query()
+            ->where('platform_id', $platform->id)
+            ->whereBetween('created_at', [$fyStart, $fyEnd])
+            ->selectRaw("salesperson_id, strftime('%Y', created_at) as y, strftime('%m', created_at) as m, SUM(gross_amount) as total, COUNT(*) as cnt")
+            ->groupBy('salesperson_id', 'y', 'm')
+            ->get();
+
+        $salesByKey = [];
+        $countByKey = [];
+        foreach ($monthlySales as $row) {
+            $key = $row->salesperson_id.'-'.((int) $row->y).'-'.((int) $row->m);
+            $salesByKey[$key] = (float) $row->total;
+            $countByKey[$key] = (int) $row->cnt;
+        }
+
+        $salespeople = Salesperson::query()->orderBy('first_name')->get();
+
+        $salespersons = $salespeople->map(function (Salesperson $salesperson) use ($fyMonths, $targetsByKey, $salesByKey, $countByKey) {
+            $totalTarget = 0;
+            $totalSales = 0;
+            $totalReservations = 0;
+            $months = [];
+
+            foreach ($fyMonths as $m) {
+                $key = $salesperson->id.'-'.$m['year'].'-'.$m['month'];
+                $target = $targetsByKey[$key] ?? 0;
+                $sales = $salesByKey[$key] ?? 0;
+                $reservations = $countByKey[$key] ?? 0;
+
+                $totalTarget += $target;
+                $totalSales += $sales;
+                $totalReservations += $reservations;
+
+                $months[] = [
+                    'target' => $target,
+                    'sales' => $sales,
+                    'reservations' => $reservations,
+                ];
+            }
+
+            $percentage = $totalTarget > 0 ? ($totalSales / $totalTarget) * 100 : 0;
+
+            return [
+                'salesperson' => $salesperson,
+                'months' => $months,
+                'totals' => [
+                    'target' => $totalTarget,
+                    'sales' => $totalSales,
+                    'reservations' => $totalReservations,
+                    'percentage' => $percentage,
+                ],
+            ];
+        })->all();
+
+        $monthLabels = array_map(fn ($m) => ['label' => Carbon::create($m['year'], $m['month'], 1)->format('M Y')], $fyMonths);
+
+        return [
+            'months' => $monthLabels,
+            'salespersons' => $salespersons,
+        ];
+    }
+
+    /**
+     * Monthly sales paired with budget for the current financial year.
+     *
+     * @return list<array{label: string, budget: float, sales: float}>
+     */
+    private function monthlySalesVsBudget(Platform $platform, int $financialYearStart, Carbon $fyStart, Carbon $fyEnd): array
+    {
+        $fyMonths = Budget::financialYearMonths($financialYearStart);
+
+        $budgets = Budget::forFinancialYear($financialYearStart)
+            ->where('platform_id', $platform->id)
+            ->get()
+            ->keyBy(fn (Budget $b) => $b->year.'-'.$b->month);
+
+        $salesByYearMonth = $this->monthlyTotals($platform, $fyStart, $fyEnd);
+
+        $rows = [];
+        foreach ($fyMonths as $m) {
+            $budgetKey = $m['year'].'-'.$m['month'];
+            $salesKey = $m['year'].'-'.$m['month'];
+
+            $rows[] = [
+                'label' => Carbon::create($m['year'], $m['month'], 1)->format('M Y'),
+                'budget' => (float) ($budgets[$budgetKey]->amount ?? 0),
+                'sales' => (float) ($salesByYearMonth[$salesKey] ?? 0),
+            ];
+        }
+
+        return $rows;
     }
 
     /**
@@ -235,6 +357,7 @@ class HomeController extends Controller
         return [
             PlacementType::Web->value => (float) ($totals[PlacementType::Web->value] ?? 0),
             PlacementType::SocialMedia->value => (float) ($totals[PlacementType::SocialMedia->value] ?? 0),
+            PlacementType::Programmatic->value => (float) ($totals[PlacementType::Programmatic->value] ?? 0),
         ];
     }
 

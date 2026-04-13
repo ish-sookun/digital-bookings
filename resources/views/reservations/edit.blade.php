@@ -475,6 +475,9 @@
         },
         recalculateGrossAmount() {
           const placement = this.allPlacements.find(p => p.id == this.selectedPlacementId);
+          if (placement && placement.type === 'programmatic') {
+            return;
+          }
           if (placement && placement.price && this.datesCount > 0) {
             this.grossAmount = (parseFloat(placement.price) * this.datesCount).toFixed(2);
             this.calculateDiscount();

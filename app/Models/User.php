@@ -4,13 +4,14 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\UserRole;
+use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
+    /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
     /**
@@ -63,6 +64,16 @@ class User extends Authenticatable
     public function isSalesperson(): bool
     {
         return $this->role === UserRole::Salesperson;
+    }
+
+    public function isManagement(): bool
+    {
+        return $this->role === UserRole::Management;
+    }
+
+    public function isFinance(): bool
+    {
+        return $this->role === UserRole::Finance;
     }
 
     public function hasRole(UserRole ...$roles): bool

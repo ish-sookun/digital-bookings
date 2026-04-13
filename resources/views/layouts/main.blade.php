@@ -125,7 +125,7 @@
             <!-- Main nav -->
             <nav class="px-3 py-3">
               <ul class="space-y-1">
-                <!-- Active -->
+                @can('view-dashboard')
                 <li>
                   <a
                     href="{{ route('home') }}"
@@ -137,7 +137,9 @@
                     Dashboard
                   </a>
                 </li>
+                @endcan
 
+                @can('view-reservations')
                 {{-- Reservations --}}
                 <li>
                   <a href="{{ route('reservations.index') }}" class="flex items-center gap-3 rounded-xl px-3 py-2 text-sm {{ request()->routeIs('reservations.*') ? 'font-semibold text-gray-900 bg-white shadow-sm ring-1 ring-gray-200' : 'text-gray-700 hover:bg-white/70' }}">
@@ -147,6 +149,7 @@
                     Reservations
                   </a>
                 </li>
+                @endcan
 
                 @can('manage-clients')
                 {{-- Clients --}}
@@ -232,6 +235,7 @@
                 </li>
                 @endcan
 
+                @can('view-calendar')
                 {{-- Calendar --}}
                 <li>
                   <a href="{{ route('calendar.index') }}" class="flex items-center gap-3 rounded-xl px-3 py-2 text-sm {{ request()->routeIs('calendar.*') ? 'font-semibold text-gray-900 bg-white shadow-sm ring-1 ring-gray-200' : 'text-gray-700 hover:bg-white/70' }}">
@@ -241,6 +245,7 @@
                     Calendar
                   </a>
                 </li>
+                @endcan
               </ul>
             </nav>
 

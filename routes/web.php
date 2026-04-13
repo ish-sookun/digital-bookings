@@ -8,6 +8,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PlacementController;
 use App\Http\Controllers\PlatformController;
 use App\Http\Controllers\ReservationController;
+use App\Http\Controllers\SalesPerformanceController;
 use App\Http\Controllers\SalespersonController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\UserController;
@@ -18,6 +19,12 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function (HomeController $controller) {
     if (! Auth::check()) {
         return redirect()->route('login');
+    }
+
+    $user = Auth::user();
+
+    if ($user->isFinance()) {
+        return redirect()->route('reservations.index');
     }
 
     return $controller->index();
@@ -57,16 +64,42 @@ Route::middleware('auth')->group(function () {
         Route::delete('agencies/{agency}', [AgencyController::class, 'destroy'])->name('agencies.destroy');
     });
 
-    // All roles: reservations, calendar, and creating/editing clients & agencies
-    Route::resource('clients', ClientController::class)->except(['destroy']);
-    Route::resource('agencies', AgencyController::class)->except(['destroy']);
-    Route::resource('reservations', ReservationController::class);
-    Route::get('reservations/{reservation}/pdf', [ReservationController::class, 'downloadPdf'])->name('reservations.pdf');
-    Route::get('reservations/{reservation}/document/{type}', [ReservationController::class, 'downloadDocument'])->name('reservations.document');
-    Route::post('reservations/{reservation}/upload-document', [ReservationController::class, 'uploadDocument'])->name('reservations.upload-document');
+    // Dashboard & Calendar: super_admin, admin, salesperson, management
+    Route::middleware('role:super_admin,admin,salesperson,management')->group(function () {
+        Route::get('/calendar', [CalendarController::class, 'index'])->name('calendar.index');
+    });
 
-    Route::get('/calendar', [CalendarController::class, 'index'])->name('calendar.index');
+    // Clients & Agencies: super_admin, admin, salesperson
+    Route::middleware('role:super_admin,admin,salesperson')->group(function () {
+        Route::resource('clients', ClientController::class)->except(['destroy']);
+        Route::resource('agencies', AgencyController::class)->except(['destroy']);
+    });
 
+    // Reservations write: super_admin, admin, salesperson
+    Route::middleware('role:super_admin,admin,salesperson')->group(function () {
+        Route::get('reservations/create', [ReservationController::class, 'create'])->name('reservations.create');
+        Route::post('reservations', [ReservationController::class, 'store'])->name('reservations.store');
+        Route::get('reservations/{reservation}/edit', [ReservationController::class, 'edit'])->name('reservations.edit');
+        Route::put('reservations/{reservation}', [ReservationController::class, 'update'])->name('reservations.update');
+        Route::delete('reservations/{reservation}', [ReservationController::class, 'destroy'])->name('reservations.destroy');
+        Route::post('reservations/{reservation}/upload-document', [ReservationController::class, 'uploadDocument'])->name('reservations.upload-document');
+    });
+
+    // Reservations read: super_admin, admin, salesperson, finance
+    Route::middleware('role:super_admin,admin,salesperson,finance')->group(function () {
+        Route::get('reservations', [ReservationController::class, 'index'])->name('reservations.index');
+        Route::get('reservations/{reservation}', [ReservationController::class, 'show'])->name('reservations.show');
+        Route::get('reservations/{reservation}/pdf', [ReservationController::class, 'downloadPdf'])->name('reservations.pdf');
+        Route::get('reservations/{reservation}/document/{type}', [ReservationController::class, 'downloadDocument'])->name('reservations.document');
+    });
+
+    // Sales performance export: super_admin, management
+    Route::middleware('role:super_admin,management')->group(function () {
+        Route::get('sales-performance/export', [SalesPerformanceController::class, 'export'])
+            ->name('sales-performance.export');
+    });
+
+    // All authenticated roles
     Route::get('/search', [SearchController::class, 'index'])->name('search.index');
 
     Route::get('/profile', [UserController::class, 'profile'])->name('profile.show');

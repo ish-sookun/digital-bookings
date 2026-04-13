@@ -59,6 +59,18 @@ class UserSeeder extends Seeder
                 'email' => 'rachel.dauhoo@lasentinelle.mu',
                 'role' => UserRole::Salesperson,
             ],
+            [
+                'firstname' => 'Areff',
+                'lastname' => 'Salauroo',
+                'email' => 'areff.salauroo@lasentinelle.mu',
+                'role' => UserRole::Management,
+            ],
+            [
+                'firstname' => 'Enzo',
+                'lastname' => 'Samuel',
+                'email' => 'enzo.samuel@lasentinelle.mu',
+                'role' => UserRole::Finance,
+            ],
         ];
 
         foreach ($users as $user) {

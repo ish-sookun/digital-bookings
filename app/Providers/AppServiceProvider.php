@@ -26,9 +26,29 @@ class AppServiceProvider extends ServiceProvider
 
         Gate::define('manage-budgets', fn (User $user) => $user->isSuperAdmin());
 
-        Gate::define('manage-clients', fn (User $user) => true);
+        Gate::define('view-dashboard', fn (User $user) => $user->hasRole(
+            UserRole::SuperAdmin, UserRole::Admin, UserRole::Salesperson, UserRole::Management,
+        ));
 
-        Gate::define('manage-agencies', fn (User $user) => true);
+        Gate::define('view-calendar', fn (User $user) => $user->hasRole(
+            UserRole::SuperAdmin, UserRole::Admin, UserRole::Salesperson, UserRole::Management,
+        ));
+
+        Gate::define('view-reservations', fn (User $user) => $user->hasRole(
+            UserRole::SuperAdmin, UserRole::Admin, UserRole::Salesperson, UserRole::Finance,
+        ));
+
+        Gate::define('manage-reservations', fn (User $user) => $user->hasRole(
+            UserRole::SuperAdmin, UserRole::Admin, UserRole::Salesperson,
+        ));
+
+        Gate::define('manage-clients', fn (User $user) => $user->hasRole(
+            UserRole::SuperAdmin, UserRole::Admin, UserRole::Salesperson,
+        ));
+
+        Gate::define('manage-agencies', fn (User $user) => $user->hasRole(
+            UserRole::SuperAdmin, UserRole::Admin, UserRole::Salesperson,
+        ));
 
         Gate::define('delete-clients', fn (User $user) => $user->hasRole(UserRole::SuperAdmin, UserRole::Admin));
 
@@ -40,8 +60,8 @@ class AppServiceProvider extends ServiceProvider
 
         Gate::define('manage-placements', fn (User $user) => $user->hasRole(UserRole::SuperAdmin, UserRole::Admin));
 
-        Gate::define('manage-reservations', fn (User $user) => true);
-
         Gate::define('edit-financials', fn (User $user) => $user->hasRole(UserRole::SuperAdmin, UserRole::Admin));
+
+        Gate::define('view-targets', fn (User $user) => $user->hasRole(UserRole::SuperAdmin, UserRole::Management));
     }
 }
