@@ -63,6 +63,65 @@
   </div>
 </div>
 
+{{-- Monthly Sales vs Budget table --}}
+<div class="mt-6 rounded-2xl bg-white p-5 ring-1 ring-gray-200 shadow-sm">
+  <p class="text-xs font-medium uppercase tracking-wider text-gray-500">Monthly Sales vs Budget</p>
+  <p class="mt-1 text-xs text-gray-400">FY {{ $financialYearLabel }}</p>
+
+  <div class="mt-4 overflow-x-auto">
+    <table class="w-full text-left text-xs">
+      <thead>
+        <tr class="border-b border-gray-200">
+          <th class="pb-2 pr-4 font-medium uppercase tracking-wider text-gray-500">Month</th>
+          @foreach($stats['monthlySalesVsBudget'] as $row)
+            <th class="pb-2 text-right font-medium uppercase tracking-wider text-gray-500">{{ Str::before($row['label'], ' ') }}</th>
+          @endforeach
+          <th class="pb-2 pl-4 text-right font-medium uppercase tracking-wider text-gray-900">Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        @php
+          $totalBudget = 0;
+          $totalSales = 0;
+          foreach ($stats['monthlySalesVsBudget'] as $row) {
+              $totalBudget += $row['budget'];
+              $totalSales += $row['sales'];
+          }
+        @endphp
+        <tr class="border-b border-gray-50">
+          <td class="py-2 pr-4 font-medium text-gray-700">Budget</td>
+          @foreach($stats['monthlySalesVsBudget'] as $row)
+            <td class="py-2 text-right text-gray-700">{{ number_format($row['budget']) }}</td>
+          @endforeach
+          <td class="py-2 pl-4 text-right font-semibold text-gray-900">{{ number_format($totalBudget) }}</td>
+        </tr>
+        <tr class="border-b border-gray-50">
+          <td class="py-2 pr-4 font-medium text-gray-700">Sales</td>
+          @foreach($stats['monthlySalesVsBudget'] as $row)
+            <td class="py-2 text-right text-gray-700">{{ number_format($row['sales']) }}</td>
+          @endforeach
+          <td class="py-2 pl-4 text-right font-semibold text-gray-900">{{ number_format($totalSales) }}</td>
+        </tr>
+        <tr>
+          <td class="py-2 pr-4 font-medium text-gray-700">Variance</td>
+          @foreach($stats['monthlySalesVsBudget'] as $row)
+            @php
+              $variance = $row['sales'] - $row['budget'];
+              $varClass = $variance > 0 ? 'text-green-600' : ($variance < 0 ? 'text-red-600' : 'text-gray-500');
+            @endphp
+            <td class="py-2 text-right font-medium {{ $varClass }}">{{ ($variance >= 0 ? '+' : '') . number_format($variance) }}</td>
+          @endforeach
+          @php
+            $totalVariance = $totalSales - $totalBudget;
+            $totalVarClass = $totalVariance > 0 ? 'text-green-600' : ($totalVariance < 0 ? 'text-red-600' : 'text-gray-500');
+          @endphp
+          <td class="py-2 pl-4 text-right font-semibold {{ $totalVarClass }}">{{ ($totalVariance >= 0 ? '+' : '') . number_format($totalVariance) }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
 {{-- Second row: salesperson, monthly comparison, placement earnings --}}
 <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-4">
   {{-- Salesperson reservations & sales --}}

@@ -131,6 +131,8 @@ class HomeController extends Controller
 
         $salespersonTargets = $this->salespersonTargets($platform, $financialYearStart, $fyStart, $fyEnd);
 
+        $monthlySalesVsBudget = $this->monthlySalesVsBudget($platform, $financialYearStart, $fyStart, $fyEnd);
+
         return [
             'platform' => $platform,
             'yearlyBudget' => $yearlyBudget,
@@ -142,6 +144,7 @@ class HomeController extends Controller
             'yearlyTargetState' => $yearlyTargetState,
             'salespersonStats' => $salespersonStats,
             'salespersonTargets' => $salespersonTargets,
+            'monthlySalesVsBudget' => $monthlySalesVsBudget,
             'monthlySalesComparison' => $monthlySalesComparison,
             'monthlySalesMax' => $monthlySalesMax,
             'monthlySalesCurrentColor' => $monthlySalesColors['current'],
@@ -253,6 +256,37 @@ class HomeController extends Controller
             'months' => $monthLabels,
             'salespersons' => $salespersons,
         ];
+    }
+
+    /**
+     * Monthly sales paired with budget for the current financial year.
+     *
+     * @return list<array{label: string, budget: float, sales: float}>
+     */
+    private function monthlySalesVsBudget(Platform $platform, int $financialYearStart, Carbon $fyStart, Carbon $fyEnd): array
+    {
+        $fyMonths = Budget::financialYearMonths($financialYearStart);
+
+        $budgets = Budget::forFinancialYear($financialYearStart)
+            ->where('platform_id', $platform->id)
+            ->get()
+            ->keyBy(fn (Budget $b) => $b->year.'-'.$b->month);
+
+        $salesByYearMonth = $this->monthlyTotals($platform, $fyStart, $fyEnd);
+
+        $rows = [];
+        foreach ($fyMonths as $m) {
+            $budgetKey = $m['year'].'-'.$m['month'];
+            $salesKey = $m['year'].'-'.$m['month'];
+
+            $rows[] = [
+                'label' => Carbon::create($m['year'], $m['month'], 1)->format('M Y'),
+                'budget' => (float) ($budgets[$budgetKey]->amount ?? 0),
+                'sales' => (float) ($salesByYearMonth[$salesKey] ?? 0),
+            ];
+        }
+
+        return $rows;
     }
 
     /**
