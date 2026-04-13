@@ -339,7 +339,7 @@
 
   {{-- Placement earnings: Web vs Social Media --}}
   <div class="rounded-2xl bg-white p-5 ring-1 ring-gray-200 shadow-sm lg:col-span-1">
-    <p class="text-xs font-medium uppercase tracking-wider text-gray-500">Placement Earnings</p>
+    <p class="text-xs font-medium uppercase tracking-wider text-gray-500">Sales by Placement</p>
     <p class="mt-1 text-xs text-gray-400">FY {{ $financialYearLabel }}</p>
     @php
       $webEarnings = (float) ($stats['placementEarnings'][\App\PlacementType::Web->value] ?? 0);
