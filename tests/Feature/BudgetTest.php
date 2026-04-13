@@ -256,7 +256,7 @@ it('shows the second row of dashboard cards on the home page', function () {
         ->assertSee('Alice Anderson')
         ->assertSee('1 reservations')
         ->assertSee('Monthly Sales Comparison')
-        ->assertSee('Placement Earnings')
+        ->assertSee('Sales by Placement')
         ->assertSee('lexpress.mu')
         ->assertSee('MUR '.number_format(12345))
         ->assertSee('MUR '.number_format(6789));
@@ -331,7 +331,7 @@ it('leaves the yearly target neutral when no budget has been set', function () {
         ->assertDontSee('text-red-600', false);
 });
 
-it('splits placement earnings by web and social media type', function () {
+it('splits sales by placement into web and social media type', function () {
     $user = User::factory()->create(['role' => UserRole::Admin]);
     $fyStart = Budget::financialYearStartYear();
     $insideCurrentFy = Carbon::create($fyStart, Budget::FINANCIAL_YEAR_START_MONTH, 15);
@@ -365,7 +365,7 @@ it('splits placement earnings by web and social media type', function () {
     $this->actingAs($user)
         ->get(route('home'))
         ->assertOk()
-        ->assertSee('Placement Earnings')
+        ->assertSee('Sales by Placement')
         ->assertSee('Web')
         ->assertSee('Social Media')
         ->assertSee('MUR '.number_format(40000))

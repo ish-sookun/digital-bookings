@@ -53,6 +53,7 @@ class ReservationController extends Controller
             'name' => $p->name,
             'platform_id' => $p->platform_id,
             'price' => $p->price,
+            'type' => $p->type->value,
         ]);
         $clientsJson = $clients->map(fn (Client $c) => [
             'id' => $c->id,
@@ -115,6 +116,7 @@ class ReservationController extends Controller
             'name' => $p->name,
             'platform_id' => $p->platform_id,
             'price' => $p->price,
+            'type' => $p->type->value,
         ]);
         $clientsJson = $clients->map(fn (Client $c) => [
             'id' => $c->id,

@@ -25,6 +25,10 @@ class PlacementSeeder extends Seeder
             ['name' => 'LinkedIn Post', 'price' => 2500, 'type' => PlacementType::SocialMedia, 'platform_id' => $lexpress->id],
             ['name' => 'Top Billboard Banner Homepage', 'price' => 10000, 'type' => PlacementType::Web, 'platform_id' => $fivePlus->id],
             ['name' => 'Facebook Post', 'price' => 3000, 'type' => PlacementType::SocialMedia, 'platform_id' => $fivePlus->id],
+            ['name' => 'Google Ads', 'price' => 0, 'type' => PlacementType::Programmatic, 'platform_id' => $lexpress->id],
+            ['name' => 'DigitalGo', 'price' => 0, 'type' => PlacementType::Programmatic, 'platform_id' => $lexpress->id],
+            ['name' => 'Google Ads', 'price' => 0, 'type' => PlacementType::Programmatic, 'platform_id' => $fivePlus->id],
+            ['name' => 'DigitalGo', 'price' => 0, 'type' => PlacementType::Programmatic, 'platform_id' => $fivePlus->id],
         ];
 
         foreach ($placements as $placement) {
