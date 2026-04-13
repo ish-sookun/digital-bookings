@@ -9,11 +9,12 @@ use App\Models\SalespersonTarget;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class SalesPerformanceController extends Controller
 {
-    public function export(Request $request): StreamedResponse
+    public function export(Request $request): Response
     {
         $request->validate([
             'platform_id' => ['required', 'exists:platforms,id'],
@@ -100,7 +101,7 @@ class SalesPerformanceController extends Controller
         ]);
     }
 
-    private function exportPdf(array $data, Platform $platform, string $financialYearLabel, Carbon $now): StreamedResponse
+    private function exportPdf(array $data, Platform $platform, string $financialYearLabel, Carbon $now): Response
     {
         $filename = 'sales-performance-report-'.$now->format('Y-m-d').'.pdf';
 
