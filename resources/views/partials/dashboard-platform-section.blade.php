@@ -89,7 +89,7 @@
     </div>
 
     @if($stats['salespersonStats']->count() > 0)
-      <div class="mt-4 flex flex-col gap-2">
+      <div class="mt-4 flex gap-2">
         <button type="button" @click="showAllPerformance = true"
           class="w-full rounded-lg border border-gray-200 px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50">
           View All
