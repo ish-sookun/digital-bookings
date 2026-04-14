@@ -49,6 +49,12 @@
                     @case(\App\UserRole::Salesperson)
                       <span class="inline-flex items-center rounded-full bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-green-700/10 ring-inset">Salesperson</span>
                       @break
+                    @case(\App\UserRole::Management)
+                      <span class="inline-flex items-center rounded-full bg-amber-50 px-2 py-1 text-xs font-medium text-amber-700 ring-1 ring-amber-700/10 ring-inset">Management</span>
+                      @break
+                    @case(\App\UserRole::Finance)
+                      <span class="inline-flex items-center rounded-full bg-cyan-50 px-2 py-1 text-xs font-medium text-cyan-700 ring-1 ring-cyan-700/10 ring-inset">Finance</span>
+                      @break
                   @endswitch
                 </td>
                 <td class="px-4 py-3 text-right">
