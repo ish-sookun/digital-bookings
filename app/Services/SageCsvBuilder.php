@@ -13,17 +13,30 @@ use Illuminate\Support\Collection;
 /**
  * Build the SAGE-formatted CSV rows for a date range.
  *
- * The Credit export produces, per client:
- *   V;LG01;INV;1;{sage_client_code};{YYYYMMDD today};{dd-Mon-yyyy} To {dd-Mon-yyyy}
- * followed by, per reservation (one pair per line item):
- *   D;MUTLTIM;1;{gross_in_range};{commission_pct};{discount_pct};{sage_salesperson_code};{product} | Ref. No {reference}
- *   LC;DPT;PRD;SNM;MUL
+ * Billing model
+ * -------------
+ * A reservation is billed in **exactly one** export — the one whose date
+ * range covers the reservation's "billing date":
  *
- * Rules:
- * - Only Confirmed reservations are included.
- * - Only the days within [start, end] count towards the gross.
- * - If bill_at_end_of_campaign is set and the campaign ends after the range, the reservation is excluded entirely.
- * - For Cost of Artwork reservations, gross = reservation.gross_amount (no daily-rate × days math).
+ *   - Standard reservations: billing date = first booked date
+ *   - bill_at_end_of_campaign: billing date = last booked date
+ *
+ * When billed, every booked date of the reservation produces a D + LC pair —
+ * including dates that fall outside the export range (e.g. a campaign that
+ * starts in this month but ends in a future month is billed in full this
+ * month). A reservation whose billing date falls before the export's start
+ * is therefore **excluded** entirely (it was billed in a previous export).
+ *
+ * Output shape
+ * ------------
+ * For each eligible reservation:
+ *   V;LG01;INV;1;{sage_client_code};{YYYYMMDD today};{dd-Mon-yyyy} To {dd-Mon-yyyy}
+ *   D;MUTLTIM;1;{daily_gross};{commission_pct};{discount_pct};{salesperson_code};{description}   <-- one per booked day
+ *   LC;DPT;PRD;SNM;MUL                                                                            <-- one after each D
+ *
+ * Cost of Artwork reservations are billed as a single line item (1 V + 1 D +
+ * 1 LC per reservation, regardless of how many dates the reservation has)
+ * using the user-entered `gross_amount`.
  */
 class SageCsvBuilder
 {
@@ -46,47 +59,62 @@ class SageCsvBuilder
         /** @var Collection<int, Reservation> $eligible */
         $eligible = $reservations
             ->filter(fn (Reservation $r) => $r->status === ReservationStatus::Confirmed)
-            ->filter(fn (Reservation $r) => ! $this->isExcludedByBillAtEnd($r))
-            ->map(function (Reservation $r) {
-                $r->setAttribute('__dates_in_range', $this->datesInRange($r));
-
-                return $r;
-            })
-            ->filter(fn (Reservation $r) => $this->hasChargeableDates($r));
-
-        $grouped = $eligible
-            ->sortBy(fn (Reservation $r) => [$r->client?->sage_client_code ?? 'zzz', $r->client?->company_name ?? ''])
-            ->groupBy('client_id');
+            ->filter(fn (Reservation $r) => $this->isBillableInRange($r))
+            ->sortBy(fn (Reservation $r) => [
+                $r->client?->sage_client_code ?? 'zzz',
+                $r->client?->company_name ?? '',
+                $r->reference ?? '',
+            ])
+            ->values();
 
         $rows = [];
-        foreach ($grouped as $clientReservations) {
-            /** @var Collection<int, Reservation> $clientReservations */
-            $client = $clientReservations->first()->client;
-
+        foreach ($eligible as $reservation) {
             $rows[] = [
                 'V',
                 'LG01',
                 'INV',
                 '1',
-                (string) ($client?->sage_client_code ?? ''),
+                (string) ($reservation->client?->sage_client_code ?? ''),
                 $now->format('Ymd'),
                 $this->start->format('d-M-Y').' To '.$this->end->format('d-M-Y'),
             ];
 
-            foreach ($clientReservations as $reservation) {
-                $gross = $this->grossInRange($reservation);
-                $commissionPct = $this->commissionPercent($reservation, $gross);
-                $discountPct = $this->discountPercent($reservation, $gross);
+            $allDates = $this->allDatesSorted($reservation);
+
+            if ($reservation->type === ReservationType::CostOfArtwork) {
+                $primaryDate = $allDates->first();
 
                 $rows[] = [
                     'D',
                     'MUTLTIM',
                     '1',
-                    $this->formatNumber($gross),
+                    $this->formatNumber((float) $reservation->gross_amount),
+                    '0',
+                    '0',
+                    (string) ($reservation->salesperson?->sage_salesperson_code ?? ''),
+                    $this->description($reservation, $primaryDate),
+                ];
+
+                $rows[] = ['LC', 'DPT', 'PRD', 'SNM', 'MUL'];
+
+                continue;
+            }
+
+            $dailyGross = (float) ($reservation->placement?->price ?? 0);
+            $totalGross = round($dailyGross * $allDates->count(), 2);
+            $commissionPct = $this->commissionPercent($reservation, $totalGross);
+            $discountPct = $this->discountPercent($reservation, $totalGross);
+
+            foreach ($allDates as $date) {
+                $rows[] = [
+                    'D',
+                    'MUTLTIM',
+                    '1',
+                    $this->formatNumber($dailyGross),
                     $this->formatNumber($commissionPct),
                     $this->formatNumber($discountPct),
                     (string) ($reservation->salesperson?->sage_salesperson_code ?? ''),
-                    trim(($reservation->product ?? '').' | Ref. No '.($reservation->reference ?? '')),
+                    $this->description($reservation, $date),
                 ];
 
                 $rows[] = ['LC', 'DPT', 'PRD', 'SNM', 'MUL'];
@@ -97,56 +125,66 @@ class SageCsvBuilder
     }
 
     /**
+     * Decide whether a reservation should be billed in this export.
+     *
+     * - bill_at_end_of_campaign: billed when the LAST booked date falls inside
+     *   the export window.
+     * - Otherwise: billed when the FIRST booked date falls inside the window.
+     *
+     * Reservations whose billing date falls before the window are assumed to
+     * have been billed in a previous export. Reservations whose billing date
+     * falls after the window are billed in a future export.
+     */
+    private function isBillableInRange(Reservation $reservation): bool
+    {
+        $dates = $this->allDatesSorted($reservation);
+
+        if ($dates->isEmpty()) {
+            return false;
+        }
+
+        $billingDate = $reservation->bill_at_end_of_campaign
+            ? $dates->last()
+            : $dates->first();
+
+        return $billingDate->betweenIncluded($this->start, $this->end);
+    }
+
+    /**
+     * Build the `||`-separated description for the D row's 8th column.
+     *
+     * Segments (in order): product, platform name, booked date (DD-MM-YYYY),
+     * placement name, and the reservation reference.
+     */
+    private function description(Reservation $reservation, ?Carbon $date): string
+    {
+        $platformName = $reservation->placement?->platform?->name
+            ?? $reservation->platform?->name
+            ?? '';
+
+        $segments = [
+            (string) ($reservation->product ?? ''),
+            (string) $platformName,
+            $date?->format('d-m-Y') ?? '',
+            (string) ($reservation->placement?->name ?? ''),
+            'Ref. No '.($reservation->reference ?? ''),
+        ];
+
+        return implode('|| ', $segments);
+    }
+
+    /**
      * @return Collection<int, Carbon>
      */
-    private function datesInRange(Reservation $reservation): Collection
+    private function allDatesSorted(Reservation $reservation): Collection
     {
         return collect($reservation->dates_booked ?? [])
             ->map(fn ($date) => $date instanceof Carbon ? $date : Carbon::parse((string) $date))
-            ->filter(fn (Carbon $date) => $date->betweenIncluded($this->start, $this->end))
+            ->sort()
             ->values();
     }
 
-    private function isExcludedByBillAtEnd(Reservation $reservation): bool
-    {
-        if (! $reservation->bill_at_end_of_campaign) {
-            return false;
-        }
-
-        $lastBooked = collect($reservation->dates_booked ?? [])
-            ->map(fn ($date) => $date instanceof Carbon ? $date : Carbon::parse((string) $date))
-            ->max();
-
-        if ($lastBooked === null) {
-            return false;
-        }
-
-        return $lastBooked->greaterThan($this->end);
-    }
-
-    private function hasChargeableDates(Reservation $reservation): bool
-    {
-        /** @var Collection<int, Carbon> $datesInRange */
-        $datesInRange = $reservation->getAttribute('__dates_in_range');
-
-        return $datesInRange->isNotEmpty();
-    }
-
-    private function grossInRange(Reservation $reservation): float
-    {
-        /** @var Collection<int, Carbon> $datesInRange */
-        $datesInRange = $reservation->getAttribute('__dates_in_range');
-
-        if ($reservation->type === ReservationType::CostOfArtwork) {
-            return (float) $reservation->gross_amount;
-        }
-
-        $dailyRate = (float) ($reservation->placement?->price ?? 0);
-
-        return round($dailyRate * $datesInRange->count(), 2);
-    }
-
-    private function commissionPercent(Reservation $reservation, float $grossInRange): float
+    private function commissionPercent(Reservation $reservation, float $totalGross): float
     {
         if ($reservation->type === ReservationType::CostOfArtwork) {
             return 0.0;
@@ -166,14 +204,14 @@ class SageCsvBuilder
             return round($amount, 2);
         }
 
-        if ($grossInRange <= 0) {
+        if ($totalGross <= 0) {
             return 0.0;
         }
 
-        return round(($amount / $grossInRange) * 100, 2);
+        return round(($amount / $totalGross) * 100, 2);
     }
 
-    private function discountPercent(Reservation $reservation, float $grossInRange): float
+    private function discountPercent(Reservation $reservation, float $totalGross): float
     {
         if ($reservation->type === ReservationType::CostOfArtwork) {
             return 0.0;
@@ -193,11 +231,11 @@ class SageCsvBuilder
             return round($amount, 2);
         }
 
-        if ($grossInRange <= 0) {
+        if ($totalGross <= 0) {
             return 0.0;
         }
 
-        return round(($amount / $grossInRange) * 100, 2);
+        return round(($amount / $totalGross) * 100, 2);
     }
 
     private function formatNumber(float $value): string
