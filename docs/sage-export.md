@@ -14,10 +14,46 @@ The toolbar is a small inline `GET` form with three controls:
 |---|---|---|
 | Start date | `start_date` | Native `<input type="date">` |
 | End date | `end_date` | Must be `>= start_date` |
-| Payment mode | `payment_mode` | `credit` (the default) or `cash` |
+| Payment mode | `payment_mode` | `credit` (default — exports `is_cash = false` reservations) or `cash` (exports `is_cash = true`) |
 | **SAGE Export** button | — | Submits the form |
 
 Pressing the button submits to `GET /reservations/sage-export`.
+
+## Billing model
+
+Each reservation is billed in **exactly one** export — the one whose date window covers the reservation's *billing date*:
+
+| Reservation kind | Billing date |
+|---|---|
+| Standard (default) | First booked date |
+| `bill_at_end_of_campaign` enabled | Last booked date |
+
+When a reservation is included, **all** its booked dates produce a `D` + `LC` pair, including dates outside the export window. So a campaign that starts in April but extends into May is billed in full in April's export, and won't reappear in May's.
+
+A reservation whose billing date falls **before** the export's start is therefore **excluded** — it was billed in a previous export. A reservation whose billing date falls **after** the export's end is also excluded — it'll be billed in a future export.
+
+### Worked scenarios
+
+| Reservation dates | bill_at_end | Export range | Included? | D rows |
+|---|---|---|---|---|
+| Apr 5–7 | no | Apr 1–30 | ✅ | 3 |
+| Apr 28 – May 2 | no | Apr 1–30 | ✅ | 5 (incl. May dates) |
+| Mar 30 – Apr 3 | no | Apr 1–30 | ❌ (already billed in March) | 0 |
+| Apr 5–7 | yes | Apr 1–30 | ✅ (last date inside range) | 3 |
+| Apr 20 – May 10 | yes | Apr 1–30 | ❌ (campaign not yet ended) | 0 |
+| Mar 15 – Apr 15 | yes | Apr 1–30 | ✅ (last date inside range) | 32 (incl. all March dates) |
+
+## Cash vs Credit
+
+- **Credit mode** (`payment_mode=credit`): exports reservations where `is_cash = false` (the default for any reservation). A "credit" reservation is one billed against a client account.
+- **Cash mode** (`payment_mode=cash`): exports reservations where `is_cash = true`. A "cash" reservation is one paid up front.
+
+The CSV row format is identical between the two modes — only the underlying reservation set differs. The downloaded filename embeds the mode for clarity:
+
+```
+sage-export-credit-20260401-20260430.csv
+sage-export-cash-20260401-20260430.csv
+```
 
 ## End-to-end flow
 
@@ -27,19 +63,19 @@ Pressing the button submits to `GET /reservations/sage-export`.
 │  toolbar     │            │     __invoke()       │                │  authorize + rules │
 └──────────────┘            └──────────┬───────────┘                └────────────────────┘
                                        │
-                       ┌───────────────┴───────────────┐
-                       ▼                               ▼
-            (cash) flash redirect              (credit) build CSV
-                                                       │
-                                                       ▼
-                                            ┌──────────────────────┐
-                                            │   SageCsvBuilder     │
-                                            │   build($reservations)│
-                                            └──────────┬───────────┘
-                                                       │
-                                                       ▼
-                                            response()->streamDownload()
-                                                  text/csv attachment
+                                       ▼
+                          query Confirmed reservations
+                          where is_cash matches mode
+                                       │
+                                       ▼
+                            ┌──────────────────────┐
+                            │   SageCsvBuilder     │
+                            │   build($reservations)│
+                            └──────────┬───────────┘
+                                       │
+                                       ▼
+                            response()->streamDownload()
+                                  text/csv attachment
 ```
 
 ## Routing & authorization
@@ -66,42 +102,44 @@ Validation rules:
 
 ## Controller
 
-`App\Http\Controllers\SageExportController` is invokable. It has two paths:
-
-### Cash mode
-```php
-return redirect()
-    ->route('reservations.index')
-    ->with('error', 'Cash SAGE export is not yet available — the format is pending from accounting.');
-```
-The Cash CSV format has not yet been finalised by the accounting team. The export simply flashes a notice and returns.
-
-### Credit mode
-1. Loads all `Confirmed` reservations with `client`, `placement`, `salesperson`, and `representedClient` eager-loaded.
-2. Hands them to `App\Services\SageCsvBuilder`.
-3. Streams the rows as a CSV download.
+`App\Http\Controllers\SageExportController` is invokable.
 
 ```php
-$filename = sprintf('sage-export-%s-%s.csv', $start->format('Ymd'), $end->format('Ymd'));
+$isCash = $paymentMode === 'cash';
 
-return response()->streamDownload(function () use ($rows) {
-    $handle = fopen('php://output', 'w');
-    foreach ($rows as $row) {
-        fputcsv($handle, $row, ';', '"', '\\');
-    }
-    fclose($handle);
-}, $filename, ['Content-Type' => 'text/csv']);
+$reservations = Reservation::query()
+    ->with(['client', 'placement.platform', 'salesperson', 'representedClient', 'platform'])
+    ->where('status', ReservationStatus::Confirmed)
+    ->where('is_cash', $isCash)
+    ->get();
+
+$builder = new SageCsvBuilder($start, $end);
+$rows = $builder->build($reservations);
+
+return response()->streamDownload(/* writes ;-delimited CSV with fputcsv */);
 ```
+
+The status filter (`Confirmed`) and the cash filter (`is_cash`) are applied at the query level; everything downstream is the responsibility of the builder.
 
 ## CSV builder
 
-`App\Services\SageCsvBuilder` is the heart of the export. It is a pure, testable service: input is `Carbon $start`, `Carbon $end`, and a `Collection<Reservation>`; output is `array<array<string>>`.
+`App\Services\SageCsvBuilder` is a pure, testable service: input is `Carbon $start`, `Carbon $end`, and a `Collection<Reservation>`; output is `array<array<string>>`.
 
-### Filtering rules (applied in order)
+### Eligibility
 
-1. **Status** — only reservations whose `status === ReservationStatus::Confirmed` are considered.
-2. **Bill at end of campaign** — if `bill_at_end_of_campaign` is `true` *and* the reservation's last booked date falls **after** `end`, the reservation is excluded entirely (the agency hasn't been billed yet).
-3. **Dates in range** — for each remaining reservation, the booked-dates array is intersected with the inclusive `[start, end]` window. Any reservation with zero overlapping dates is dropped.
+```php
+private function isBillableInRange(Reservation $reservation): bool
+{
+    $dates = $this->allDatesSorted($reservation);
+    if ($dates->isEmpty()) return false;
+
+    $billingDate = $reservation->bill_at_end_of_campaign
+        ? $dates->last()
+        : $dates->first();
+
+    return $billingDate->betweenIncluded($this->start, $this->end);
+}
+```
 
 ### Sort order
 
@@ -110,16 +148,16 @@ Reservations are sorted by:
 2. `client.company_name` (tiebreaker, ascending)
 3. `reservation.reference` (final tiebreaker for stable ordering)
 
-Multiple reservations belonging to the same client therefore appear consecutively in the output, but each is treated as its own voucher (see below).
+Multiple reservations belonging to the same client therefore appear consecutively, but each is treated as its own voucher.
 
 ### Row structure (one block per reservation)
 
-Each confirmed reservation that survives filtering produces:
+For each eligible reservation:
 
 - **One V row** — voucher header
-- **One D + one LC pair per booked day** that falls inside the date range
+- **One D + one LC pair per booked date** — every date of the reservation (sorted chronologically), regardless of whether it falls inside the export window
 
-For a reservation with 5 in-range booked dates, that's 1 V + 5 D + 5 LC = **11 rows**.
+For a reservation with 5 booked dates, that's 1 V + 5 D + 5 LC = **11 rows**.
 
 #### V row — voucher header
 
@@ -137,7 +175,7 @@ V;LG01;INV;1;{client.sage_client_code};{today YYYYMMDD};{startDate} To {endDate}
 | 6 | Today's date in `YYYYMMDD` format |
 | 7 | `{start.d-M-Y} To {end.d-M-Y}` (human-readable export window) |
 
-#### D row — line item (one per booked day in range)
+#### D row — line item (one per booked date)
 
 ```
 D;MUTLTIM;1;{daily_gross};{commissionPct};{discountPct};{salesperson.sage_salesperson_code};{description}
@@ -174,13 +212,11 @@ The 8th column of every D row carries a human-readable description with **`||` a
 |---|---|
 | `{product}` | `reservation.product` |
 | `{platform}` | `reservation.placement.platform.name` (falls back to `reservation.platform.name`) |
-| `{date_DD-MM-YYYY}` | The specific booked day this D row covers, in `DD-MM-YYYY` format |
+| `{date_DD-MM-YYYY}` | The specific booked date this D row covers, in `DD-MM-YYYY` format |
 | `{placement}` | `reservation.placement.name` (e.g. "Run of site", "Facebook Boost") |
 | `Ref. No {reference}` | `reservation.reference` (the autogenerated `{timestamp}-{Ymd}` ID) |
 
 A multi-day reservation produces multiple D rows, each with the same product / platform / placement / reference but a **different date** in the third segment — making each row self-describing in SAGE.
-
-Empty fields render as empty segments; the `||` separators are preserved so column count stays consistent.
 
 ### Daily gross calculation
 
@@ -188,20 +224,20 @@ For **standard** reservations (`type === ReservationType::Standard`):
 ```
 daily_gross = placement.price
 ```
-The same `placement.price` is emitted for every per-day D row. Total revenue per reservation is therefore `placement.price × number_of_in_range_days` distributed across N D rows.
+The same `placement.price` is emitted for every per-day D row. Total revenue per reservation is therefore `placement.price × number_of_booked_dates` distributed across N D rows.
 
 For **Cost of Artwork** reservations (`type === ReservationType::CostOfArtwork`):
 ```
 gross = reservation.gross_amount   // user-entered flat amount
 ```
-These are billed as a **single line item** — exactly **one V + one D + one LC** per Cost of Artwork reservation, regardless of how many dates are in range. The single D row uses the first in-range date for the description's date segment. The user-entered `gross_amount` is emitted as-is (no daily-rate maths).
+These are billed as a **single line item** — exactly **one V + one D + one LC** per Cost of Artwork reservation, regardless of how many dates the reservation has. The single D row uses the first booked date for the description's date segment. The user-entered `gross_amount` is emitted as-is (no daily-rate maths).
 
 ### Percentage normalisation
 
-Both `commission` and `discount` on a Client can be stored as either a **percentage** (`%`) or a **flat MUR amount**. The CSV always emits a percentage, computed once per reservation against the **total in-range gross** (so multi-day decomposition does not affect the per-day percentage):
+Both `commission` and `discount` on a Client can be stored as either a **percentage** (`%`) or a **flat MUR amount**. The CSV always emits a percentage, computed once per reservation against the **total reservation gross** (`placement.price × number_of_booked_dates`):
 
 - If `client.commission_type === Percentage`: use the value as-is, rounded to 2 dp.
-- If `client.commission_type === MUR`: convert via `(amount / total_in_range_gross) × 100`, rounded to 2 dp. If `total_in_range_gross <= 0` the result is `0` (no division-by-zero).
+- If `client.commission_type === MUR`: convert via `(amount / total_gross) × 100`, rounded to 2 dp. If `total_gross <= 0` the result is `0` (no division-by-zero).
 
 Discount works identically.
 
@@ -213,7 +249,7 @@ For Cost of Artwork reservations, both `commissionPct` and `discountPct` are for
 
 ## Worked example
 
-A confirmed reservation, fully inside `2026-04-01 to 2026-04-30`:
+A confirmed credit reservation, billed in April:
 
 ```
 client.sage_client_code            = "ART-0009"
@@ -227,10 +263,12 @@ placement.price                    = 5000
 product                            = "Spring promo"
 reference                          = "1745234567-20260015"
 type                               = Standard
+is_cash                            = false
+bill_at_end_of_campaign            = false
 dates_booked                       = ["2026-04-15", "2026-04-16", "2026-04-17"]
 ```
 
-The CSV emits **7 rows** — 1 V + 3 (D + LC):
+Run with `start=2026-04-01`, `end=2026-04-30`, `payment_mode=credit`. The CSV emits **7 rows** — 1 V + 3 (D + LC):
 
 ```
 V;LG01;INV;1;ART-0009;20260504;01-Apr-2026 To 30-Apr-2026
@@ -242,53 +280,53 @@ D;MUTLTIM;1;5000;10;0;GINO;Spring promo|| lexpress.mu|| 17-04-2026|| Run of site
 LC;DPT;PRD;SNM;MUL
 ```
 
-(Daily gross is `5000` per row, totaling `15 000` for the reservation. Commission is the flat 10 % from the client, applied identically to every D row.)
+If the same reservation had `dates_booked = ["2026-04-28", "2026-04-29", "2026-04-30", "2026-05-01", "2026-05-02"]`, the same April export would emit **11 rows** — D + LC pairs for **all five** dates including the two May dates, since the reservation begins inside the export window.
 
-## Edge cases
+## Edge-case matrix
 
 | Scenario | Behaviour |
 |---|---|
 | Client missing `sage_client_code` | V row 5th column is empty (`""`) — the row is still emitted. |
 | Reservation missing salesperson | D row 7th column is empty. |
-| Reservation partially overlapping the date range | One D row per overlapping day (e.g. a 5-day campaign with 2 days inside the range produces 1 V + 2 D + 2 LC). |
-| `bill_at_end_of_campaign = true` and last booked date is after `end` | Reservation **excluded** entirely. |
-| `bill_at_end_of_campaign = true` and last booked date is inside `end` | Reservation **included** — D rows emitted for the in-range days only. |
+| Reservation crossing the previous-month boundary (first date < `start_date`) | **Excluded** entirely — was billed in a previous export. |
+| Reservation crossing the next-month boundary (first date in range, last date > `end_date`) | **Included**, with D rows for every booked date including the future ones. |
+| `bill_at_end_of_campaign = true`, last date inside range | **Included**, with D rows for every booked date (including past ones). |
+| `bill_at_end_of_campaign = true`, last date after range | **Excluded** — campaign not yet finished. |
+| `bill_at_end_of_campaign = true`, last date before range | **Excluded** — already billed when the campaign ended. |
 | `Option` or `Canceled` status | Excluded. Only `Confirmed` is exported. |
-| Client acting as agency (has `represented_client_id`) | V row uses the **billing** client's SAGE code (i.e. `client_id`). The represented brand is informational only and does not appear in the CSV. |
-| `Cost of Artwork` reservation | Always emits exactly 1 V + 1 D + 1 LC per reservation regardless of date count. The D row uses the full `gross_amount` and the first in-range date in the description. |
-| `Cost of Artwork` with no date in range | Excluded (same date-overlap rule applies). |
-| `cash` payment mode | No CSV; redirect back to `/reservations` with a flash error. |
+| `is_cash = true` and `payment_mode = credit` | Excluded. |
+| `is_cash = false` and `payment_mode = cash` | Excluded. |
+| Client acting as agency (has `represented_client_id`) | V row uses the **billing** client's SAGE code (`client_id`). The represented brand is informational only and does not appear in the CSV. |
+| `Cost of Artwork` reservation | Always emits exactly 1 V + 1 D + 1 LC per reservation regardless of date count. The D row uses the full `gross_amount` and the first booked date in the description. |
 | Empty result (no reservations match) | An empty CSV is streamed (no V/D/LC rows). |
 | Multiple reservations from the same client | They appear consecutively in the output (sorted by reference) but each gets its **own** V header. |
 
 ## Test coverage
 
-`tests/Feature/SageExportTest.php` covers ~17 scenarios including:
+`tests/Feature/SageExportTest.php` covers ~19 scenarios including:
 
-- Single reservation with N in-range dates → `1×V + N×(D+LC)`
+- Single reservation with N booked dates → `1×V + N×(D+LC)`
 - Two reservations same client → 2 separate `V` blocks
 - Two clients → V blocks ordered by SAGE code
-- Reservation partially overlapping the range → only the overlapping days produce D rows
+- Reservation that starts before the range → **excluded**
+- Reservation that starts in the range and ends in the future → **included with all dates**
 - `bill_at_end_of_campaign` true + ends outside range → excluded
 - `bill_at_end_of_campaign` true + ends inside range → included
 - `Option` / `Canceled` reservations → excluded
+- Credit mode excludes `is_cash = true` reservations
+- Cash mode includes `is_cash = true` reservations and excludes credit ones
 - Client acting as agency → V row uses the billing client's SAGE code
 - Missing `sage_client_code` → row still emitted with empty 5th column
-- `payment_mode=cash` → flash redirect, no download
 - D row description format → `||`-separated with the booked date in DD-MM-YYYY
-- Multi-day reservation → consecutive D rows each with their own day in the description
-
-## Future work
-
-The Cash CSV format is still being defined by the accounting team. Once the spec lands, the controller's `cash` branch will be replaced with its own builder (likely `SageCashCsvBuilder`) following the same pattern.
+- Multi-day reservation → consecutive D rows each with their own date
 
 ## File map
 
 | Path | Role |
 |---|---|
-| `app/Http/Controllers/SageExportController.php` | Invokable controller; streams or redirects |
+| `app/Http/Controllers/SageExportController.php` | Invokable controller; queries Confirmed reservations filtered by `is_cash` and streams CSV |
 | `app/Http/Requests/SageExportRequest.php` | Authorisation + validation |
-| `app/Services/SageCsvBuilder.php` | Pure builder — filters, sorts, formats rows |
+| `app/Services/SageCsvBuilder.php` | Pure builder — eligibility, sort, format |
 | `routes/web.php` | Route declared before `Route::resource('reservations', ...)` |
 | `resources/views/reservations/index.blade.php` | Toolbar with date pickers + payment mode + button |
 | `tests/Feature/SageExportTest.php` | Feature tests |

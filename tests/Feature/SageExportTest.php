@@ -75,7 +75,7 @@ it('streams a CSV download for credit mode as an admin', function () {
 
     $disposition = $response->headers->get('Content-Disposition');
     expect($disposition)->toContain('attachment');
-    expect($disposition)->toContain('sage-export-20260401-20260430.csv');
+    expect($disposition)->toContain('sage-export-credit-20260401-20260430.csv');
 });
 
 it('builds one V plus a D+LC pair for each booked day of a confirmed reservation', function () {
@@ -238,7 +238,7 @@ it('orders reservations by sage_client_code ascending', function () {
     expect($rows[5][0])->toBe('LC');
 });
 
-it('only emits D+LC pairs for booked dates that fall inside the export range', function () {
+it('excludes reservations whose first booked date falls before the export range', function () {
     $admin = User::factory()->admin()->create();
 
     $client = Client::factory()->create([
@@ -249,6 +249,8 @@ it('only emits D+LC pairs for booked dates that fall inside the export range', f
     $salesperson = Salesperson::factory()->create(['sage_salesperson_code' => 'SP01']);
     $placement = Placement::factory()->create(['price' => 500]);
 
+    // Spans the previous month into the current month — already billed
+    // in the previous export.
     Reservation::factory()->create([
         'client_id' => $client->id,
         'salesperson_id' => $salesperson->id,
@@ -261,7 +263,6 @@ it('only emits D+LC pairs for booked dates that fall inside the export range', f
             '2026-04-01',
             '2026-04-02',
             '2026-04-03',
-            '2026-05-01',
         ],
         'bill_at_end_of_campaign' => false,
     ]);
@@ -274,12 +275,54 @@ it('only emits D+LC pairs for booked dates that fall inside the export range', f
 
     $rows = parseSageCsv($response->streamedContent());
 
-    // 3 in-range dates → 1 V + 3 D + 3 LC = 7 rows
-    expect($rows)->toHaveCount(7);
+    expect($rows)->toBeEmpty();
+});
+
+it('includes all dates of a reservation that starts inside the range and ends in the future', function () {
+    $admin = User::factory()->admin()->create();
+
+    $client = Client::factory()->create([
+        'sage_client_code' => 'CLI001',
+        'commission_amount' => null,
+        'discount' => null,
+    ]);
+    $salesperson = Salesperson::factory()->create(['sage_salesperson_code' => 'SP01']);
+    $placement = Placement::factory()->create(['price' => 500]);
+
+    // Starts in April (the export range), runs into May. The whole campaign
+    // is billed in this April export — including the May dates.
+    Reservation::factory()->create([
+        'client_id' => $client->id,
+        'salesperson_id' => $salesperson->id,
+        'placement_id' => $placement->id,
+        'type' => ReservationType::Standard,
+        'status' => ReservationStatus::Confirmed,
+        'dates_booked' => [
+            '2026-04-28',
+            '2026-04-29',
+            '2026-04-30',
+            '2026-05-01',
+            '2026-05-02',
+        ],
+        'bill_at_end_of_campaign' => false,
+    ]);
+
+    $response = $this->actingAs($admin)->get(route('reservations.sage-export', [
+        'start_date' => '2026-04-01',
+        'end_date' => '2026-04-30',
+        'payment_mode' => 'credit',
+    ]));
+
+    $rows = parseSageCsv($response->streamedContent());
+
+    // 1 V + 5 (D + LC) — every booked date emits a D + LC pair, including
+    // the two future May dates.
+    expect($rows)->toHaveCount(11);
     expect($rows[1][0])->toBe('D');
     expect($rows[1][3])->toBe('500');
-    expect($rows[3][3])->toBe('500');
-    expect($rows[5][3])->toBe('500');
+    // The future dates are present in the description segments.
+    expect($rows[7][7])->toContain('01-05-2026');
+    expect($rows[9][7])->toContain('02-05-2026');
 });
 
 it('excludes bill_at_end_of_campaign reservations whose campaign ends after the range', function () {
@@ -483,8 +526,40 @@ it('uses the billing client sage code when the reservation represents another cl
     expect($rows[0][4])->toBe('BILL01');
 });
 
-it('redirects with an error flash when payment_mode is cash', function () {
+it('streams a cash CSV containing only is_cash=true reservations', function () {
     $admin = User::factory()->admin()->create();
+
+    $client = Client::factory()->create([
+        'sage_client_code' => 'CLI001',
+        'commission_amount' => null,
+        'discount' => null,
+    ]);
+    $salesperson = Salesperson::factory()->create(['sage_salesperson_code' => 'SP01']);
+    $placement = Placement::factory()->create(['price' => 1000]);
+
+    // One credit reservation — should NOT appear in the cash export.
+    Reservation::factory()->create([
+        'client_id' => $client->id,
+        'salesperson_id' => $salesperson->id,
+        'placement_id' => $placement->id,
+        'type' => ReservationType::Standard,
+        'status' => ReservationStatus::Confirmed,
+        'is_cash' => false,
+        'dates_booked' => ['2026-04-05'],
+        'bill_at_end_of_campaign' => false,
+    ]);
+
+    // One cash reservation — should be the only one in the cash export.
+    Reservation::factory()->create([
+        'client_id' => $client->id,
+        'salesperson_id' => $salesperson->id,
+        'placement_id' => $placement->id,
+        'type' => ReservationType::Standard,
+        'status' => ReservationStatus::Confirmed,
+        'is_cash' => true,
+        'dates_booked' => ['2026-04-05'],
+        'bill_at_end_of_campaign' => false,
+    ]);
 
     $response = $this->actingAs($admin)->get(route('reservations.sage-export', [
         'start_date' => '2026-04-01',
@@ -492,8 +567,44 @@ it('redirects with an error flash when payment_mode is cash', function () {
         'payment_mode' => 'cash',
     ]));
 
-    $response->assertRedirect(route('reservations.index'));
-    expect(session('error'))->toContain('Cash SAGE export is not yet available');
+    $response->assertSuccessful();
+    expect($response->headers->get('Content-Type'))->toContain('text/csv');
+    expect($response->headers->get('Content-Disposition'))->toContain('sage-export-cash-20260401-20260430.csv');
+
+    $rows = parseSageCsv($response->streamedContent());
+
+    // 1 V + 1 D + 1 LC = 3 rows for the single cash reservation.
+    expect($rows)->toHaveCount(3);
+    expect($rows[0][0])->toBe('V');
+    expect($rows[1][0])->toBe('D');
+    expect($rows[2][0])->toBe('LC');
+});
+
+it('credit mode excludes is_cash=true reservations', function () {
+    $admin = User::factory()->admin()->create();
+
+    $client = Client::factory()->create(['sage_client_code' => 'CLI001']);
+    $placement = Placement::factory()->create(['price' => 1000]);
+
+    Reservation::factory()->create([
+        'client_id' => $client->id,
+        'placement_id' => $placement->id,
+        'type' => ReservationType::Standard,
+        'status' => ReservationStatus::Confirmed,
+        'is_cash' => true,
+        'dates_booked' => ['2026-04-05'],
+        'bill_at_end_of_campaign' => false,
+    ]);
+
+    $response = $this->actingAs($admin)->get(route('reservations.sage-export', [
+        'start_date' => '2026-04-01',
+        'end_date' => '2026-04-30',
+        'payment_mode' => 'credit',
+    ]));
+
+    $rows = parseSageCsv($response->streamedContent());
+
+    expect($rows)->toBeEmpty();
 });
 
 it('rejects requests missing start_date, end_date, or payment_mode', function () {
