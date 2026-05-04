@@ -308,6 +308,12 @@ php artisan test
 vendor/bin/pint
 ```
 
+## Documentation
+
+Project documentation lives in [`docs/`](./docs/README.md). Notable entries:
+
+- [SAGE Export](./docs/sage-export.md) — how the SAGE accounting CSV export works (filters, row format, edge cases, worked example).
+
 ## License
 
 This project is proprietary software owned by La Sentinelle.
