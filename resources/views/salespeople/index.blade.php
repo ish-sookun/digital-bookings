@@ -1,63 +1,55 @@
 @extends('layouts.main')
 
+@section('title', 'Salespersons • Digital Bookings')
+
 @section('content')
-  <main class="flex-1 bg-white">
-    <div class="px-12 py-10">
-      <div class="flex items-center justify-between">
-        <h1 class="text-2xl font-semibold text-gray-900">Salespersons</h1>
-        <a href="{{ route('salespeople.create') }}" class="rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gray-800 focus:outline-none focus:ring-4 focus:ring-gray-200">
-          Add Salesperson
-        </a>
-      </div>
-      <div class="mt-6 h-px w-full bg-gray-100"></div>
+  <x-ls.page>
+    <x-ls.page-header title="Salespersons">
+      <x-slot name="actions">
+        <x-ls.button :href="route('salespeople.create')" variant="primary">Add Salesperson</x-ls.button>
+      </x-slot>
+    </x-ls.page-header>
 
-      @if(session('success'))
-        <div class="mt-6 rounded-lg bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-800">
-          {{ session('success') }}
-        </div>
-      @endif
-
-      <div class="mt-6">
-        <table class="min-w-full divide-y divide-gray-200">
-          <thead>
-            <tr>
-              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Name</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Email</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Phone</th>
-              <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">Actions</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-gray-100">
-            @forelse($salespeople as $salesperson)
-              <tr class="hover:bg-gray-50">
-                <td class="px-4 py-3 text-sm text-gray-900">{{ $salesperson->first_name }} {{ $salesperson->last_name }}</td>
-                <td class="px-4 py-3 text-sm text-gray-600">{{ $salesperson->email }}</td>
-                <td class="px-4 py-3 text-sm text-gray-600">{{ $salesperson->phone }}</td>
-                <td class="px-4 py-3 text-right">
-                  <div class="flex items-center justify-end gap-2">
-                    <a href="{{ route('salespeople.edit', $salesperson) }}" class="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50">
-                      Edit
-                    </a>
-                    <form action="{{ route('salespeople.destroy', $salesperson) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this salesperson?')">
-                      @csrf
-                      @method('DELETE')
-                      <button type="submit" class="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50">
-                        Delete
-                      </button>
-                    </form>
-                  </div>
-                </td>
-              </tr>
-            @empty
-              <tr>
-                <td colspan="4" class="px-4 py-10 text-center text-sm text-gray-500">
-                  No salespeople found. Click "Add Salesperson" to create one.
-                </td>
-              </tr>
-            @endforelse
-          </tbody>
-        </table>
-      </div>
+    <div class="mt-6">
+      <x-ls.flash />
     </div>
-  </main>
+
+    <div class="mt-6">
+      <table class="ls-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th class="text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @forelse($salespeople as $salesperson)
+            <tr>
+              <td class="font-medium">{{ $salesperson->first_name }} {{ $salesperson->last_name }}</td>
+              <td class="text-ls-text-muted">{{ $salesperson->email }}</td>
+              <td class="text-ls-text-muted">{{ $salesperson->phone }}</td>
+              <td>
+                <div class="flex items-center justify-end gap-2">
+                  <x-ls.button :href="route('salespeople.edit', $salesperson)" variant="outline" size="sm">Edit</x-ls.button>
+                  <form action="{{ route('salespeople.destroy', $salesperson) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this salesperson?')">
+                    @csrf
+                    @method('DELETE')
+                    <x-ls.button type="submit" variant="danger" size="sm">Delete</x-ls.button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          @empty
+            <tr>
+              <td colspan="4" class="px-4 py-10 text-center text-sm text-ls-text-muted">
+                No salespeople found. Click "Add Salesperson" to create one.
+              </td>
+            </tr>
+          @endforelse
+        </tbody>
+      </table>
+    </div>
+  </x-ls.page>
 @endsection
