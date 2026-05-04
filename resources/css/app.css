@@ -5,7 +5,630 @@
 @source '../**/*.blade.php';
 @source '../**/*.js';
 
+/* ============================================================
+   LA SENTINELLE BRAND SYSTEM — DESIGN TOKENS (LIGHT)
+   Mirrors brand-system.html. CSS variables are the single source
+   of truth; Tailwind utilities below expose them as `bg-*`, `text-*`,
+   `border-*` classes so views can use either approach.
+   ============================================================ */
+@layer base {
+  :root {
+    /* Brand palette */
+    --ls-cream: #f1f6f8;
+    --ls-cream-dark: #dde6ea;
+    --ls-cream-darker: #c5d4db;
+    --ls-sky-soft: #c8e2ee;
+    --ls-sky: #95c9e3;
+    --ls-sky-deep: #6aafd0;
+    --ls-slate: #7298bd;
+    --ls-slate-dark: #5b80a3;
+    --ls-deep: #4080a8;
+    --ls-deep-dark: #2e6389;
+    --ls-deep-darker: #1f4a6b;
+    --ls-ink: #0f2c44;
+    --ls-ink-deeper: #081c2e;
+    --ls-ink-shade: #14354f;
+
+    /* Semantic surfaces & text */
+    --ls-page: var(--ls-cream);
+    --ls-surface: #ffffff;
+    --ls-surface-muted: var(--ls-cream);
+    --ls-surface-raised: #ffffff;
+    --ls-surface-inverse: var(--ls-ink);
+
+    --ls-text: var(--ls-ink);
+    --ls-text-muted: var(--ls-slate-dark);
+    --ls-text-soft: var(--ls-deep-darker);
+    --ls-text-on-dark: var(--ls-cream);
+    --ls-text-on-accent: #ffffff;
+
+    --ls-border: var(--ls-cream-dark);
+    --ls-border-strong: var(--ls-cream-darker);
+
+    --ls-accent-soft-bg: var(--ls-sky-soft);
+    --ls-accent-soft-text: var(--ls-deep-darker);
+
+    --ls-neutral-tag-bg: var(--ls-cream-dark);
+    --ls-neutral-tag-text: var(--ls-ink);
+
+    /* Semantic state colors */
+    --ls-success: #3b8a6e;
+    --ls-success-bg: #e4f0ea;
+    --ls-success-text: #1e5843;
+    --ls-warning: #c98a3b;
+    --ls-warning-bg: #f5e9d1;
+    --ls-warning-text: #7a5318;
+    --ls-danger: #b8483f;
+    --ls-danger-hover: #9e3b33;
+    --ls-danger-bg: #f4ddda;
+    --ls-danger-text: #7a2a23;
+    --ls-info: #4080a8;
+    --ls-info-bg: #c8e2ee;
+    --ls-info-text: #1f4a6b;
+
+    /* Overlays */
+    --ls-overlay-scrim: rgba(15, 44, 68, 0.45);
+    --ls-dialog-scrim: rgba(15, 44, 68, 0.35);
+
+    /* Typography */
+    --ls-font-sans:
+      -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    --ls-font-mono: 'JetBrains Mono', 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+
+    /* Radius */
+    --ls-radius-sm: 4px;
+    --ls-radius-md: 6px;
+    --ls-radius-lg: 10px;
+    --ls-radius-xl: 14px;
+
+    /* Shadows */
+    --ls-shadow-sm: 0 1px 2px rgba(15, 44, 68, 0.06);
+    --ls-shadow-md: 0 4px 12px rgba(15, 44, 68, 0.08);
+    --ls-shadow-lg: 0 12px 32px rgba(15, 44, 68, 0.18);
+  }
+
+  /* ---------- DARK THEME (manual toggle) ---------- */
+  [data-theme='dark'] {
+    --ls-page: #0a1e2e;
+    --ls-surface: #13304a;
+    --ls-surface-muted: #0f2840;
+    --ls-surface-raised: #173c5a;
+    --ls-surface-inverse: #dde6ea;
+
+    --ls-text: #eaf1f4;
+    --ls-text-muted: #8fa8be;
+    --ls-text-soft: #b5d4f4;
+    --ls-text-on-dark: #f1f6f8;
+
+    --ls-border: #23486a;
+    --ls-border-strong: #2e5a82;
+
+    --ls-accent-soft-bg: #1f4a6b;
+    --ls-accent-soft-text: #c8e2ee;
+
+    --ls-neutral-tag-bg: #2e5a82;
+    --ls-neutral-tag-text: #eaf1f4;
+
+    --ls-success: #5fb08f;
+    --ls-success-bg: #1b3a30;
+    --ls-success-text: #9fe1cb;
+    --ls-warning: #e0a75a;
+    --ls-warning-bg: #3d2c14;
+    --ls-warning-text: #fac775;
+    --ls-danger: #d66961;
+    --ls-danger-hover: #bc554d;
+    --ls-danger-bg: #3d1e1b;
+    --ls-danger-text: #f09595;
+    --ls-info: #6aafd0;
+    --ls-info-bg: #1f4a6b;
+    --ls-info-text: #c8e2ee;
+
+    --ls-overlay-scrim: rgba(0, 0, 0, 0.7);
+    --ls-dialog-scrim: rgba(0, 0, 0, 0.6);
+
+    --ls-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --ls-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+    --ls-shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.5);
+  }
+
+  /* Respect OS preference when user has not explicitly chosen */
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) {
+      --ls-page: #0a1e2e;
+      --ls-surface: #13304a;
+      --ls-surface-muted: #0f2840;
+      --ls-surface-raised: #173c5a;
+      --ls-surface-inverse: #dde6ea;
+      --ls-text: #eaf1f4;
+      --ls-text-muted: #8fa8be;
+      --ls-text-soft: #b5d4f4;
+      --ls-border: #23486a;
+      --ls-border-strong: #2e5a82;
+      --ls-accent-soft-bg: #1f4a6b;
+      --ls-accent-soft-text: #c8e2ee;
+      --ls-neutral-tag-bg: #2e5a82;
+      --ls-neutral-tag-text: #eaf1f4;
+      --ls-success: #5fb08f;
+      --ls-success-bg: #1b3a30;
+      --ls-success-text: #9fe1cb;
+      --ls-warning: #e0a75a;
+      --ls-warning-bg: #3d2c14;
+      --ls-warning-text: #fac775;
+      --ls-danger: #d66961;
+      --ls-danger-hover: #bc554d;
+      --ls-danger-bg: #3d1e1b;
+      --ls-danger-text: #f09595;
+      --ls-info: #6aafd0;
+      --ls-info-bg: #1f4a6b;
+      --ls-info-text: #c8e2ee;
+      --ls-overlay-scrim: rgba(0, 0, 0, 0.7);
+      --ls-dialog-scrim: rgba(0, 0, 0, 0.6);
+      --ls-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+      --ls-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+      --ls-shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.5);
+    }
+  }
+
+  /* Document base */
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    font-family: var(--ls-font-sans);
+    color: var(--ls-text);
+    background: var(--ls-page);
+    -webkit-font-smoothing: antialiased;
+    transition:
+      background-color 0.2s,
+      color 0.2s;
+  }
+}
+
+/* ============================================================
+   TAILWIND THEME EXTENSION
+   Expose brand tokens as Tailwind utilities (e.g. bg-ls-deep,
+   text-ls-text, border-ls-border-strong).
+   ============================================================ */
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+  --font-sans: var(--ls-font-sans);
+  --font-mono: var(--ls-font-mono);
+
+  --color-ls-cream: var(--ls-cream);
+  --color-ls-cream-dark: var(--ls-cream-dark);
+  --color-ls-cream-darker: var(--ls-cream-darker);
+  --color-ls-sky-soft: var(--ls-sky-soft);
+  --color-ls-sky: var(--ls-sky);
+  --color-ls-sky-deep: var(--ls-sky-deep);
+  --color-ls-slate: var(--ls-slate);
+  --color-ls-slate-dark: var(--ls-slate-dark);
+  --color-ls-deep: var(--ls-deep);
+  --color-ls-deep-dark: var(--ls-deep-dark);
+  --color-ls-deep-darker: var(--ls-deep-darker);
+  --color-ls-ink: var(--ls-ink);
+  --color-ls-ink-deeper: var(--ls-ink-deeper);
+
+  --color-ls-page: var(--ls-page);
+  --color-ls-surface: var(--ls-surface);
+  --color-ls-surface-muted: var(--ls-surface-muted);
+  --color-ls-surface-raised: var(--ls-surface-raised);
+  --color-ls-surface-inverse: var(--ls-surface-inverse);
+
+  --color-ls-text: var(--ls-text);
+  --color-ls-text-muted: var(--ls-text-muted);
+  --color-ls-text-soft: var(--ls-text-soft);
+  --color-ls-text-on-dark: var(--ls-text-on-dark);
+
+  --color-ls-border: var(--ls-border);
+  --color-ls-border-strong: var(--ls-border-strong);
+
+  --color-ls-success: var(--ls-success);
+  --color-ls-warning: var(--ls-warning);
+  --color-ls-danger: var(--ls-danger);
+  --color-ls-info: var(--ls-info);
+}
+
+/* ============================================================
+   COMPONENT CLASSES (mirror of brand-system.html)
+   Use these when a view needs a quick on-brand element without
+   reaching for a Blade component.
+   ============================================================ */
+@layer components {
+  /* ---------- Buttons ---------- */
+  .ls-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.2;
+    padding: 9px 16px;
+    border-radius: var(--ls-radius-md);
+    cursor: pointer;
+    border: 1px solid transparent;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: all 0.15s;
+  }
+  .ls-btn > svg {
+    flex: none;
+  }
+  .ls-btn-primary {
+    background: var(--ls-deep);
+    color: #fff;
+    border-color: var(--ls-deep);
+  }
+  .ls-btn-primary:hover {
+    background: var(--ls-deep-dark);
+    border-color: var(--ls-deep-dark);
+  }
+  [data-theme='dark'] .ls-btn-primary {
+    background: var(--ls-sky-deep);
+    border-color: var(--ls-sky-deep);
+    color: var(--ls-ink);
+  }
+  [data-theme='dark'] .ls-btn-primary:hover {
+    background: var(--ls-sky);
+    border-color: var(--ls-sky);
+  }
+
+  .ls-btn-secondary {
+    background: var(--ls-accent-soft-bg);
+    color: var(--ls-accent-soft-text);
+    border-color: var(--ls-sky);
+  }
+  .ls-btn-secondary:hover {
+    background: var(--ls-sky);
+  }
+  [data-theme='dark'] .ls-btn-secondary {
+    border-color: var(--ls-slate-dark);
+  }
+  [data-theme='dark'] .ls-btn-secondary:hover {
+    background: var(--ls-deep-dark);
+  }
+
+  .ls-btn-outline {
+    background: transparent;
+    color: var(--ls-deep);
+    border-color: var(--ls-deep);
+  }
+  .ls-btn-outline:hover {
+    background: var(--ls-deep);
+    color: #fff;
+  }
+  [data-theme='dark'] .ls-btn-outline {
+    color: var(--ls-sky);
+    border-color: var(--ls-sky);
+  }
+  [data-theme='dark'] .ls-btn-outline:hover {
+    background: var(--ls-sky);
+    color: var(--ls-ink);
+  }
+
+  .ls-btn-ghost {
+    background: transparent;
+    color: var(--ls-text-soft);
+    border-color: transparent;
+  }
+  .ls-btn-ghost:hover {
+    background: var(--ls-surface-muted);
+  }
+
+  .ls-btn-danger {
+    background: var(--ls-danger);
+    color: #fff;
+    border-color: var(--ls-danger);
+  }
+  .ls-btn-danger:hover {
+    background: var(--ls-danger-hover);
+  }
+
+  .ls-btn-sm {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+  .ls-btn-lg {
+    padding: 12px 22px;
+    font-size: 14px;
+  }
+  .ls-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* ---------- Pills, tags, badges ---------- */
+  .ls-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .ls-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 8px;
+    border-radius: var(--ls-radius-sm);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.2px;
+    text-transform: uppercase;
+  }
+  .ls-pill-success,
+  .ls-tag-success {
+    background: var(--ls-success-bg);
+    color: var(--ls-success-text);
+  }
+  .ls-pill-warning,
+  .ls-tag-warning {
+    background: var(--ls-warning-bg);
+    color: var(--ls-warning-text);
+  }
+  .ls-pill-danger,
+  .ls-tag-danger {
+    background: var(--ls-danger-bg);
+    color: var(--ls-danger-text);
+  }
+  .ls-pill-info,
+  .ls-tag-info {
+    background: var(--ls-info-bg);
+    color: var(--ls-info-text);
+  }
+  .ls-pill-neutral,
+  .ls-tag-neutral {
+    background: var(--ls-neutral-tag-bg);
+    color: var(--ls-neutral-tag-text);
+  }
+
+  /* ---------- Forms ---------- */
+  .ls-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .ls-field > label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--ls-text);
+  }
+  .ls-field .hint {
+    font-size: 11px;
+    color: var(--ls-text-muted);
+  }
+  .ls-input,
+  .ls-textarea,
+  .ls-select {
+    font-family: inherit;
+    font-size: 13px;
+    background: var(--ls-surface);
+    color: var(--ls-text);
+    border: 1px solid var(--ls-border-strong);
+    border-radius: var(--ls-radius-md);
+    padding: 9px 12px;
+    transition:
+      border 0.15s,
+      box-shadow 0.15s;
+    width: 100%;
+  }
+  [data-theme='dark'] .ls-input,
+  [data-theme='dark'] .ls-textarea,
+  [data-theme='dark'] .ls-select {
+    background: var(--ls-surface-raised);
+  }
+  .ls-input:focus,
+  .ls-textarea:focus,
+  .ls-select:focus {
+    outline: none;
+    border-color: var(--ls-deep);
+    box-shadow: 0 0 0 3px rgba(64, 128, 168, 0.18);
+  }
+  [data-theme='dark'] .ls-input:focus,
+  [data-theme='dark'] .ls-textarea:focus,
+  [data-theme='dark'] .ls-select:focus {
+    border-color: var(--ls-sky);
+    box-shadow: 0 0 0 3px rgba(149, 201, 227, 0.2);
+  }
+  .ls-input.error {
+    border-color: var(--ls-danger);
+  }
+  .ls-input.success {
+    border-color: var(--ls-success);
+  }
+  .ls-textarea {
+    resize: vertical;
+    min-height: 70px;
+  }
+
+  .ls-check {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--ls-text);
+    cursor: pointer;
+  }
+  .ls-check input {
+    accent-color: var(--ls-deep);
+    width: 15px;
+    height: 15px;
+  }
+  [data-theme='dark'] .ls-check input {
+    accent-color: var(--ls-sky);
+  }
+
+  /* ---------- Alerts ---------- */
+  .ls-alert {
+    padding: 10px 14px;
+    border-radius: var(--ls-radius-md);
+    font-size: 13px;
+    display: flex;
+    gap: 10px;
+    border-left: 3px solid;
+  }
+  .ls-alert-info {
+    background: var(--ls-info-bg);
+    border-color: var(--ls-info);
+    color: var(--ls-info-text);
+  }
+  .ls-alert-success {
+    background: var(--ls-success-bg);
+    border-color: var(--ls-success);
+    color: var(--ls-success-text);
+  }
+  .ls-alert-warning {
+    background: var(--ls-warning-bg);
+    border-color: var(--ls-warning);
+    color: var(--ls-warning-text);
+  }
+  .ls-alert-danger {
+    background: var(--ls-danger-bg);
+    border-color: var(--ls-danger);
+    color: var(--ls-danger-text);
+  }
+  .ls-alert strong {
+    font-weight: 500;
+    color: inherit;
+  }
+
+  /* ---------- Cards ---------- */
+  .ls-card {
+    background: var(--ls-surface);
+    border: 1px solid var(--ls-border);
+    border-radius: var(--ls-radius-lg);
+    padding: 16px;
+  }
+  [data-theme='dark'] .ls-card {
+    background: var(--ls-surface-raised);
+  }
+  .ls-card-accent {
+    border-top: 3px solid var(--ls-deep);
+  }
+  [data-theme='dark'] .ls-card-accent {
+    border-top-color: var(--ls-sky);
+  }
+
+  /* ---------- Data tables ---------- */
+  .ls-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .ls-table th {
+    text-align: left;
+    padding: 10px 12px;
+    background: var(--ls-surface-muted);
+    color: var(--ls-text);
+    font-weight: 500;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    border-bottom: 1px solid var(--ls-border);
+  }
+  .ls-table td {
+    padding: 10px 12px;
+    border-bottom: 0.5px solid var(--ls-border);
+    color: var(--ls-text);
+  }
+  .ls-table tr:hover td {
+    background: var(--ls-surface-muted);
+  }
+  .ls-table tr:last-child td {
+    border-bottom: none;
+  }
+
+  /* ---------- KPI cards (dashboard) ---------- */
+  .ls-kpi {
+    background: var(--ls-surface);
+    border: 1px solid var(--ls-border);
+    border-radius: var(--ls-radius-lg);
+    padding: 14px 16px;
+  }
+  [data-theme='dark'] .ls-kpi {
+    background: var(--ls-surface-raised);
+  }
+  .ls-kpi .lbl {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--ls-text-muted);
+    font-weight: 500;
+  }
+  .ls-kpi .val {
+    font-size: 20px;
+    font-weight: 500;
+    color: var(--ls-text);
+    margin-top: 4px;
+  }
+  .ls-kpi .sub {
+    font-size: 11px;
+    color: var(--ls-text-muted);
+    margin-top: 2px;
+  }
+
+  /* ---------- Sidebar nav (used by main layout) ---------- */
+  .ls-sb-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: var(--ls-radius-md);
+    font-size: 13px;
+    color: color-mix(in srgb, var(--ls-text-on-dark) 75%, transparent);
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.15s, color 0.15s;
+  }
+  .ls-sb-item:hover {
+    background: color-mix(in srgb, var(--ls-text-on-dark) 8%, transparent);
+    color: var(--ls-text-on-dark);
+  }
+  .ls-sb-item.active {
+    background: color-mix(in srgb, var(--ls-text-on-dark) 12%, transparent);
+    color: var(--ls-sky);
+    font-weight: 500;
+  }
+  .ls-sb-group-title {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--ls-sky);
+    padding: 12px 12px 4px;
+    font-weight: 500;
+  }
+
+  /* ---------- Theme toggle ---------- */
+  .ls-theme-toggle {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid var(--ls-border-strong);
+    background: var(--ls-surface);
+    color: var(--ls-text);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition:
+      background 0.2s,
+      transform 0.15s;
+  }
+  .ls-theme-toggle:hover {
+    transform: scale(1.05);
+  }
+  .ls-theme-toggle .icon-sun {
+    display: none;
+  }
+  .ls-theme-toggle .icon-moon {
+    display: block;
+  }
+  [data-theme='dark'] .ls-theme-toggle .icon-sun {
+    display: block;
+  }
+  [data-theme='dark'] .ls-theme-toggle .icon-moon {
+    display: none;
+  }
 }

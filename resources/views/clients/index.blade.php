@@ -1,92 +1,82 @@
 @extends('layouts.main')
 
-@section('content')
-  <main class="flex-1 bg-white">
-    <div class="px-12 py-10">
-      <div class="flex items-center justify-between">
-        <h1 class="text-2xl font-semibold text-gray-900">Clients</h1>
-        <a href="{{ route('clients.create') }}" class="rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gray-800 focus:outline-none focus:ring-4 focus:ring-gray-200">
-          Add Client
-        </a>
-      </div>
-      <div class="mt-6 h-px w-full bg-gray-100"></div>
+@section('title', 'Clients • Digital Bookings')
 
-      @if(session('success'))
-        <div class="mt-6 rounded-lg bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-800">
-          {{ session('success') }}
+@section('content')
+  <x-ls.page>
+    <x-ls.page-header title="Clients">
+      <x-slot name="actions">
+        <x-ls.button :href="route('clients.create')" variant="primary">Add Client</x-ls.button>
+      </x-slot>
+    </x-ls.page-header>
+
+    <div class="mt-6">
+      <x-ls.flash />
+    </div>
+
+    <div class="mt-6">
+      <table class="ls-table">
+        <thead>
+          <tr>
+            <th>Company</th>
+            <th>BRN</th>
+            <th>Phone</th>
+            <th>Contact Person</th>
+            <th>Commission</th>
+            <th>Discount</th>
+            <th class="text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @forelse($clients as $client)
+            <tr>
+              <td class="font-medium">{{ $client->company_name }}</td>
+              <td class="text-ls-text-muted">{{ $client->brn }}</td>
+              <td class="text-ls-text-muted">{{ $client->phone }}</td>
+              <td class="text-ls-text-muted">{{ $client->contact_person_name ?? '—' }}</td>
+              <td class="text-ls-text-muted">
+                @if($client->commission_amount && $client->commission_type)
+                  {{ $client->commission_amount }}{{ $client->commission_type->value }}
+                @else
+                  —
+                @endif
+              </td>
+              <td class="text-ls-text-muted">
+                @if($client->discount && $client->discount_type)
+                  {{ $client->discount }}{{ $client->discount_type->value }}
+                @else
+                  —
+                @endif
+              </td>
+              <td>
+                <div class="flex items-center justify-end gap-2">
+                  <x-ls.button :href="route('clients.show', $client)" variant="outline" size="sm">View</x-ls.button>
+                  <x-ls.button :href="route('clients.edit', $client)" variant="outline" size="sm">Edit</x-ls.button>
+                  @can('delete-clients')
+                    <form action="{{ route('clients.destroy', $client) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this client?')">
+                      @csrf
+                      @method('DELETE')
+                      <x-ls.button type="submit" variant="danger" size="sm">Delete</x-ls.button>
+                    </form>
+                  @endcan
+                </div>
+              </td>
+            </tr>
+          @empty
+            <tr>
+              <td colspan="7" class="px-4 py-10 text-center text-sm text-ls-text-muted">
+                No clients found. Click "Add Client" to create one.
+              </td>
+            </tr>
+          @endforelse
+        </tbody>
+      </table>
+
+      @if($clients->hasPages())
+        <div class="mt-6">
+          {{ $clients->links() }}
         </div>
       @endif
-
-      <div class="mt-6">
-        <table class="min-w-full divide-y divide-gray-200">
-          <thead>
-            <tr>
-              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Company</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">BRN</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Phone</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Contact Person</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Commission</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Discount</th>
-              <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">Actions</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-gray-100">
-            @forelse($clients as $client)
-              <tr class="hover:bg-gray-50">
-                <td class="px-4 py-3 text-sm text-gray-900">{{ $client->company_name }}</td>
-                <td class="px-4 py-3 text-sm text-gray-600">{{ $client->brn }}</td>
-                <td class="px-4 py-3 text-sm text-gray-600">{{ $client->phone }}</td>
-                <td class="px-4 py-3 text-sm text-gray-600">{{ $client->contact_person_name ?? '—' }}</td>
-                <td class="px-4 py-3 text-sm text-gray-600">
-                  @if($client->commission_amount && $client->commission_type)
-                    {{ $client->commission_amount }}{{ $client->commission_type->value }}
-                  @else
-                    —
-                  @endif
-                </td>
-                <td class="px-4 py-3 text-sm text-gray-600">
-                  @if($client->discount && $client->discount_type)
-                    {{ $client->discount }}{{ $client->discount_type->value }}
-                  @else
-                    —
-                  @endif
-                </td>
-                <td class="px-4 py-3 text-right">
-                  <div class="flex items-center justify-end gap-2">
-                    <a href="{{ route('clients.show', $client) }}" class="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50">
-                      View
-                    </a>
-                    <a href="{{ route('clients.edit', $client) }}" class="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50">
-                      Edit
-                    </a>
-                    @can('delete-clients')
-                      <form action="{{ route('clients.destroy', $client) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this client?')">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50">
-                          Delete
-                        </button>
-                      </form>
-                    @endcan
-                  </div>
-                </td>
-              </tr>
-            @empty
-              <tr>
-                <td colspan="7" class="px-4 py-10 text-center text-sm text-gray-500">
-                  No clients found. Click "Add Client" to create one.
-                </td>
-              </tr>
-            @endforelse
-          </tbody>
-        </table>
-
-        @if($clients->hasPages())
-          <div class="mt-6">
-            {{ $clients->links() }}
-          </div>
-        @endif
-      </div>
     </div>
-  </main>
+  </x-ls.page>
 @endsection

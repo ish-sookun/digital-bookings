@@ -1,102 +1,55 @@
 @extends('layouts.main')
 
+@section('title', 'Edit User • Digital Bookings')
+
 @section('content')
-  <main class="flex-1 bg-white">
-    <div class="px-12 py-10">
-      <div class="flex items-center gap-4">
-        <a href="{{ route('users.index') }}" class="text-gray-400 hover:text-gray-600">
-          <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-            <path fill-rule="evenodd" d="M17 10a.75.75 0 0 1-.75.75H5.612l4.158 3.96a.75.75 0 1 1-1.04 1.08l-5.5-5.25a.75.75 0 0 1 0-1.08l5.5-5.25a.75.75 0 0 1 1.04 1.08L5.612 9.25H16.25A.75.75 0 0 1 17 10Z" clip-rule="evenodd" />
-          </svg>
-        </a>
-        <h1 class="text-2xl font-semibold text-gray-900">Edit User</h1>
+  <x-ls.page>
+    <x-ls.page-header title="Edit User" :back="route('users.index')" />
+
+    <form action="{{ route('users.update', $user) }}" method="POST" class="mt-8 max-w-xl space-y-6">
+      @csrf
+      @method('PUT')
+
+      <div class="grid grid-cols-2 gap-6">
+        <x-ls.input-field name="firstname" label="First Name" :value="old('firstname', $user->firstname)" required />
+        <x-ls.input-field name="lastname" label="Last Name" :value="old('lastname', $user->lastname)" required />
       </div>
-      <div class="mt-6 h-px w-full bg-gray-100"></div>
 
-      <form action="{{ route('users.update', $user) }}" method="POST" class="mt-8 max-w-xl space-y-6">
-        @csrf
-        @method('PUT')
+      <x-ls.input-field name="email" type="email" label="Email" :value="old('email', $user->email)" required />
 
-        <div class="grid grid-cols-2 gap-6">
-          <div>
-            <label for="firstname" class="block text-sm font-medium text-gray-700">First Name</label>
-            <div class="mt-2">
-              <input type="text" name="firstname" id="firstname" value="{{ old('firstname', $user->firstname) }}" required
-                class="block w-full rounded-lg border @error('firstname') border-red-500 @else border-gray-200 @enderror bg-white px-4 py-2.5 text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-gray-300 focus:outline-none focus:ring-4 focus:ring-gray-100" />
-            </div>
-            @error('firstname')
-              <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-            @enderror
-          </div>
+      @php
+        $roleOptions = [];
+        foreach ($roles as $role) {
+          $roleOptions[$role->value] = match($role) {
+              \App\UserRole::SuperAdmin => 'Super Admin',
+              \App\UserRole::Admin => 'Admin',
+              \App\UserRole::Salesperson => 'Salesperson',
+              \App\UserRole::Management => 'Management',
+              \App\UserRole::Finance => 'Finance',
+          };
+        }
+      @endphp
 
-          <div>
-            <label for="lastname" class="block text-sm font-medium text-gray-700">Last Name</label>
-            <div class="mt-2">
-              <input type="text" name="lastname" id="lastname" value="{{ old('lastname', $user->lastname) }}" required
-                class="block w-full rounded-lg border @error('lastname') border-red-500 @else border-gray-200 @enderror bg-white px-4 py-2.5 text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-gray-300 focus:outline-none focus:ring-4 focus:ring-gray-100" />
-            </div>
-            @error('lastname')
-              <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-            @enderror
-          </div>
-        </div>
+      <x-ls.select-field
+        name="role"
+        label="Role"
+        :options="$roleOptions"
+        :selected="old('role', $user->role->value)"
+        required
+      />
 
-        <div>
-          <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
-          <div class="mt-2">
-            <input type="email" name="email" id="email" value="{{ old('email', $user->email) }}" required
-              class="block w-full rounded-lg border @error('email') border-red-500 @else border-gray-200 @enderror bg-white px-4 py-2.5 text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-gray-300 focus:outline-none focus:ring-4 focus:ring-gray-100" />
-          </div>
-          @error('email')
-            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-          @enderror
-        </div>
+      <x-ls.input-field
+        name="password"
+        type="password"
+        label="Password"
+        placeholder="Leave blank to keep the current password"
+        hint="Minimum 8 characters, including an uppercase letter, a number, and a symbol (.,$,_,!,#)."
+      />
 
-        <div>
-          <label for="role" class="block text-sm font-medium text-gray-700">Role</label>
-          <div class="mt-2">
-            <select name="role" id="role" required
-              class="block w-full rounded-lg border @error('role') border-red-500 @else border-gray-200 @enderror bg-white px-4 py-2.5 text-gray-900 shadow-sm focus:border-gray-300 focus:outline-none focus:ring-4 focus:ring-gray-100">
-              @foreach($roles as $role)
-                <option value="{{ $role->value }}" {{ old('role', $user->role->value) === $role->value ? 'selected' : '' }}>
-                  {{ match($role) {
-                      \App\UserRole::SuperAdmin => 'Super Admin',
-                      \App\UserRole::Admin => 'Admin',
-                      \App\UserRole::Salesperson => 'Salesperson',
-                      \App\UserRole::Management => 'Management',
-                      \App\UserRole::Finance => 'Finance',
-                  } }}
-                </option>
-              @endforeach
-            </select>
-          </div>
-          @error('role')
-            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-          @enderror
-        </div>
-
-        <div>
-          <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
-          <p class="text-xs text-gray-500">Leave blank to keep the current password.</p>
-          <div class="mt-2">
-            <input type="password" name="password" id="password"
-              class="block w-full rounded-lg border @error('password') border-red-500 @else border-gray-200 @enderror bg-white px-4 py-2.5 text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-gray-300 focus:outline-none focus:ring-4 focus:ring-gray-100" />
-          </div>
-          <p class="mt-1 text-xs text-gray-500">Minimum 8 characters, including an uppercase letter, a number, and a symbol (.,$,_,!,#).</p>
-          @error('password')
-            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-          @enderror
-        </div>
-
-        <div class="flex items-center gap-4">
-          <button type="submit" class="rounded-lg bg-gray-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-gray-800 focus:outline-none focus:ring-4 focus:ring-gray-200">
-            Update User
-          </button>
-          <a href="{{ route('users.index') }}" class="text-sm font-medium text-gray-700 hover:text-gray-900">
-            Cancel
-          </a>
-        </div>
-      </form>
-    </div>
-  </main>
+      <div class="flex items-center gap-4">
+        <x-ls.button type="submit" variant="primary">Update User</x-ls.button>
+        <x-ls.button :href="route('users.index')" variant="ghost">Cancel</x-ls.button>
+      </div>
+    </form>
+  </x-ls.page>
 @endsection

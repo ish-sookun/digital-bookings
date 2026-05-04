@@ -4,6 +4,11 @@
   <meta charset="UTF-8">
   <title>Sales Performance Report - {{ $platform->name }}</title>
   <style>
+    /*
+     * Inline CSS retained because DomPDF does not support CSS variables,
+     * Tailwind utilities, or external stylesheets. Hex values mirror the
+     * La Sentinelle brand tokens defined in resources/css/app.css.
+     */
     * {
       margin: 0;
       padding: 0;
@@ -13,7 +18,7 @@
     body {
       font-family: 'Helvetica', 'Arial', sans-serif;
       font-size: 10px;
-      color: #1a1a1a;
+      color: #0f2c44; /* --ls-ink */
       line-height: 1.4;
     }
 
@@ -47,30 +52,30 @@
 
     .company-name {
       font-size: 9px;
-      color: #555;
+      color: #5b80a3; /* --ls-slate-dark */
     }
 
     .doc-title {
       font-size: 18px;
       font-weight: bold;
-      color: #1a365d;
+      color: #1f4a6b; /* --ls-deep-darker */
       margin-bottom: 3px;
     }
 
     .doc-date {
       font-size: 9px;
-      color: #666;
+      color: #5b80a3; /* --ls-slate-dark */
     }
 
     .divider {
       border: none;
-      border-top: 2px solid #1a365d;
+      border-top: 2px solid #1f4a6b; /* --ls-deep-darker */
       margin: 12px 0;
     }
 
     .meta {
       font-size: 10px;
-      color: #444;
+      color: #14354f; /* --ls-ink-shade */
       margin-bottom: 15px;
     }
 
@@ -93,7 +98,7 @@
       display: table-cell;
       font-size: 11px;
       font-weight: bold;
-      color: #1a365d;
+      color: #1f4a6b; /* --ls-deep-darker */
     }
 
     .salesperson-achievement {
@@ -109,7 +114,7 @@
     }
 
     th {
-      background-color: #1a365d;
+      background-color: #1f4a6b; /* --ls-deep-darker */
       color: #ffffff;
       font-size: 8px;
       font-weight: 600;
@@ -126,7 +131,7 @@
     td {
       padding: 5px 8px;
       font-size: 9px;
-      border-bottom: 1px solid #e5e7eb;
+      border-bottom: 1px solid #dde6ea; /* --ls-cream-dark */
     }
 
     td.right {
@@ -134,37 +139,37 @@
     }
 
     tr:nth-child(even) {
-      background-color: #f9fafb;
+      background-color: #f1f6f8; /* --ls-cream */
     }
 
     tr.totals-row {
-      background-color: #eef2ff !important;
+      background-color: #c8e2ee !important; /* --ls-sky-soft */
       font-weight: 600;
     }
 
     tr.totals-row td {
-      border-top: 2px solid #1a365d;
+      border-top: 2px solid #1f4a6b; /* --ls-deep-darker */
       border-bottom: none;
       padding-top: 6px;
       padding-bottom: 6px;
     }
 
-    .achievement-high { color: #059669; }
-    .achievement-mid { color: #d97706; }
-    .achievement-low { color: #6b7280; }
+    .achievement-high { color: #1e5843; } /* --ls-success-text */
+    .achievement-mid { color: #7a5318; }  /* --ls-warning-text */
+    .achievement-low { color: #5b80a3; }  /* --ls-slate-dark */
 
     .section-divider {
       border: none;
-      border-top: 1px solid #e5e7eb;
+      border-top: 1px solid #dde6ea; /* --ls-cream-dark */
       margin: 15px 0;
     }
 
     .footer {
       margin-top: 20px;
       padding-top: 10px;
-      border-top: 1px solid #e5e7eb;
+      border-top: 1px solid #dde6ea; /* --ls-cream-dark */
       font-size: 8px;
-      color: #9ca3af;
+      color: #7298bd; /* --ls-slate */
       text-align: center;
     }
   </style>

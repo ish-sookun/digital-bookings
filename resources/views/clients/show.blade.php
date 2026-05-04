@@ -1,160 +1,146 @@
 @extends('layouts.main')
 
+@section('title', 'Client • Digital Bookings')
+
 @section('content')
-  <main class="flex-1 bg-white">
-    <div class="px-12 py-10">
-      <div class="flex items-center gap-4">
-        <a href="{{ route('clients.index') }}" class="text-gray-400 hover:text-gray-600">
-          <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-            <path fill-rule="evenodd" d="M17 10a.75.75 0 0 1-.75.75H5.612l4.158 3.96a.75.75 0 1 1-1.04 1.08l-5.5-5.25a.75.75 0 0 1 0-1.08l5.5-5.25a.75.75 0 0 1 1.04 1.08L5.612 9.25H16.25A.75.75 0 0 1 17 10Z" clip-rule="evenodd" />
-          </svg>
-        </a>
-        <h1 class="text-2xl font-semibold text-gray-900">{{ $client->company_name }}</h1>
-      </div>
-      <div class="mt-6 h-px w-full bg-gray-100"></div>
+  <x-ls.page>
+    <x-ls.page-header :title="$client->company_name" :back="route('clients.index')" />
 
-      <div class="mt-8 grid grid-cols-1 gap-12 lg:grid-cols-2">
-        <div class="space-y-8">
-          {{-- Company Details --}}
-          <div class="space-y-6">
-            <h2 class="text-lg font-medium text-gray-900">Company Details</h2>
-
-            @if($client->company_logo)
-              <div>
-                <p class="text-sm font-medium text-gray-700">Logo</p>
-                <div class="mt-2">
-                  <img src="{{ Storage::url($client->company_logo) }}" alt="{{ $client->company_name }}" class="max-h-24 rounded-lg object-contain" />
-                </div>
-              </div>
-            @endif
-
-            <div class="grid grid-cols-2 gap-6">
-              <div>
-                <p class="text-sm font-medium text-gray-700">Company Name</p>
-                <p class="mt-1 text-sm text-gray-900">{{ $client->company_name }}</p>
-              </div>
-              <div>
-                <p class="text-sm font-medium text-gray-700">BRN</p>
-                <p class="mt-1 text-sm text-gray-900">{{ $client->brn }}</p>
-              </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-6">
-              <div>
-                <p class="text-sm font-medium text-gray-700">Phone</p>
-                <p class="mt-1 text-sm text-gray-900">{{ $client->phone }}</p>
-              </div>
-              <div>
-                <p class="text-sm font-medium text-gray-700">Address</p>
-                <p class="mt-1 text-sm text-gray-900">{{ $client->address }}</p>
-              </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-6">
-              <div>
-                <p class="text-sm font-medium text-gray-700">VAT Number</p>
-                <p class="mt-1 text-sm text-gray-900">{{ $client->vat_number ?? '—' }}</p>
-              </div>
-              <div>
-                <p class="text-sm font-medium text-gray-700">VAT Exempt</p>
-                <p class="mt-1 text-sm text-gray-900">{{ $client->vat_exempt ? 'Yes' : 'No' }}</p>
-              </div>
-            </div>
-          </div>
-
-          {{-- Commission --}}
-          <div class="space-y-6">
-            <h2 class="text-lg font-medium text-gray-900">Commission</h2>
-
-            <div class="grid grid-cols-2 gap-6">
-              <div>
-                <p class="text-sm font-medium text-gray-700">Amount</p>
-                <p class="mt-1 text-sm text-gray-900">{{ $client->commission_amount ?? '—' }}</p>
-              </div>
-              <div>
-                <p class="text-sm font-medium text-gray-700">Type</p>
-                <p class="mt-1 text-sm text-gray-900">{{ $client->commission_type?->value ?? '—' }}</p>
-              </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-6">
-              <div>
-                <p class="text-sm font-medium text-gray-700">Discount Amount</p>
-                <p class="mt-1 text-sm text-gray-900">{{ $client->discount ?? '—' }}</p>
-              </div>
-              <div>
-                <p class="text-sm font-medium text-gray-700">Discount Type</p>
-                <p class="mt-1 text-sm text-gray-900">{{ $client->discount_type?->value ?? '—' }}</p>
-              </div>
-            </div>
-          </div>
-
-          {{-- Contact Person --}}
-          <div class="space-y-6">
-            <h2 class="text-lg font-medium text-gray-900">Contact Person</h2>
-
+    <div class="mt-8 grid grid-cols-1 gap-12 lg:grid-cols-2">
+      <div class="space-y-8">
+        {{-- Company Details --}}
+        <x-ls.section title="Company Details">
+          @if($client->company_logo)
             <div>
-              <p class="text-sm font-medium text-gray-700">Name</p>
-              <p class="mt-1 text-sm text-gray-900">{{ $client->contact_person_name ?? '—' }}</p>
+              <p class="text-sm font-medium text-ls-text">Logo</p>
+              <div class="mt-2">
+                <img src="{{ Storage::url($client->company_logo) }}" alt="{{ $client->company_name }}" class="max-h-24 rounded-md object-contain" />
+              </div>
             </div>
+          @endif
 
-            <div class="grid grid-cols-2 gap-6">
-              <div>
-                <p class="text-sm font-medium text-gray-700">Email</p>
-                <p class="mt-1 text-sm text-gray-900">{{ $client->contact_person_email ?? '—' }}</p>
-              </div>
-              <div>
-                <p class="text-sm font-medium text-gray-700">Phone</p>
-                <p class="mt-1 text-sm text-gray-900">{{ $client->contact_person_phone ?? '—' }}</p>
-              </div>
+          <div class="grid grid-cols-2 gap-6">
+            <div>
+              <p class="text-sm font-medium text-ls-text">Company Name</p>
+              <p class="mt-1 text-sm text-ls-text-muted">{{ $client->company_name }}</p>
+            </div>
+            <div>
+              <p class="text-sm font-medium text-ls-text">BRN</p>
+              <p class="mt-1 text-sm text-ls-text-muted">{{ $client->brn }}</p>
             </div>
           </div>
 
-          <div class="flex items-center gap-4">
-            <a href="{{ route('clients.edit', $client) }}" class="rounded-lg bg-gray-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-gray-800 focus:outline-none focus:ring-4 focus:ring-gray-200">
-              Edit Client
-            </a>
-            <a href="{{ route('clients.index') }}" class="text-sm font-medium text-gray-700 hover:text-gray-900">
-              Back to Clients
-            </a>
+          <div class="grid grid-cols-2 gap-6">
+            <div>
+              <p class="text-sm font-medium text-ls-text">Phone</p>
+              <p class="mt-1 text-sm text-ls-text-muted">{{ $client->phone }}</p>
+            </div>
+            <div>
+              <p class="text-sm font-medium text-ls-text">Address</p>
+              <p class="mt-1 text-sm text-ls-text-muted">{{ $client->address }}</p>
+            </div>
           </div>
+
+          <div class="grid grid-cols-2 gap-6">
+            <div>
+              <p class="text-sm font-medium text-ls-text">VAT Number</p>
+              <p class="mt-1 text-sm text-ls-text-muted">{{ $client->vat_number ?? '—' }}</p>
+            </div>
+            <div>
+              <p class="text-sm font-medium text-ls-text">VAT Exempt</p>
+              <p class="mt-1 text-sm text-ls-text-muted">{{ $client->vat_exempt ? 'Yes' : 'No' }}</p>
+            </div>
+          </div>
+        </x-ls.section>
+
+        {{-- Commission --}}
+        <x-ls.section title="Commission">
+          <div class="grid grid-cols-2 gap-6">
+            <div>
+              <p class="text-sm font-medium text-ls-text">Amount</p>
+              <p class="mt-1 text-sm text-ls-text-muted">{{ $client->commission_amount ?? '—' }}</p>
+            </div>
+            <div>
+              <p class="text-sm font-medium text-ls-text">Type</p>
+              <p class="mt-1 text-sm text-ls-text-muted">{{ $client->commission_type?->value ?? '—' }}</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-6">
+            <div>
+              <p class="text-sm font-medium text-ls-text">Discount Amount</p>
+              <p class="mt-1 text-sm text-ls-text-muted">{{ $client->discount ?? '—' }}</p>
+            </div>
+            <div>
+              <p class="text-sm font-medium text-ls-text">Discount Type</p>
+              <p class="mt-1 text-sm text-ls-text-muted">{{ $client->discount_type?->value ?? '—' }}</p>
+            </div>
+          </div>
+        </x-ls.section>
+
+        {{-- Contact Person --}}
+        <x-ls.section title="Contact Person">
+          <div>
+            <p class="text-sm font-medium text-ls-text">Name</p>
+            <p class="mt-1 text-sm text-ls-text-muted">{{ $client->contact_person_name ?? '—' }}</p>
+          </div>
+
+          <div class="grid grid-cols-2 gap-6">
+            <div>
+              <p class="text-sm font-medium text-ls-text">Email</p>
+              <p class="mt-1 text-sm text-ls-text-muted">{{ $client->contact_person_email ?? '—' }}</p>
+            </div>
+            <div>
+              <p class="text-sm font-medium text-ls-text">Phone</p>
+              <p class="mt-1 text-sm text-ls-text-muted">{{ $client->contact_person_phone ?? '—' }}</p>
+            </div>
+          </div>
+        </x-ls.section>
+
+        <div class="flex items-center gap-4">
+          <x-ls.button :href="route('clients.edit', $client)" variant="primary">Edit Client</x-ls.button>
+          <x-ls.button :href="route('clients.index')" variant="ghost">Back to Clients</x-ls.button>
+        </div>
+      </div>
+
+      {{-- Reservations --}}
+      <div>
+        <h2 class="text-lg font-medium text-ls-text">Reservations</h2>
+        <p class="mt-1 text-xs text-ls-text-soft">{{ $reservations->total() }} total</p>
+
+        <div class="mt-4 space-y-3">
+          @forelse($reservations as $reservation)
+            <a href="{{ route('reservations.show', $reservation) }}" class="block rounded-lg border border-ls-border p-4 hover:bg-ls-surface-muted">
+              <div class="flex items-center justify-between">
+                <p class="text-sm font-medium text-ls-text">{{ $reservation->product }}</p>
+                @php
+                  $statusVariant = match($reservation->status) {
+                    \App\ReservationStatus::Confirmed => 'success',
+                    \App\ReservationStatus::Canceled => 'danger',
+                    default => 'warning',
+                  };
+                @endphp
+                <x-ls.pill :variant="$statusVariant">{{ $reservation->status->value }}</x-ls.pill>
+              </div>
+              <div class="mt-2 flex items-center gap-4 text-xs text-ls-text-muted">
+                <span>{{ $reservation->platform->name }}</span>
+                <span>{{ $reservation->placement->name }}</span>
+                <span>{{ $reservation->salesperson->first_name }} {{ $reservation->salesperson->last_name }}</span>
+              </div>
+              <div class="mt-1 flex items-center justify-between text-xs">
+                <span class="text-ls-text-soft">{{ $reservation->created_at->format('d M Y') }}</span>
+                <span class="font-medium text-ls-text">MUR {{ number_format($reservation->gross_amount) }}</span>
+              </div>
+            </a>
+          @empty
+            <p class="text-sm text-ls-text-muted">No reservations found.</p>
+          @endforelse
         </div>
 
-        {{-- Reservations --}}
-        <div>
-          <h2 class="text-lg font-medium text-gray-900">Reservations</h2>
-          <p class="mt-1 text-xs text-gray-400">{{ $reservations->total() }} total</p>
-
-          <div class="mt-4 space-y-3">
-            @forelse($reservations as $reservation)
-              <a href="{{ route('reservations.show', $reservation) }}" class="block rounded-lg border border-gray-200 p-4 hover:bg-gray-50">
-                <div class="flex items-center justify-between">
-                  <p class="text-sm font-medium text-gray-900">{{ $reservation->product }}</p>
-                  <span class="rounded-full px-2 py-0.5 text-xs font-medium
-                    {{ $reservation->status === \App\ReservationStatus::Confirmed ? 'bg-green-50 text-green-700' : ($reservation->status === \App\ReservationStatus::Canceled ? 'bg-red-50 text-red-700' : 'bg-amber-50 text-amber-700') }}">
-                    {{ $reservation->status->value }}
-                  </span>
-                </div>
-                <div class="mt-2 flex items-center gap-4 text-xs text-gray-500">
-                  <span>{{ $reservation->platform->name }}</span>
-                  <span>{{ $reservation->placement->name }}</span>
-                  <span>{{ $reservation->salesperson->first_name }} {{ $reservation->salesperson->last_name }}</span>
-                </div>
-                <div class="mt-1 flex items-center justify-between text-xs">
-                  <span class="text-gray-400">{{ $reservation->created_at->format('d M Y') }}</span>
-                  <span class="font-medium text-gray-900">MUR {{ number_format($reservation->gross_amount) }}</span>
-                </div>
-              </a>
-            @empty
-              <p class="text-sm text-gray-500">No reservations found.</p>
-            @endforelse
-          </div>
-
-          <div class="mt-4">
-            {{ $reservations->links() }}
-          </div>
+        <div class="mt-4">
+          {{ $reservations->links() }}
         </div>
       </div>
     </div>
-  </main>
+  </x-ls.page>
 @endsection
