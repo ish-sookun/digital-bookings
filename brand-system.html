@@ -1,0 +1,3533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>La Sentinelle — Brand system for web applications</title>
+<meta name="description" content="Brand system specification for building web applications across La Sentinelle Group." />
+<meta name="author" content="Ish Sookun" />
+<script>
+  // Apply stored theme before first paint to prevent FOUC.
+  (function() {
+    try {
+      var stored = localStorage.getItem('ls-theme');
+      if (stored === 'dark' || stored === 'light') {
+        document.documentElement.setAttribute('data-theme', stored);
+      }
+    } catch (e) {}
+  })();
+</script>
+<style>
+/* ============================================================
+   LA SENTINELLE BRAND SYSTEM — DESIGN TOKENS
+   ============================================================ */
+:root {
+  /* Brand palette (theme-invariant hexes) */
+  --ls-cream: #F1F6F8;
+  --ls-cream-dark: #DDE6EA;
+  --ls-cream-darker: #C5D4DB;
+  --ls-sky-soft: #C8E2EE;
+  --ls-sky: #95C9E3;
+  --ls-sky-deep: #6AAFD0;
+  --ls-slate: #7298BD;
+  --ls-slate-dark: #5B80A3;
+  --ls-deep: #4080A8;
+  --ls-deep-dark: #2E6389;
+  --ls-deep-darker: #1F4A6B;
+  --ls-ink: #0F2C44;
+  --ls-ink-deeper: #081C2E;
+  --ls-ink-shade: #14354F;
+
+  /* ---------- SEMANTIC SURFACE & TEXT TOKENS (LIGHT) ---------- */
+  /* Page & surfaces */
+  --ls-page: var(--ls-cream);
+  --ls-surface: #FFFFFF;
+  --ls-surface-muted: var(--ls-cream);
+  --ls-surface-raised: #FFFFFF;
+  --ls-surface-inverse: var(--ls-ink);
+
+  /* Text */
+  --ls-text: var(--ls-ink);
+  --ls-text-muted: var(--ls-slate-dark);
+  --ls-text-soft: var(--ls-deep-darker);
+  --ls-text-on-dark: var(--ls-cream);
+  --ls-text-on-accent: #FFFFFF;
+
+  /* Borders */
+  --ls-border: var(--ls-cream-dark);
+  --ls-border-strong: var(--ls-cream-darker);
+
+  /* Accent tints for UI (badges, active states, info blocks) */
+  --ls-accent-soft-bg: var(--ls-sky-soft);
+  --ls-accent-soft-text: var(--ls-deep-darker);
+
+  /* Neutral tag background (used for "Economy", "+4" avatar, etc.) */
+  --ls-neutral-tag-bg: var(--ls-cream-dark);
+  --ls-neutral-tag-text: var(--ls-ink);
+
+  /* Semantic colors */
+  --ls-success: #3B8A6E;
+  --ls-success-bg: #E4F0EA;
+  --ls-success-text: #1E5843;
+  --ls-warning: #C98A3B;
+  --ls-warning-bg: #F5E9D1;
+  --ls-warning-text: #7A5318;
+  --ls-danger: #B8483F;
+  --ls-danger-hover: #9E3B33;
+  --ls-danger-bg: #F4DDDA;
+  --ls-danger-text: #7A2A23;
+  --ls-info: #4080A8;
+  --ls-info-bg: #C8E2EE;
+  --ls-info-text: #1F4A6B;
+
+  /* Calendar-specific */
+  --cal-outside-bg: #F7FAFC;
+  --cal-weekend-bg: #F8FBFD;
+  --cal-slate-event-bg: #E6ECF3;
+
+  /* Overlays */
+  --ls-overlay-scrim: rgba(15, 44, 68, 0.45);
+  --ls-dialog-scrim: rgba(15, 44, 68, 0.35);
+
+  /* Typography */
+  --ls-font-sans: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --ls-font-mono: "JetBrains Mono", "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+
+  /* Radius */
+  --ls-radius-sm: 4px;
+  --ls-radius-md: 6px;
+  --ls-radius-lg: 10px;
+  --ls-radius-xl: 14px;
+
+  /* Shadows */
+  --ls-shadow-sm: 0 1px 2px rgba(15,44,68,0.06);
+  --ls-shadow-md: 0 4px 12px rgba(15,44,68,0.08);
+  --ls-shadow-lg: 0 12px 32px rgba(15,44,68,0.18);
+}
+
+/* ---------- DARK THEME OVERRIDES ---------- */
+[data-theme="dark"] {
+  /* Surfaces — cool slate-blue family, never pure black */
+  --ls-page: #0A1E2E;
+  --ls-surface: #13304A;
+  --ls-surface-muted: #0F2840;
+  --ls-surface-raised: #173C5A;
+  --ls-surface-inverse: #DDE6EA;
+
+  /* Text */
+  --ls-text: #EAF1F4;
+  --ls-text-muted: #8FA8BE;
+  --ls-text-soft: #B5D4F4;
+  --ls-text-on-dark: #F1F6F8;
+  --ls-text-on-accent: #FFFFFF;
+
+  /* Borders */
+  --ls-border: #23486A;
+  --ls-border-strong: #2E5A82;
+
+  /* Accent tints — darker + more saturated so text stays readable */
+  --ls-accent-soft-bg: #1F4A6B;
+  --ls-accent-soft-text: #C8E2EE;
+
+  --ls-neutral-tag-bg: #2E5A82;
+  --ls-neutral-tag-text: #EAF1F4;
+
+  /* Semantic — tints get darker backgrounds, text gets lighter */
+  --ls-success: #5FB08F;
+  --ls-success-bg: #1B3A30;
+  --ls-success-text: #9FE1CB;
+  --ls-warning: #E0A75A;
+  --ls-warning-bg: #3D2C14;
+  --ls-warning-text: #FAC775;
+  --ls-danger: #D66961;
+  --ls-danger-hover: #BC554D;
+  --ls-danger-bg: #3D1E1B;
+  --ls-danger-text: #F09595;
+  --ls-info: #6AAFD0;
+  --ls-info-bg: #1F4A6B;
+  --ls-info-text: #C8E2EE;
+
+  /* Calendar */
+  --cal-outside-bg: #0B2236;
+  --cal-weekend-bg: #0E2A42;
+  --cal-slate-event-bg: #1F3E5C;
+
+  /* Overlays go deeper in dark mode */
+  --ls-overlay-scrim: rgba(0, 0, 0, 0.7);
+  --ls-dialog-scrim: rgba(0, 0, 0, 0.6);
+
+  /* Shadows — more pronounced for depth on dark surfaces */
+  --ls-shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+  --ls-shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+  --ls-shadow-lg: 0 12px 32px rgba(0,0,0,0.5);
+}
+
+/* Respect OS preference when no explicit theme is set */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ls-page: #0A1E2E;
+    --ls-surface: #13304A;
+    --ls-surface-muted: #0F2840;
+    --ls-surface-raised: #173C5A;
+    --ls-surface-inverse: #DDE6EA;
+    --ls-text: #EAF1F4;
+    --ls-text-muted: #8FA8BE;
+    --ls-text-soft: #B5D4F4;
+    --ls-border: #23486A;
+    --ls-border-strong: #2E5A82;
+    --ls-accent-soft-bg: #1F4A6B;
+    --ls-accent-soft-text: #C8E2EE;
+    --ls-neutral-tag-bg: #2E5A82;
+    --ls-neutral-tag-text: #EAF1F4;
+    --ls-success: #5FB08F;
+    --ls-success-bg: #1B3A30;
+    --ls-success-text: #9FE1CB;
+    --ls-warning: #E0A75A;
+    --ls-warning-bg: #3D2C14;
+    --ls-warning-text: #FAC775;
+    --ls-danger: #D66961;
+    --ls-danger-hover: #BC554D;
+    --ls-danger-bg: #3D1E1B;
+    --ls-danger-text: #F09595;
+    --ls-info: #6AAFD0;
+    --ls-info-bg: #1F4A6B;
+    --ls-info-text: #C8E2EE;
+    --cal-outside-bg: #0B2236;
+    --cal-weekend-bg: #0E2A42;
+    --cal-slate-event-bg: #1F3E5C;
+    --ls-overlay-scrim: rgba(0, 0, 0, 0.7);
+    --ls-dialog-scrim: rgba(0, 0, 0, 0.6);
+    --ls-shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+    --ls-shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+    --ls-shadow-lg: 0 12px 32px rgba(0,0,0,0.5);
+  }
+}
+
+/* ============================================================
+   DOCUMENT BASE
+   ============================================================ */
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  font-family: var(--ls-font-sans);
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--ls-text);
+  background: var(--ls-page);
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+/* Document layout */
+.doc-layout {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  min-height: 100vh;
+}
+
+/* Table of contents */
+.toc {
+  background: var(--ls-surface-inverse);
+  color: var(--ls-text-on-dark);
+  padding: 28px 20px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+.toc-brand {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--ls-text-on-dark);
+  margin-bottom: 4px;
+}
+.toc-sub {
+  font-size: 11px;
+  color: color-mix(in srgb, var(--ls-text-on-dark) 55%, transparent);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: 24px;
+}
+.toc ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.toc li { margin: 0; }
+.toc a {
+  display: block;
+  padding: 6px 10px;
+  font-size: 12px;
+  color: color-mix(in srgb, var(--ls-text-on-dark) 70%, transparent);
+  text-decoration: none;
+  border-radius: var(--ls-radius-md);
+  border-left: 2px solid transparent;
+}
+.toc a:hover {
+  color: var(--ls-text-on-dark);
+  background: color-mix(in srgb, var(--ls-text-on-dark) 6%, transparent);
+}
+.toc-section {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--ls-sky);
+  padding: 16px 10px 6px;
+  font-weight: 500;
+}
+
+[data-theme="dark"] .toc { background: #050F19; }
+
+/* Main content */
+.doc-main {
+  background: var(--ls-surface);
+  padding: 40px 48px 80px;
+  max-width: 1100px;
+  transition: background-color 0.2s;
+}
+
+.doc-header {
+  border-bottom: 0.5px solid var(--ls-border);
+  padding-bottom: 24px;
+  margin-bottom: 40px;
+}
+.doc-header h1 {
+  margin: 0 0 6px;
+  font-size: 28px;
+  font-weight: 500;
+  color: var(--ls-text);
+  letter-spacing: -0.3px;
+}
+.doc-header .subtitle {
+  font-size: 14px;
+  color: var(--ls-text-soft);
+}
+.doc-header .meta {
+  display: flex;
+  gap: 24px;
+  margin-top: 16px;
+  font-size: 12px;
+  color: var(--ls-text-muted);
+}
+.doc-header .meta strong { color: var(--ls-text); font-weight: 500; }
+
+section.doc-section {
+  margin: 0 0 56px;
+  scroll-margin-top: 20px;
+}
+section.doc-section > h2 {
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--ls-text);
+  margin: 0 0 6px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--ls-deep);
+  display: inline-block;
+}
+section.doc-section > .section-intro {
+  font-size: 13px;
+  color: var(--ls-text-muted);
+  margin: 0 0 24px;
+  max-width: 720px;
+  line-height: 1.6;
+}
+
+.sub-block {
+  margin: 0 0 28px;
+}
+.sub-block h3 {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ls-text);
+  margin: 0 0 4px;
+}
+.sub-block .sb-desc {
+  font-size: 12px;
+  color: var(--ls-text-muted);
+  margin: 0 0 14px;
+}
+
+.panel {
+  background: var(--ls-surface);
+  border: 0.5px solid var(--ls-border-strong);
+  border-radius: var(--ls-radius-lg);
+  padding: 20px;
+}
+.panel-flush { padding: 0; overflow: hidden; }
+
+/* ---------- THEME TOGGLE ---------- */
+.theme-toggle {
+  position: fixed;
+  top: 20px;
+  right: 24px;
+  z-index: 100;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 0.5px solid var(--ls-border-strong);
+  background: var(--ls-surface);
+  color: var(--ls-text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--ls-shadow-md);
+  font-family: inherit;
+  transition: background 0.2s, color 0.2s, transform 0.15s;
+}
+.theme-toggle:hover { transform: scale(1.05); }
+.theme-toggle .icon-sun { display: none; }
+.theme-toggle .icon-moon { display: block; }
+[data-theme="dark"] .theme-toggle .icon-sun { display: block; }
+[data-theme="dark"] .theme-toggle .icon-moon { display: none; }
+
+/* ============================================================
+   1. PALETTE
+   ============================================================ */
+.swatch-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 10px;
+}
+.swatch {
+  border-radius: var(--ls-radius-md);
+  overflow: hidden;
+  border: 0.5px solid var(--ls-border-strong);
+}
+.swatch-color { height: 64px; }
+.swatch-meta {
+  padding: 8px 10px;
+  font-size: 11px;
+  background: var(--ls-surface);
+}
+.swatch-meta .n { font-weight: 500; color: var(--ls-text); display: block; }
+.swatch-meta .h { color: var(--ls-text-muted); font-family: var(--ls-font-mono); font-size: 10px; }
+
+.palette-note {
+  margin-top: 16px;
+  padding: 12px 14px;
+  background: var(--ls-surface-muted);
+  border-radius: var(--ls-radius-md);
+  font-size: 12px;
+  color: var(--ls-text-soft);
+  line-height: 1.6;
+}
+.palette-note strong { font-weight: 500; }
+
+.palette-group-title {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--ls-text-soft);
+  margin: 18px 0 8px;
+  font-weight: 500;
+}
+
+/* ============================================================
+   2. TYPOGRAPHY
+   ============================================================ */
+.type-sample h1 { margin: 0; font-size: 28px; font-weight: 500; color: var(--ls-text); letter-spacing: -0.3px; }
+.type-sample h2 { margin: 12px 0 0; font-size: 20px; font-weight: 500; color: var(--ls-text); }
+.type-sample h3 { margin: 10px 0 0; font-size: 15px; font-weight: 500; color: var(--ls-text-soft); }
+.type-sample p { margin: 10px 0 0; font-size: 13px; color: var(--ls-text); line-height: 1.6; }
+.type-sample .mono {
+  font-family: var(--ls-font-mono);
+  font-size: 12px;
+  color: var(--ls-text-soft);
+  margin-top: 10px;
+  padding: 8px 10px;
+  background: var(--ls-surface-muted);
+  border-radius: var(--ls-radius-sm);
+  display: inline-block;
+}
+
+/* ============================================================
+   3. PROJECT ICONS
+   ============================================================ */
+.icon-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+}
+.icon-card {
+  background: var(--ls-surface);
+  border: 0.5px solid var(--ls-border-strong);
+  border-radius: var(--ls-radius-lg);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+[data-theme="dark"] .icon-card { background: var(--ls-surface-raised); }
+.icon-frame {
+  width: 96px;
+  height: 96px;
+  border-radius: 20px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.icon-frame svg { display: block; width: 100%; height: 100%; }
+.icon-meta {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.icon-meta .name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ls-text);
+}
+.icon-meta .slug {
+  font-size: 11px;
+  color: var(--ls-text-muted);
+  font-family: var(--ls-font-mono);
+}
+
+/* Favicon size demos */
+.favicon-strip {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 16px 20px;
+  background: var(--ls-surface-muted);
+  border-radius: var(--ls-radius-md);
+  margin-top: 16px;
+}
+[data-theme="dark"] .favicon-strip { background: var(--ls-page); }
+.favicon-demo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.favicon-demo .size-label {
+  font-size: 10px;
+  color: var(--ls-text-muted);
+  font-family: var(--ls-font-mono);
+}
+.favicon-demo-icon {
+  border-radius: 4px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.favicon-demo-icon.s16 { width: 16px; height: 16px; border-radius: 3px; }
+.favicon-demo-icon.s32 { width: 32px; height: 32px; border-radius: 5px; }
+.favicon-demo-icon.s64 { width: 64px; height: 64px; border-radius: 10px; }
+.favicon-demo-icon.s128 { width: 128px; height: 128px; border-radius: 20px; }
+.favicon-demo-icon svg { display: block; width: 100%; height: 100%; }
+
+/* ============================================================
+   4. NAVIGATION
+   ============================================================ */
+.ls-nav {
+  background: var(--ls-surface-inverse);
+  color: var(--ls-text-on-dark);
+  border-radius: var(--ls-radius-lg);
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+[data-theme="dark"] .ls-nav { background: #050F19; }
+.ls-nav .brand { font-weight: 500; letter-spacing: 0.3px; }
+.ls-nav .links { display: flex; gap: 18px; flex: 1; font-size: 13px; }
+.ls-nav .links a { color: color-mix(in srgb, var(--ls-text-on-dark) 75%, transparent); text-decoration: none; cursor: pointer; }
+.ls-nav .links a.active { color: var(--ls-sky); }
+.ls-nav .nav-cta {
+  background: var(--ls-sky);
+  color: var(--ls-ink);
+  border: none;
+  padding: 7px 14px;
+  border-radius: var(--ls-radius-md);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+}
+.ls-nav-search {
+  background: color-mix(in srgb, var(--ls-text-on-dark) 10%, transparent);
+  color: var(--ls-text-on-dark);
+  border: 1px solid color-mix(in srgb, var(--ls-text-on-dark) 15%, transparent);
+  border-radius: var(--ls-radius-md);
+  padding: 7px 12px;
+  font-size: 13px;
+  width: 200px;
+  font-family: inherit;
+}
+.ls-nav-search::placeholder { color: color-mix(in srgb, var(--ls-text-on-dark) 50%, transparent); }
+.ls-nav-search:focus { outline: none; border-color: var(--ls-sky); background: color-mix(in srgb, var(--ls-text-on-dark) 15%, transparent); }
+
+.ls-avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--ls-slate); color: #fff;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 500;
+}
+
+.ls-header-bar {
+  background: var(--ls-surface);
+  border: 0.5px solid var(--ls-border-strong);
+  border-radius: var(--ls-radius-lg);
+  padding: 12px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.ls-header-bar .title {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--ls-text);
+  flex: 1;
+}
+.ls-crumb { font-size: 13px; color: var(--ls-text-muted); }
+.ls-crumb a { color: var(--ls-deep); text-decoration: none; cursor: pointer; }
+[data-theme="dark"] .ls-crumb a { color: var(--ls-sky); }
+.ls-crumb span { margin: 0 8px; color: var(--ls-border-strong); }
+
+.ls-tabs {
+  display: flex;
+  gap: 2px;
+  border-bottom: 1px solid var(--ls-border);
+  padding: 0 12px;
+}
+.ls-tab {
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ls-text-muted);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  cursor: pointer;
+  background: transparent;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  font-family: inherit;
+}
+.ls-tab.active {
+  color: var(--ls-deep);
+  border-bottom-color: var(--ls-deep);
+}
+[data-theme="dark"] .ls-tab.active {
+  color: var(--ls-sky);
+  border-bottom-color: var(--ls-sky);
+}
+
+/* Sidebar application */
+.ls-app {
+  background: var(--ls-surface);
+  border: 0.5px solid var(--ls-border-strong);
+  border-radius: var(--ls-radius-lg);
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  min-height: 460px;
+  overflow: hidden;
+}
+.ls-sidebar {
+  background: var(--ls-surface-muted);
+  padding: 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  border-right: 0.5px solid var(--ls-border-strong);
+}
+.ls-brand-block { display: flex; align-items: center; gap: 10px; padding: 4px 6px 10px; }
+.ls-brand-logo {
+  width: 34px; height: 34px;
+  background: var(--ls-ink);
+  border-radius: var(--ls-radius-md);
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 2px;
+  padding: 3px;
+}
+[data-theme="dark"] .ls-brand-logo { background: var(--ls-ink-deeper); }
+.ls-brand-logo span { background: var(--ls-cream); border-radius: 1px; }
+.ls-brand-logo span:nth-child(2),
+.ls-brand-logo span:nth-child(6),
+.ls-brand-logo span:nth-child(7) { background: var(--ls-slate); }
+.ls-brand-text { line-height: 1.2; }
+.ls-brand-text .name { font-size: 14px; font-weight: 500; color: var(--ls-text); }
+.ls-brand-text .sub { font-size: 11px; color: var(--ls-text-soft); }
+
+.ls-sb-search {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--ls-surface);
+  border: 1px solid var(--ls-border-strong);
+  border-radius: var(--ls-radius-md);
+  padding: 7px 10px;
+  font-size: 12px;
+  color: var(--ls-text-muted);
+  cursor: pointer;
+}
+.ls-sb-search .kbd {
+  margin-left: auto;
+  font-family: var(--ls-font-mono);
+  font-size: 10px;
+  background: var(--ls-neutral-tag-bg);
+  padding: 2px 5px;
+  border-radius: 3px;
+  color: var(--ls-text-soft);
+}
+.ls-sb-nav { display: flex; flex-direction: column; gap: 2px; }
+.ls-sb-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 12px;
+  border-radius: var(--ls-radius-md);
+  font-size: 13px;
+  color: var(--ls-text);
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  text-align: left;
+  width: 100%;
+  font-family: inherit;
+}
+.ls-sb-item:hover { background: var(--ls-border); }
+.ls-sb-item.active {
+  background: var(--ls-surface);
+  box-shadow: var(--ls-shadow-sm);
+  font-weight: 500;
+}
+[data-theme="dark"] .ls-sb-item.active { background: var(--ls-surface-raised); }
+.ls-sb-item svg { flex: none; }
+.ls-sb-group {
+  padding-top: 12px;
+  border-top: 0.5px solid var(--ls-border-strong);
+}
+/* Only the last group hugs the bottom; intermediate groups (Admin nav, etc.)
+   sit naturally below the main nav. */
+.ls-sb-group:last-child { margin-top: auto; }
+.ls-sb-group-title {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--ls-text-soft);
+  padding: 0 12px 6px;
+  font-weight: 500;
+}
+.ls-sb-reservation {
+  padding: 6px 12px;
+  font-size: 12px;
+  color: var(--ls-text);
+  line-height: 1.4;
+}
+.ls-sb-reservation .client { color: var(--ls-text-muted); font-size: 11px; }
+
+.ls-main-preview {
+  padding: 20px 24px;
+  background: var(--ls-surface);
+  overflow: hidden;
+}
+.ls-main-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding-bottom: 12px;
+  border-bottom: 0.5px solid var(--ls-border);
+  margin-bottom: 16px;
+}
+.ls-main-head h2 { margin: 0; font-size: 20px; font-weight: 500; color: var(--ls-text); }
+.ls-main-head .meta { font-size: 12px; color: var(--ls-text-muted); }
+
+.kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.kpi-card {
+  background: var(--ls-surface);
+  border: 1px solid var(--ls-border);
+  border-radius: var(--ls-radius-lg);
+  padding: 12px 14px;
+}
+[data-theme="dark"] .kpi-card { background: var(--ls-surface-raised); }
+.kpi-card .lbl {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--ls-text-muted);
+  font-weight: 500;
+}
+.kpi-card .val { font-size: 18px; font-weight: 500; color: var(--ls-text); margin-top: 4px; }
+.kpi-card .sub { font-size: 11px; color: var(--ls-text-muted); margin-top: 2px; }
+.kpi-card .sub.warn { color: var(--ls-warning); font-weight: 500; }
+
+/* ============================================================
+   4. BUTTONS
+   ============================================================ */
+.ls-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.2;
+  padding: 9px 16px;
+  border-radius: var(--ls-radius-md);
+  cursor: pointer;
+  border: 1px solid transparent;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+.ls-btn > svg { flex: none; }
+.ls-btn-primary { background: var(--ls-deep); color: #fff; border-color: var(--ls-deep); }
+.ls-btn-primary:hover { background: var(--ls-deep-dark); border-color: var(--ls-deep-dark); }
+[data-theme="dark"] .ls-btn-primary { background: var(--ls-sky-deep); border-color: var(--ls-sky-deep); color: var(--ls-ink); }
+[data-theme="dark"] .ls-btn-primary:hover { background: var(--ls-sky); border-color: var(--ls-sky); }
+
+.ls-btn-secondary { background: var(--ls-accent-soft-bg); color: var(--ls-accent-soft-text); border-color: var(--ls-sky); }
+.ls-btn-secondary:hover { background: var(--ls-sky); }
+[data-theme="dark"] .ls-btn-secondary { background: var(--ls-accent-soft-bg); color: var(--ls-accent-soft-text); border-color: var(--ls-slate-dark); }
+[data-theme="dark"] .ls-btn-secondary:hover { background: var(--ls-deep-dark); }
+
+.ls-btn-outline { background: transparent; color: var(--ls-deep); border-color: var(--ls-deep); }
+.ls-btn-outline:hover { background: var(--ls-deep); color: #fff; }
+[data-theme="dark"] .ls-btn-outline { color: var(--ls-sky); border-color: var(--ls-sky); }
+[data-theme="dark"] .ls-btn-outline:hover { background: var(--ls-sky); color: var(--ls-ink); }
+
+.ls-btn-ghost { background: transparent; color: var(--ls-text-soft); border-color: transparent; }
+.ls-btn-ghost:hover { background: var(--ls-surface-muted); }
+
+.ls-btn-danger { background: var(--ls-danger); color: #fff; border-color: var(--ls-danger); }
+.ls-btn-danger:hover { background: var(--ls-danger-hover); }
+
+.ls-btn-sm { padding: 6px 12px; font-size: 12px; }
+.ls-btn-lg { padding: 12px 22px; font-size: 14px; }
+.ls-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+
+/* ============================================================
+   5. PILLS, TAGS, BADGES
+   ============================================================ */
+.ls-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+}
+.ls-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  border-radius: var(--ls-radius-sm);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+  text-transform: uppercase;
+}
+.ls-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.group-label {
+  font-size: 11px;
+  color: var(--ls-text-muted);
+  margin-bottom: 10px;
+  font-weight: 500;
+}
+
+/* ============================================================
+   6. FORMS
+   ============================================================ */
+.ls-field { display: flex; flex-direction: column; gap: 6px; }
+.ls-field label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ls-text);
+}
+.ls-field .hint { font-size: 11px; color: var(--ls-text-muted); }
+.ls-input, .ls-textarea, .ls-select {
+  font-family: inherit;
+  font-size: 13px;
+  background: var(--ls-surface);
+  color: var(--ls-text);
+  border: 1px solid var(--ls-border-strong);
+  border-radius: var(--ls-radius-md);
+  padding: 9px 12px;
+  transition: border 0.15s, box-shadow 0.15s;
+  width: 100%;
+}
+[data-theme="dark"] .ls-input,
+[data-theme="dark"] .ls-textarea,
+[data-theme="dark"] .ls-select { background: var(--ls-surface-raised); }
+.ls-input:focus, .ls-textarea:focus, .ls-select:focus {
+  outline: none;
+  border-color: var(--ls-deep);
+  box-shadow: 0 0 0 3px rgba(64,128,168,0.18);
+}
+[data-theme="dark"] .ls-input:focus,
+[data-theme="dark"] .ls-textarea:focus,
+[data-theme="dark"] .ls-select:focus {
+  border-color: var(--ls-sky);
+  box-shadow: 0 0 0 3px rgba(149,201,227,0.2);
+}
+.ls-input.error { border-color: var(--ls-danger); }
+.ls-input.success { border-color: var(--ls-success); }
+.ls-textarea { resize: vertical; min-height: 70px; }
+
+.ls-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--ls-text);
+  cursor: pointer;
+  margin-bottom: 6px;
+}
+.ls-check input { accent-color: var(--ls-deep); width: 15px; height: 15px; }
+[data-theme="dark"] .ls-check input { accent-color: var(--ls-sky); }
+
+.ls-toggle {
+  position: relative;
+  display: inline-block;
+  width: 36px;
+  height: 20px;
+}
+.ls-toggle input { opacity: 0; width: 0; height: 0; }
+.ls-toggle .slider {
+  position: absolute;
+  inset: 0;
+  background: var(--ls-border-strong);
+  border-radius: 999px;
+  transition: 0.2s;
+  cursor: pointer;
+}
+.ls-toggle .slider::before {
+  content: "";
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  left: 3px;
+  top: 3px;
+  background: var(--ls-surface);
+  border-radius: 50%;
+  transition: 0.2s;
+}
+.ls-toggle input:checked + .slider { background: var(--ls-deep); }
+[data-theme="dark"] .ls-toggle input:checked + .slider { background: var(--ls-sky); }
+.ls-toggle input:checked + .slider::before { transform: translateX(16px); }
+
+.ls-combo { position: relative; }
+.ls-combo-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: var(--ls-surface);
+  border: 1px solid var(--ls-border-strong);
+  border-radius: var(--ls-radius-md);
+  box-shadow: var(--ls-shadow-md);
+  z-index: 2;
+  max-height: 160px;
+  overflow-y: auto;
+}
+[data-theme="dark"] .ls-combo-menu { background: var(--ls-surface-raised); }
+.ls-combo-item {
+  padding: 8px 12px;
+  font-size: 13px;
+  color: var(--ls-text);
+  cursor: pointer;
+}
+.ls-combo-item:hover,
+.ls-combo-item.active { background: var(--ls-surface-muted); }
+.ls-combo-item.selected { background: var(--ls-accent-soft-bg); color: var(--ls-accent-soft-text); }
+
+.ls-radio-card {
+  border: 1px solid var(--ls-border-strong);
+  border-radius: var(--ls-radius-md);
+  padding: 12px;
+  cursor: pointer;
+  font-size: 13px;
+}
+.ls-radio-card.selected {
+  border-color: var(--ls-deep);
+  background: var(--ls-accent-soft-bg);
+}
+[data-theme="dark"] .ls-radio-card.selected { border-color: var(--ls-sky); }
+.ls-radio-card .rc-label { font-weight: 500; color: var(--ls-text); }
+.ls-radio-card.selected .rc-label { color: var(--ls-accent-soft-text); }
+.ls-radio-card .rc-desc {
+  font-size: 11px;
+  color: var(--ls-text-muted);
+  margin-top: 2px;
+}
+.ls-radio-card.selected .rc-desc { color: var(--ls-accent-soft-text); opacity: 0.85; }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.three-col { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+
+/* ============================================================
+   7. ALERTS
+   ============================================================ */
+.ls-alert {
+  padding: 10px 14px;
+  border-radius: var(--ls-radius-md);
+  font-size: 13px;
+  display: flex;
+  gap: 10px;
+  border-left: 3px solid;
+  margin-bottom: 10px;
+}
+.ls-alert:last-child { margin-bottom: 0; }
+.ls-alert-info { background: var(--ls-info-bg); border-color: var(--ls-info); color: var(--ls-info-text); }
+.ls-alert-success { background: var(--ls-success-bg); border-color: var(--ls-success); color: var(--ls-success-text); }
+.ls-alert-warning { background: var(--ls-warning-bg); border-color: var(--ls-warning); color: var(--ls-warning-text); }
+.ls-alert-danger { background: var(--ls-danger-bg); border-color: var(--ls-danger); color: var(--ls-danger-text); }
+.ls-alert strong { font-weight: 500; color: inherit; }
+
+/* ============================================================
+   8. PROGRESS & STATS
+   ============================================================ */
+.ls-progress {
+  background: var(--ls-surface-muted);
+  border-radius: 999px;
+  height: 8px;
+  overflow: hidden;
+}
+[data-theme="dark"] .ls-progress { background: var(--ls-border); }
+.ls-progress > div {
+  height: 100%;
+  background: var(--ls-deep);
+  border-radius: 999px;
+}
+[data-theme="dark"] .ls-progress > div { background: var(--ls-sky); }
+.ls-progress.thick { height: 12px; }
+
+.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.stat-card {
+  background: var(--ls-surface-muted);
+  border-radius: var(--ls-radius-md);
+  padding: 12px 14px;
+}
+[data-theme="dark"] .stat-card { background: var(--ls-surface-raised); }
+.stat-card .lbl {
+  font-size: 11px;
+  color: var(--ls-text-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.stat-card .val { font-size: 22px; font-weight: 500; color: var(--ls-text); margin-top: 4px; }
+.stat-card .delta { font-size: 11px; color: var(--ls-success); margin-top: 2px; }
+.stat-card .delta.neg { color: var(--ls-danger); }
+
+/* ============================================================
+   9. CHARTS
+   ============================================================ */
+.chart-card {
+  background: var(--ls-surface);
+  border: 1px solid var(--ls-border);
+  border-radius: var(--ls-radius-lg);
+  padding: 16px;
+}
+[data-theme="dark"] .chart-card { background: var(--ls-surface-raised); }
+.chart-card .title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ls-text);
+  margin-bottom: 10px;
+}
+.chart-legend {
+  display: flex;
+  gap: 14px;
+  font-size: 11px;
+  color: var(--ls-text-muted);
+  margin-top: 8px;
+}
+.chart-legend .k { display: flex; align-items: center; gap: 5px; }
+.chart-legend .sw { width: 10px; height: 10px; border-radius: 2px; }
+
+/* ============================================================
+   10. TIMELINE & STEPPER
+   ============================================================ */
+.ls-timeline {
+  position: relative;
+  padding-left: 24px;
+}
+.ls-timeline::before {
+  content: "";
+  position: absolute;
+  left: 7px;
+  top: 4px;
+  bottom: 4px;
+  width: 2px;
+  background: var(--ls-border);
+}
+.ls-timeline-item { position: relative; padding-bottom: 16px; }
+.ls-timeline-item:last-child { padding-bottom: 0; }
+.ls-timeline-item::before {
+  content: "";
+  position: absolute;
+  left: -21px;
+  top: 4px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--ls-deep);
+  border: 2px solid var(--ls-surface);
+  box-shadow: 0 0 0 2px var(--ls-deep);
+}
+.ls-timeline-item.done::before { background: var(--ls-success); box-shadow: 0 0 0 2px var(--ls-success); }
+.ls-timeline-item.pending::before { background: var(--ls-surface); box-shadow: 0 0 0 2px var(--ls-border-strong); }
+.ls-timeline-item .t-title { font-size: 13px; font-weight: 500; color: var(--ls-text); }
+.ls-timeline-item .t-meta { font-size: 11px; color: var(--ls-text-muted); }
+
+.ls-stepper { display: flex; align-items: center; }
+.ls-step { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--ls-text); }
+.ls-step .circle {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 500;
+  background: var(--ls-surface-muted);
+  color: var(--ls-text-muted);
+}
+.ls-step.done .circle { background: var(--ls-success); color: #fff; }
+.ls-step.active .circle { background: var(--ls-deep); color: #fff; }
+[data-theme="dark"] .ls-step.active .circle { background: var(--ls-sky); color: var(--ls-ink); }
+.step-line { flex: 1; height: 2px; background: var(--ls-border); margin: 0 8px; }
+.step-line.done { background: var(--ls-success); }
+
+/* ============================================================
+   11. CARDS
+   ============================================================ */
+.ls-card {
+  background: var(--ls-surface);
+  border: 1px solid var(--ls-border);
+  border-radius: var(--ls-radius-lg);
+  padding: 16px;
+}
+[data-theme="dark"] .ls-card { background: var(--ls-surface-raised); }
+.ls-card-accent { border-top: 3px solid var(--ls-deep); }
+[data-theme="dark"] .ls-card-accent { border-top-color: var(--ls-sky); }
+
+/* ============================================================
+   12. DATA TABLE & PAGINATION
+   ============================================================ */
+.ls-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.ls-table th {
+  text-align: left;
+  padding: 10px 12px;
+  background: var(--ls-surface-muted);
+  color: var(--ls-text);
+  font-weight: 500;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  border-bottom: 1px solid var(--ls-border);
+}
+.ls-table td {
+  padding: 10px 12px;
+  border-bottom: 0.5px solid var(--ls-border);
+  color: var(--ls-text);
+}
+.ls-table tr:hover td { background: var(--ls-surface-muted); }
+.ls-table tr:last-child td { border-bottom: none; }
+
+.ls-page {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.ls-page button {
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--ls-border-strong);
+  background: var(--ls-surface);
+  border-radius: var(--ls-radius-sm);
+  font-size: 12px;
+  cursor: pointer;
+  color: var(--ls-text);
+  font-family: inherit;
+}
+.ls-page button.active {
+  background: var(--ls-deep);
+  color: #fff;
+  border-color: var(--ls-deep);
+}
+[data-theme="dark"] .ls-page button.active {
+  background: var(--ls-sky);
+  color: var(--ls-ink);
+  border-color: var(--ls-sky);
+}
+.ls-page button:hover:not(.active) { background: var(--ls-surface-muted); }
+
+.table-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-top: 1px solid var(--ls-border);
+}
+.table-footer span { font-size: 12px; color: var(--ls-text-muted); }
+
+/* ============================================================
+   13. HERO
+   ============================================================ */
+.ls-hero {
+  background: var(--ls-surface-muted);
+  border-radius: var(--ls-radius-lg);
+  padding: 28px 24px;
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 24px;
+  align-items: center;
+}
+[data-theme="dark"] .ls-hero { background: var(--ls-surface-raised); }
+.ls-hero h2 {
+  margin: 10px 0 8px;
+  font-size: 22px;
+  color: var(--ls-text);
+  font-weight: 500;
+}
+.ls-hero p {
+  margin: 0 0 16px;
+  font-size: 13px;
+  color: var(--ls-text-soft);
+  line-height: 1.6;
+}
+.hero-visual {
+  background: var(--ls-sky);
+  border-radius: var(--ls-radius-md);
+  height: 140px;
+  position: relative;
+  overflow: hidden;
+}
+.hero-visual .band { position: absolute; left: 0; right: 0; }
+.hero-visual .b1 { top: 0; height: 30%; background: var(--ls-cream); }
+.hero-visual .b2 { top: 30%; height: 30%; background: var(--ls-sky); }
+.hero-visual .b3 { top: 60%; height: 20%; background: var(--ls-slate); }
+.hero-visual .b4 { top: 80%; height: 20%; background: var(--ls-deep); }
+
+/* ============================================================
+   14. AUXILIARY
+   ============================================================ */
+.ls-tooltip {
+  background: var(--ls-surface-inverse);
+  color: var(--ls-text-on-dark);
+  font-size: 11px;
+  padding: 5px 9px;
+  border-radius: var(--ls-radius-sm);
+  display: inline-block;
+}
+[data-theme="dark"] .ls-tooltip { background: var(--ls-ink); color: var(--ls-cream); }
+
+.ls-code {
+  background: var(--ls-ink);
+  color: var(--ls-cream);
+  font-family: var(--ls-font-mono);
+  font-size: 12px;
+  padding: 10px 14px;
+  border-radius: var(--ls-radius-md);
+  overflow-x: auto;
+}
+[data-theme="dark"] .ls-code { background: var(--ls-ink-deeper); }
+.ls-code .tk-prop { color: var(--ls-sky); }
+.ls-code .tk-val { color: var(--ls-cream-dark); }
+
+/* ============================================================
+   15. FOOTER
+   ============================================================ */
+.ls-footer {
+  background: var(--ls-surface-inverse);
+  color: var(--ls-text-on-dark);
+  border-radius: var(--ls-radius-lg);
+  padding: 24px;
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr 1fr;
+  gap: 20px;
+  font-size: 12px;
+}
+[data-theme="dark"] .ls-footer { background: #050F19; }
+.ls-footer h5 {
+  margin: 0 0 10px;
+  font-size: 12px;
+  color: var(--ls-sky);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.ls-footer a {
+  color: color-mix(in srgb, var(--ls-text-on-dark) 70%, transparent);
+  text-decoration: none;
+  display: block;
+  padding: 3px 0;
+  cursor: pointer;
+}
+.ls-footer a:hover { color: var(--ls-text-on-dark); }
+.ls-footer .copyright {
+  grid-column: 1 / -1;
+  border-top: 1px solid color-mix(in srgb, var(--ls-text-on-dark) 10%, transparent);
+  padding-top: 14px;
+  color: color-mix(in srgb, var(--ls-text-on-dark) 50%, transparent);
+}
+
+/* ============================================================
+   16. COMMAND PALETTE
+   ============================================================ */
+.overlay-mock {
+  background: var(--ls-overlay-scrim);
+  border-radius: var(--ls-radius-lg);
+  padding: 40px 24px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 420px;
+}
+.cmd-palette {
+  background: var(--ls-surface);
+  border-radius: var(--ls-radius-xl);
+  width: 100%;
+  max-width: 480px;
+  overflow: hidden;
+  box-shadow: var(--ls-shadow-lg), 0 0 0 1px var(--ls-border-strong);
+}
+[data-theme="dark"] .cmd-palette { background: var(--ls-surface-raised); }
+.cmd-input {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-bottom: 0.5px solid var(--ls-border);
+}
+.cmd-input input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 14px;
+  color: var(--ls-text);
+  font-family: inherit;
+  background: transparent;
+}
+.cmd-input input::placeholder { color: var(--ls-text-muted); }
+.cmd-esc {
+  font-family: var(--ls-font-mono);
+  font-size: 10px;
+  background: var(--ls-surface-muted);
+  padding: 2px 6px;
+  border-radius: 3px;
+  color: var(--ls-text-soft);
+}
+[data-theme="dark"] .cmd-esc { background: var(--ls-neutral-tag-bg); }
+.cmd-group-title {
+  padding: 10px 16px 4px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--ls-text-muted);
+  font-weight: 500;
+}
+.cmd-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 16px;
+  font-size: 13px;
+  color: var(--ls-text);
+  cursor: pointer;
+}
+.cmd-item:hover, .cmd-item.active { background: var(--ls-accent-soft-bg); color: var(--ls-accent-soft-text); }
+.cmd-item .pi-icon {
+  width: 26px;
+  height: 26px;
+  background: var(--ls-surface-muted);
+  border-radius: var(--ls-radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ls-text-soft);
+}
+[data-theme="dark"] .cmd-item .pi-icon { background: var(--ls-neutral-tag-bg); color: var(--ls-sky); }
+.cmd-item .pi-desc {
+  flex: 1;
+  font-size: 11px;
+  color: var(--ls-text-muted);
+  margin-left: auto;
+  text-align: right;
+}
+.cmd-item.active .pi-desc { color: var(--ls-accent-soft-text); opacity: 0.8; }
+.cmd-item .pi-kbd {
+  font-family: var(--ls-font-mono);
+  font-size: 10px;
+  background: var(--ls-surface-muted);
+  padding: 2px 6px;
+  border-radius: 3px;
+  color: var(--ls-text-soft);
+  margin-left: 8px;
+}
+[data-theme="dark"] .cmd-item .pi-kbd { background: var(--ls-neutral-tag-bg); }
+.cmd-foot {
+  padding: 10px 16px;
+  border-top: 0.5px solid var(--ls-border);
+  font-size: 11px;
+  color: var(--ls-text-muted);
+  display: flex;
+  gap: 16px;
+  background: var(--ls-surface-muted);
+}
+.cmd-foot .kbd {
+  font-family: var(--ls-font-mono);
+  background: var(--ls-surface);
+  border: 0.5px solid var(--ls-border-strong);
+  padding: 1px 5px;
+  border-radius: 3px;
+  color: var(--ls-text);
+  margin-right: 4px;
+}
+
+/* ============================================================
+   17. CONFIRMATION DIALOGS
+   ============================================================ */
+.dialog-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+/* Static documentation container — shows the dialog inline on the brand
+   system reference page. NOT for production overlays; use .ls-overlay
+   for actual modals / dialogs / command palettes. */
+.dialog-mock {
+  background: var(--ls-dialog-scrim);
+  border-radius: var(--ls-radius-lg);
+  padding: 28px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Production overlay primitive: fills the viewport, centers its child,
+   sits above the rest of the app. Wrap any modal, dialog or palette in
+   this when rendering it in the live UI. */
+.ls-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: var(--ls-dialog-scrim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.ls-overlay--top { align-items: flex-start; padding-top: 12vh; }
+.ls-dialog {
+  background: var(--ls-surface);
+  border-radius: var(--ls-radius-xl);
+  padding: 22px;
+  box-shadow: var(--ls-shadow-lg), 0 0 0 1px var(--ls-border-strong);
+  width: 100%;
+  max-width: 480px;
+}
+[data-theme="dark"] .ls-dialog { background: var(--ls-surface-raised); }
+.dialog-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--ls-radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+.dialog-icon.danger { background: var(--ls-danger-bg); color: var(--ls-danger); }
+.dialog-icon.warn { background: var(--ls-warning-bg); color: var(--ls-warning); }
+.ls-dialog h4 {
+  margin: 0 0 6px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ls-text);
+}
+.ls-dialog p {
+  margin: 0 0 14px;
+  font-size: 13px;
+  color: var(--ls-text-muted);
+  line-height: 1.5;
+}
+.ls-dialog p strong { color: var(--ls-text); font-weight: 500; }
+.dialog-target {
+  background: var(--ls-surface-muted);
+  border-radius: var(--ls-radius-md);
+  padding: 10px 12px;
+  font-size: 12px;
+  color: var(--ls-text);
+  margin-bottom: 14px;
+}
+[data-theme="dark"] .dialog-target { background: var(--ls-page); }
+.dialog-target strong { font-weight: 500; }
+.dialog-confirm-input {
+  width: 100%;
+  font-family: var(--ls-font-mono);
+  font-size: 12px;
+  padding: 8px 10px;
+  border: 1px solid var(--ls-border-strong);
+  border-radius: var(--ls-radius-md);
+  margin-bottom: 14px;
+  background: var(--ls-surface);
+  color: var(--ls-text);
+}
+[data-theme="dark"] .dialog-confirm-input { background: var(--ls-page); }
+.dialog-confirm-input:focus {
+  outline: none;
+  border-color: var(--ls-danger);
+  box-shadow: 0 0 0 3px rgba(184,72,63,0.15);
+}
+.dialog-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+.dialog-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.2;
+  padding: 8px 14px;
+  border-radius: var(--ls-radius-md);
+  cursor: pointer;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+.dialog-actions button > svg { flex: none; }
+.btn-cancel { background: var(--ls-surface); color: var(--ls-text); border-color: var(--ls-border-strong); }
+.btn-cancel:hover { background: var(--ls-surface-muted); }
+[data-theme="dark"] .btn-cancel { background: var(--ls-page); }
+[data-theme="dark"] .btn-cancel:hover { background: var(--ls-surface); }
+.btn-destructive { background: var(--ls-danger); color: #fff; border-color: var(--ls-danger); }
+.btn-destructive:hover { background: var(--ls-danger-hover); }
+.btn-destructive:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-warn { background: var(--ls-warning); color: #fff; border-color: var(--ls-warning); }
+.btn-warn:hover { background: #A8711E; }
+
+/* ============================================================
+   18. CALENDAR — MONTH, WEEK, AGENDA, DATE PICKER
+   ============================================================ */
+.cal-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 0.5px solid var(--ls-border);
+}
+.cal-head h4 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ls-text);
+  flex: 1;
+}
+.cal-nav-btns { display: flex; gap: 4px; }
+.cal-nav-btns button {
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--ls-border-strong);
+  background: var(--ls-surface);
+  border-radius: var(--ls-radius-md);
+  cursor: pointer;
+  color: var(--ls-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+}
+.cal-nav-btns button:hover { background: var(--ls-surface-muted); }
+.cal-today-btn {
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 6px 12px;
+  background: var(--ls-surface);
+  color: var(--ls-text);
+  border: 1px solid var(--ls-border-strong);
+  border-radius: var(--ls-radius-md);
+  cursor: pointer;
+}
+.cal-today-btn:hover { background: var(--ls-surface-muted); }
+.cal-view-toggle {
+  display: inline-flex;
+  background: var(--ls-surface-muted);
+  border-radius: var(--ls-radius-md);
+  padding: 2px;
+}
+[data-theme="dark"] .cal-view-toggle { background: var(--ls-page); }
+.cal-view-toggle button {
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 5px 12px;
+  border: none;
+  background: transparent;
+  color: var(--ls-text-muted);
+  cursor: pointer;
+  border-radius: var(--ls-radius-sm);
+}
+.cal-view-toggle button.active {
+  background: var(--ls-surface);
+  color: var(--ls-text);
+  box-shadow: var(--ls-shadow-sm);
+}
+[data-theme="dark"] .cal-view-toggle button.active { background: var(--ls-surface-raised); }
+
+.cal-month-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  background: var(--ls-surface-muted);
+  border-bottom: 0.5px solid var(--ls-border);
+}
+[data-theme="dark"] .cal-month-weekdays { background: var(--ls-page); }
+.cal-month-weekdays div {
+  padding: 8px 10px;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--ls-text-soft);
+}
+.cal-month {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  grid-auto-rows: minmax(88px, auto);
+}
+.cal-day {
+  border-right: 0.5px solid var(--ls-border);
+  border-bottom: 0.5px solid var(--ls-border);
+  padding: 6px 8px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  background: var(--ls-surface);
+}
+[data-theme="dark"] .cal-day { background: var(--ls-surface-raised); }
+.cal-day:nth-child(7n) { border-right: none; }
+.cal-day-num {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ls-text);
+  align-self: flex-start;
+  padding: 2px 5px;
+  border-radius: var(--ls-radius-sm);
+}
+.cal-day.outside { background: var(--cal-outside-bg); }
+.cal-day.outside .cal-day-num { color: var(--ls-border-strong); }
+.cal-day.today .cal-day-num { background: var(--ls-deep); color: #fff; }
+[data-theme="dark"] .cal-day.today .cal-day-num { background: var(--ls-sky); color: var(--ls-ink); }
+.cal-day.weekend { background: var(--cal-weekend-bg); }
+.cal-event {
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border-left: 2px solid;
+  font-weight: 500;
+}
+.cal-event.primary { background: var(--ls-accent-soft-bg); color: var(--ls-accent-soft-text); border-color: var(--ls-deep); }
+.cal-event.slate { background: var(--cal-slate-event-bg); color: var(--ls-text-soft); border-color: var(--ls-slate); }
+.cal-event.success { background: var(--ls-success-bg); color: var(--ls-success-text); border-color: var(--ls-success); }
+.cal-event.warning { background: var(--ls-warning-bg); color: var(--ls-warning-text); border-color: var(--ls-warning); }
+.cal-event.danger { background: var(--ls-danger-bg); color: var(--ls-danger-text); border-color: var(--ls-danger); }
+.cal-more {
+  font-size: 10px;
+  color: var(--ls-text-muted);
+  padding: 1px 6px;
+  cursor: pointer;
+}
+
+.cal-legend {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 10px 18px;
+  background: var(--ls-surface-muted);
+  border-top: 0.5px solid var(--ls-border);
+  font-size: 11px;
+  color: var(--ls-text-soft);
+}
+[data-theme="dark"] .cal-legend { background: var(--ls-page); }
+.cal-legend .k { display: flex; align-items: center; gap: 5px; }
+.cal-legend .sw { width: 10px; height: 10px; border-radius: 2px; }
+
+/* Week view */
+.cal-week-head {
+  display: grid;
+  grid-template-columns: 50px repeat(7, 1fr);
+  border-bottom: 0.5px solid var(--ls-border);
+  background: var(--ls-surface-muted);
+}
+[data-theme="dark"] .cal-week-head { background: var(--ls-page); }
+.cal-week-head > div {
+  padding: 8px 6px;
+  text-align: center;
+  font-size: 11px;
+  color: var(--ls-text-soft);
+  border-right: 0.5px solid var(--ls-border);
+}
+.cal-week-head > div:last-child { border-right: none; }
+.cal-week-head .day-name {
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  font-weight: 500;
+}
+.cal-week-head .day-num {
+  font-size: 16px;
+  color: var(--ls-text);
+  font-weight: 500;
+  margin-top: 2px;
+}
+.cal-week-head .day-num.today {
+  display: inline-flex;
+  width: 24px;
+  height: 24px;
+  background: var(--ls-deep);
+  color: #fff;
+  border-radius: 50%;
+  align-items: center;
+  justify-content: center;
+  margin: 2px auto 0;
+  font-size: 12px;
+}
+[data-theme="dark"] .cal-week-head .day-num.today { background: var(--ls-sky); color: var(--ls-ink); }
+.cal-week {
+  display: grid;
+  grid-template-columns: 50px repeat(7, 1fr);
+  background: var(--ls-surface);
+}
+[data-theme="dark"] .cal-week { background: var(--ls-surface-raised); }
+.cal-hour-label {
+  padding: 4px 6px;
+  font-size: 10px;
+  color: var(--ls-text-muted);
+  text-align: right;
+  border-right: 0.5px solid var(--ls-border);
+  height: 40px;
+}
+.cal-hour-cell {
+  border-right: 0.5px solid var(--ls-border);
+  border-bottom: 0.5px solid var(--ls-border);
+  height: 40px;
+  position: relative;
+}
+.cal-hour-cell.weekend { background: var(--cal-weekend-bg); }
+.cal-week-event {
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  border-radius: var(--ls-radius-sm);
+  padding: 4px 6px;
+  font-size: 10px;
+  line-height: 1.3;
+  overflow: hidden;
+  border-left: 2px solid;
+  font-weight: 500;
+}
+.cal-week-event.primary { background: var(--ls-accent-soft-bg); color: var(--ls-accent-soft-text); border-color: var(--ls-deep); }
+.cal-week-event.slate { background: var(--cal-slate-event-bg); color: var(--ls-text-soft); border-color: var(--ls-slate); }
+.cal-week-event.warning { background: var(--ls-warning-bg); color: var(--ls-warning-text); border-color: var(--ls-warning); }
+.cal-week-event .t { font-size: 9px; opacity: 0.8; }
+.cal-now-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--ls-danger);
+  z-index: 2;
+}
+.cal-now-line::before {
+  content: "";
+  position: absolute;
+  left: -4px;
+  top: -3px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--ls-danger);
+}
+
+/* Agenda view */
+.cal-agenda {
+  display: grid;
+  grid-template-columns: 60px 1fr;
+  background: var(--ls-surface);
+}
+[data-theme="dark"] .cal-agenda { background: var(--ls-surface-raised); }
+.cal-agenda-time {
+  padding: 12px 10px 12px 16px;
+  font-size: 11px;
+  color: var(--ls-text-muted);
+  border-right: 0.5px solid var(--ls-border);
+  border-bottom: 0.5px solid var(--ls-border);
+  text-align: right;
+  font-family: var(--ls-font-mono);
+}
+.cal-agenda-content {
+  padding: 10px 14px;
+  border-bottom: 0.5px solid var(--ls-border);
+}
+.cal-agenda-content.empty {
+  color: var(--ls-border-strong);
+  font-size: 11px;
+  font-style: italic;
+}
+.cal-agenda-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: var(--ls-radius-md);
+  border-left: 3px solid;
+  background: var(--ls-surface-muted);
+  margin-bottom: 4px;
+}
+.cal-agenda-item:last-child { margin-bottom: 0; }
+.cal-agenda-item.primary { background: var(--ls-accent-soft-bg); border-color: var(--ls-deep); }
+.cal-agenda-item.slate { background: var(--cal-slate-event-bg); border-color: var(--ls-slate); }
+.cal-agenda-item.warning { background: var(--ls-warning-bg); border-color: var(--ls-warning); }
+.cal-agenda-item .title { font-size: 13px; font-weight: 500; color: var(--ls-text); }
+.cal-agenda-item.primary .title { color: var(--ls-accent-soft-text); }
+.cal-agenda-item.slate .title { color: var(--ls-text-soft); }
+.cal-agenda-item.warning .title { color: var(--ls-warning-text); }
+.cal-agenda-item .meta { font-size: 11px; color: var(--ls-text-muted); margin-top: 2px; }
+.cal-agenda-item.primary .meta { color: var(--ls-accent-soft-text); opacity: 0.8; }
+.cal-agenda-item.warning .meta { color: var(--ls-warning-text); opacity: 0.85; }
+
+/* Date picker */
+.picker-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: flex-start; }
+.date-picker {
+  background: var(--ls-surface);
+  border: 0.5px solid var(--ls-border-strong);
+  border-radius: var(--ls-radius-lg);
+  padding: 14px;
+  box-shadow: var(--ls-shadow-md);
+  max-width: 280px;
+}
+[data-theme="dark"] .date-picker { background: var(--ls-surface-raised); }
+.date-picker-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.date-picker-head .title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ls-text);
+}
+.date-picker-nav { display: flex; gap: 4px; }
+.date-picker-nav button {
+  width: 22px;
+  height: 22px;
+  border: none;
+  background: transparent;
+  color: var(--ls-text);
+  cursor: pointer;
+  border-radius: var(--ls-radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+}
+.date-picker-nav button:hover { background: var(--ls-surface-muted); }
+.date-picker-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  margin-bottom: 4px;
+}
+.date-picker-weekdays div {
+  text-align: center;
+  font-size: 10px;
+  color: var(--ls-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  padding: 4px 0;
+  font-weight: 500;
+}
+.date-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+.date-picker-grid button {
+  font-family: inherit;
+  border: none;
+  background: transparent;
+  font-size: 12px;
+  color: var(--ls-text);
+  padding: 6px 0;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.date-picker-grid button:hover:not(:disabled):not(.selected):not(.in-range):not(.range-start):not(.range-end) {
+  background: var(--ls-surface-muted);
+}
+.date-picker-grid button.outside { color: var(--ls-border-strong); }
+.date-picker-grid button.today { color: var(--ls-deep); font-weight: 500; }
+[data-theme="dark"] .date-picker-grid button.today { color: var(--ls-sky); }
+.date-picker-grid button.selected { background: var(--ls-deep); color: #fff; font-weight: 500; }
+[data-theme="dark"] .date-picker-grid button.selected { background: var(--ls-sky); color: var(--ls-ink); }
+.date-picker-grid button.in-range {
+  background: var(--ls-accent-soft-bg);
+  color: var(--ls-accent-soft-text);
+  border-radius: 0;
+}
+.date-picker-grid button.range-start {
+  background: var(--ls-deep);
+  color: #fff;
+  border-radius: 5px 0 0 5px;
+}
+.date-picker-grid button.range-end {
+  background: var(--ls-deep);
+  color: #fff;
+  border-radius: 0 5px 5px 0;
+}
+[data-theme="dark"] .date-picker-grid button.range-start,
+[data-theme="dark"] .date-picker-grid button.range-end {
+  background: var(--ls-sky);
+  color: var(--ls-ink);
+}
+.date-picker-foot {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 0.5px solid var(--ls-border);
+}
+.date-picker-foot button {
+  flex: 1;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 5px 8px;
+  border: 1px solid var(--ls-border-strong);
+  background: var(--ls-surface);
+  color: var(--ls-text);
+  border-radius: var(--ls-radius-sm);
+  cursor: pointer;
+}
+.date-picker-foot button:hover { background: var(--ls-surface-muted); }
+.date-picker-foot button.primary {
+  background: var(--ls-deep);
+  color: #fff;
+  border-color: var(--ls-deep);
+}
+[data-theme="dark"] .date-picker-foot button.primary {
+  background: var(--ls-sky);
+  color: var(--ls-ink);
+  border-color: var(--ls-sky);
+}
+.date-input-group { display: flex; flex-direction: column; gap: 8px; }
+.date-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--ls-surface);
+  border: 1px solid var(--ls-border-strong);
+  border-radius: var(--ls-radius-md);
+  padding: 8px 12px;
+}
+[data-theme="dark"] .date-input-wrap { background: var(--ls-surface-raised); }
+.date-input-wrap input {
+  border: none;
+  outline: none;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--ls-text);
+  background: transparent;
+  flex: 1;
+}
+.date-input-wrap svg { color: var(--ls-text-muted); flex: none; }
+.date-preset-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px;
+  background: var(--ls-surface-muted);
+  border-radius: var(--ls-radius-md);
+  min-width: 140px;
+}
+[data-theme="dark"] .date-preset-list { background: var(--ls-page); }
+.date-preset-list .title {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--ls-text-soft);
+  font-weight: 500;
+  padding: 4px 8px 6px;
+}
+.date-preset-list button {
+  font-family: inherit;
+  font-size: 12px;
+  color: var(--ls-text);
+  text-align: left;
+  padding: 5px 8px;
+  border: none;
+  background: transparent;
+  border-radius: var(--ls-radius-sm);
+  cursor: pointer;
+}
+.date-preset-list button:hover { background: var(--ls-surface); }
+.date-preset-list button.active { background: var(--ls-surface); font-weight: 500; }
+[data-theme="dark"] .date-preset-list button:hover,
+[data-theme="dark"] .date-preset-list button.active { background: var(--ls-surface-raised); }
+
+/* ============================================================
+   DOCUMENT SIGN-OFF
+   ============================================================ */
+.doc-signoff {
+  margin-top: 64px;
+  padding-top: 24px;
+  border-top: 0.5px solid var(--ls-border);
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+}
+.signature-block {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.signature-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--ls-deep);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+  font-size: 15px;
+}
+[data-theme="dark"] .signature-avatar { background: var(--ls-sky); color: var(--ls-ink); }
+.signature-meta .name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ls-text);
+}
+.signature-meta .role {
+  font-size: 12px;
+  color: var(--ls-text-muted);
+  margin-top: 2px;
+}
+.signoff-date {
+  text-align: right;
+  font-size: 11px;
+  color: var(--ls-text-muted);
+  font-family: var(--ls-font-mono);
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .doc-layout { grid-template-columns: 1fr; }
+  .toc { position: static; height: auto; }
+  .doc-main { padding: 24px 20px; }
+  .two-col, .three-col, .picker-row, .dialog-row, .kpi-grid,
+  .ls-hero, .ls-footer { grid-template-columns: 1fr; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .ls-app { grid-template-columns: 1fr; }
+}
+
+/* Print styles */
+@media print {
+  .toc, .theme-toggle { display: none; }
+  .doc-layout { grid-template-columns: 1fr; }
+  .doc-main { padding: 20px; max-width: none; }
+  section.doc-section { page-break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+
+<!-- ==================== THEME TOGGLE ==================== -->
+<button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode" title="Toggle theme (⌘J)">
+  <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+  <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+</button>
+
+<div class="doc-layout">
+
+<!-- ==================== TABLE OF CONTENTS ==================== -->
+<nav class="toc">
+  <div class="toc-brand">La Sentinelle</div>
+  <div class="toc-sub">Brand system</div>
+  <ul>
+    <li class="toc-section">Foundations</li>
+    <li><a href="#palette">1. Core palette</a></li>
+    <li><a href="#typography">2. Typography</a></li>
+    <li><a href="#project-icons">3. Project icons</a></li>
+
+    <li class="toc-section">Navigation</li>
+    <li><a href="#topnav">4.1 Top navigation</a></li>
+    <li><a href="#sidebar">4.2 Sidebar navigation</a></li>
+    <li><a href="#breadcrumb-tabs">4.3 Breadcrumbs &amp; tabs</a></li>
+
+    <li class="toc-section">Core components</li>
+    <li><a href="#buttons">5. Buttons</a></li>
+    <li><a href="#pills">6. Pills &amp; tags</a></li>
+    <li><a href="#forms">7. Form controls</a></li>
+    <li><a href="#alerts">8. Alerts</a></li>
+    <li><a href="#progress">9. Progress &amp; stats</a></li>
+    <li><a href="#charts">10. Charts</a></li>
+    <li><a href="#timeline">11. Timeline &amp; stepper</a></li>
+    <li><a href="#cards">12. Cards</a></li>
+    <li><a href="#tables">13. Data tables</a></li>
+    <li><a href="#hero">14. Hero sections</a></li>
+    <li><a href="#aux">15. Auxiliary</a></li>
+    <li><a href="#footer">16. Footers</a></li>
+
+    <li class="toc-section">Overlays</li>
+    <li><a href="#palette-search">17. Command palette</a></li>
+    <li><a href="#dialogs">18. Confirmation dialogs</a></li>
+
+    <li class="toc-section">Calendar</li>
+    <li><a href="#cal-month">19.1 Month view</a></li>
+    <li><a href="#cal-week">19.2 Week view</a></li>
+    <li><a href="#cal-agenda">19.3 Agenda view</a></li>
+    <li><a href="#date-picker">19.4 Date picker</a></li>
+  </ul>
+</nav>
+
+<!-- ==================== MAIN CONTENT ==================== -->
+<main class="doc-main">
+
+<header class="doc-header">
+  <h1>La Sentinelle — brand system</h1>
+  <div class="subtitle">Component specification for web applications across La Sentinelle Group</div>
+  <div class="meta">
+    <span><strong>Version</strong> 1.5</span>
+    <span><strong>Scope</strong> All group web applications</span>
+    <span><strong>Stack</strong> Laravel · Tailwind · Alpine.js</span>
+    <span><strong>Theme</strong> Light / dark</span>
+  </div>
+</header>
+
+<!-- ==================== 1. PALETTE ==================== -->
+<section class="doc-section" id="palette">
+  <h2>1. Core palette</h2>
+  <p class="section-intro">Five-color foundation — cream, sky, slate, deep, ink — extracted from the La Sentinelle reference palette. Supporting tints, shades, and semantic tokens round out the system for application UI.</p>
+
+  <div class="panel">
+    <div class="palette-group-title">Primary colors</div>
+    <div class="swatch-grid">
+      <div class="swatch"><div class="swatch-color" style="background:#F1F6F8;"></div><div class="swatch-meta"><span class="n">Cream</span><span class="h">#F1F6F8</span></div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#95C9E3;"></div><div class="swatch-meta"><span class="n">Sky</span><span class="h">#95C9E3</span></div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#7298BD;"></div><div class="swatch-meta"><span class="n">Slate</span><span class="h">#7298BD</span></div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#4080A8;"></div><div class="swatch-meta"><span class="n">Deep</span><span class="h">#4080A8</span></div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#0F2C44;"></div><div class="swatch-meta"><span class="n">Ink</span><span class="h">#0F2C44</span></div></div>
+    </div>
+
+    <div class="palette-group-title">Tints &amp; shades</div>
+    <div class="swatch-grid">
+      <div class="swatch"><div class="swatch-color" style="background:#DDE6EA;"></div><div class="swatch-meta"><span class="n">Cream 200</span><span class="h">#DDE6EA</span></div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#C5D4DB;"></div><div class="swatch-meta"><span class="n">Cream 300</span><span class="h">#C5D4DB</span></div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#C8E2EE;"></div><div class="swatch-meta"><span class="n">Sky 100</span><span class="h">#C8E2EE</span></div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#6AAFD0;"></div><div class="swatch-meta"><span class="n">Sky 600</span><span class="h">#6AAFD0</span></div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#5B80A3;"></div><div class="swatch-meta"><span class="n">Slate 700</span><span class="h">#5B80A3</span></div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#2E6389;"></div><div class="swatch-meta"><span class="n">Deep 800</span><span class="h">#2E6389</span></div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#1F4A6B;"></div><div class="swatch-meta"><span class="n">Deep 900</span><span class="h">#1F4A6B</span></div></div>
+    </div>
+
+    <div class="palette-group-title">Semantic</div>
+    <div class="swatch-grid">
+      <div class="swatch"><div class="swatch-color" style="background:#3B8A6E;"></div><div class="swatch-meta"><span class="n">Success</span><span class="h">#3B8A6E</span></div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#C98A3B;"></div><div class="swatch-meta"><span class="n">Warning</span><span class="h">#C98A3B</span></div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#B8483F;"></div><div class="swatch-meta"><span class="n">Danger</span><span class="h">#B8483F</span></div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#4080A8;"></div><div class="swatch-meta"><span class="n">Info</span><span class="h">#4080A8</span></div></div>
+    </div>
+
+    <div class="palette-note">
+      <strong>Role mapping:</strong> Cream for page backgrounds and muted surfaces. Sky and Sky-soft for accents and data fills. Slate for secondary UI, borders-on-tint, and supporting labels. Deep for primary actions, active nav, and key data. Ink for top bars, footers, and code surfaces. Semantic colors are reserved for status communication — never decorative.
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 2. TYPOGRAPHY ==================== -->
+<section class="doc-section" id="typography">
+  <h2>2. Typography</h2>
+  <p class="section-intro">Inter / system-ui for UI, JetBrains Mono for code. Two weights only (400 / 500). Sentence case everywhere — never Title Case, never ALL CAPS (except ≤11px meta labels).</p>
+
+  <div class="panel type-sample">
+    <h1>Display — 28px / 500</h1>
+    <h2>Heading — 20px / 500</h2>
+    <h3>Subheading — 15px / 500</h3>
+    <p>Body — 13px / 400, line-height 1.6. Optimised for dense dashboards and editorial CMS contexts where legibility at small sizes matters more than visual flourish.</p>
+    <div class="mono">const palette = ['cream', 'sky', 'slate', 'deep', 'ink'];</div>
+  </div>
+</section>
+
+<!-- ==================== 3. PROJECT ICONS ==================== -->
+<section class="doc-section" id="project-icons">
+  <h2>3. Project icons</h2>
+  <p class="section-intro">One icon per project across La Sentinelle Group. Each icon sits in a 96px rounded-square ink frame with palette-derived glyphs, and exports cleanly to the 16/32/64/128/512px favicon set. SVG source is theme-agnostic — the frame color stays fixed so favicons and app-switcher tiles remain recognisable on both light and dark browser chrome.</p>
+
+  <div class="panel">
+
+    <div class="group-label" style="margin-bottom:14px;">Gallery</div>
+
+    <div class="icon-gallery">
+      <!-- Digital Bookings -->
+      <div class="icon-card">
+        <div class="icon-frame">
+          <svg viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg">
+            <rect width="96" height="96" rx="20" fill="#0F2C44"/>
+            <!-- 3x3 grid with two sky-blue accents -->
+            <rect x="18" y="18" width="16" height="16" rx="2" fill="#F1F6F8"/>
+            <rect x="40" y="18" width="16" height="16" rx="2" fill="#7298BD"/>
+            <rect x="62" y="18" width="16" height="16" rx="2" fill="#F1F6F8"/>
+            <rect x="18" y="40" width="16" height="16" rx="2" fill="#F1F6F8"/>
+            <rect x="40" y="40" width="16" height="16" rx="2" fill="#F1F6F8"/>
+            <rect x="62" y="40" width="16" height="16" rx="2" fill="#7298BD"/>
+            <rect x="18" y="62" width="16" height="16" rx="2" fill="#7298BD"/>
+            <rect x="40" y="62" width="16" height="16" rx="2" fill="#F1F6F8"/>
+            <rect x="62" y="62" width="16" height="16" rx="2" fill="#F1F6F8"/>
+          </svg>
+        </div>
+        <div class="icon-meta">
+          <div class="name">Digital Bookings</div>
+          <div class="slug">bookings.lsl.mu</div>
+        </div>
+      </div>
+
+      <!-- lexpress.mu — tablet reading metaphor -->
+      <div class="icon-card">
+        <div class="icon-frame">
+          <svg viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg">
+            <rect width="96" height="96" rx="20" fill="#0F2C44"/>
+            <!-- Tablet body (landscape) with rounded corners -->
+            <rect x="14" y="22" width="68" height="52" rx="5" fill="#F1F6F8"/>
+            <!-- Inner screen bezel -->
+            <rect x="17" y="25" width="62" height="46" rx="3" fill="#1F4A6B"/>
+            <!-- Masthead bar at top of screen -->
+            <rect x="20" y="28" width="56" height="6" rx="1" fill="#95C9E3"/>
+            <rect x="20" y="28" width="18" height="6" rx="1" fill="#F1F6F8"/>
+            <!-- Article headline -->
+            <rect x="20" y="38" width="42" height="4" rx="1" fill="#F1F6F8"/>
+            <rect x="20" y="44" width="34" height="3" rx="1" fill="#95C9E3" opacity="0.7"/>
+            <!-- Image placeholder (thumbnail) -->
+            <rect x="20" y="50" width="24" height="17" rx="1" fill="#4080A8"/>
+            <!-- Body text lines next to the image -->
+            <rect x="47" y="51" width="28" height="2.5" rx="1" fill="#95C9E3" opacity="0.6"/>
+            <rect x="47" y="56" width="28" height="2.5" rx="1" fill="#95C9E3" opacity="0.6"/>
+            <rect x="47" y="61" width="22" height="2.5" rx="1" fill="#95C9E3" opacity="0.6"/>
+          </svg>
+        </div>
+        <div class="icon-meta">
+          <div class="name">lexpress.mu</div>
+          <div class="slug">Digital edition</div>
+        </div>
+      </div>
+
+      <!-- lasentinelle.mu — sentinel guard (helmet + spear) -->
+      <div class="icon-card">
+        <div class="icon-frame">
+          <svg viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg">
+            <rect width="96" height="96" rx="20" fill="#0F2C44"/>
+
+            <!-- Spear shaft (behind figure, runs vertically) -->
+            <rect x="68" y="14" width="3" height="68" fill="#7298BD"/>
+            <!-- Spearhead (diamond/leaf shape pointing up) -->
+            <path d="M 69.5 8 L 74 16 L 69.5 22 L 65 16 Z" fill="#F1F6F8"/>
+
+            <!-- Helmet dome -->
+            <path d="M 30 34
+                     Q 30 20 44 20
+                     L 52 20
+                     Q 62 20 62 34
+                     L 62 42
+                     L 30 42 Z"
+                  fill="#F1F6F8"/>
+            <!-- Helmet crest/plume along top -->
+            <path d="M 30 20
+                     Q 46 10 62 20
+                     L 62 24
+                     Q 46 16 30 24 Z"
+                  fill="#4080A8"/>
+            <!-- Helmet brim (horizontal band) -->
+            <rect x="28" y="40" width="36" height="4" fill="#95C9E3"/>
+            <!-- Eye slit (T-shape: horizontal + vertical nose guard) -->
+            <rect x="36" y="30" width="20" height="3" fill="#0F2C44"/>
+            <rect x="44" y="30" width="4" height="10" fill="#0F2C44"/>
+
+            <!-- Neck/gorget -->
+            <rect x="40" y="44" width="12" height="4" fill="#7298BD"/>
+
+            <!-- Shoulders / pauldrons (sloped armor) -->
+            <path d="M 22 50
+                     Q 22 48 26 48
+                     L 66 48
+                     Q 70 48 70 50
+                     L 72 58
+                     L 20 58 Z"
+                  fill="#F1F6F8"/>
+            <!-- Armor chest plate -->
+            <path d="M 26 58
+                     L 66 58
+                     L 64 80
+                     L 28 80 Z"
+                  fill="#F1F6F8"/>
+            <!-- Chest seam (vertical line down the middle) -->
+            <rect x="45.5" y="58" width="1" height="22" fill="#0F2C44" opacity="0.25"/>
+            <!-- Shoulder-armor accent lines -->
+            <path d="M 24 54 L 36 54" stroke="#4080A8" stroke-width="1.5" stroke-linecap="round"/>
+            <path d="M 56 54 L 68 54" stroke="#4080A8" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="icon-meta">
+          <div class="name">lasentinelle.mu</div>
+          <div class="slug">Corporate site</div>
+        </div>
+      </div>
+
+      <!-- l'express archive -->
+      <div class="icon-card">
+        <div class="icon-frame">
+          <svg viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg">
+            <rect width="96" height="96" rx="20" fill="#0F2C44"/>
+            <!-- Stacked newspaper/archive volumes with descending ages -->
+            <g transform="translate(16 22)">
+              <!-- back volume (oldest, palest) -->
+              <rect x="2" y="4" width="60" height="12" rx="2" fill="#C8E2EE"/>
+              <rect x="8" y="8" width="3" height="4" fill="#0F2C44" opacity="0.35"/>
+              <rect x="14" y="8" width="14" height="4" fill="#0F2C44" opacity="0.35"/>
+
+              <!-- middle volume -->
+              <rect x="2" y="20" width="60" height="12" rx="2" fill="#7298BD"/>
+              <rect x="8" y="24" width="3" height="4" fill="#F1F6F8" opacity="0.7"/>
+              <rect x="14" y="24" width="14" height="4" fill="#F1F6F8" opacity="0.7"/>
+
+              <!-- front volume (newest, deepest) -->
+              <rect x="2" y="36" width="60" height="12" rx="2" fill="#4080A8"/>
+              <rect x="8" y="40" width="3" height="4" fill="#F1F6F8"/>
+              <rect x="14" y="40" width="14" height="4" fill="#F1F6F8"/>
+
+              <!-- Clock face on the right — "time capsule" signifier -->
+              <circle cx="53" cy="42" r="9" fill="#F1F6F8" stroke="#0F2C44" stroke-width="1.5"/>
+              <line x1="53" y1="42" x2="53" y2="36" stroke="#0F2C44" stroke-width="1.8" stroke-linecap="round"/>
+              <line x1="53" y1="42" x2="57" y2="42" stroke="#0F2C44" stroke-width="1.8" stroke-linecap="round"/>
+            </g>
+          </svg>
+        </div>
+        <div class="icon-meta">
+          <div class="name">L'express archive</div>
+          <div class="slug">archive.lexpress.mu</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Favicon size demonstration -->
+    <div class="group-label" style="margin-top:24px;margin-bottom:8px;">Favicon sizes — lexpress.mu example</div>
+    <div class="favicon-strip">
+      <div class="favicon-demo">
+        <div class="favicon-demo-icon s16">
+          <svg viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg">
+            <rect width="96" height="96" rx="20" fill="#0F2C44"/>
+            <rect x="14" y="22" width="68" height="52" rx="5" fill="#F1F6F8"/>
+            <rect x="17" y="25" width="62" height="46" rx="3" fill="#1F4A6B"/>
+            <rect x="20" y="28" width="56" height="6" rx="1" fill="#95C9E3"/>
+            <rect x="20" y="28" width="18" height="6" rx="1" fill="#F1F6F8"/>
+            <rect x="20" y="38" width="42" height="4" rx="1" fill="#F1F6F8"/>
+            <rect x="20" y="44" width="34" height="3" rx="1" fill="#95C9E3" opacity="0.7"/>
+            <rect x="20" y="50" width="24" height="17" rx="1" fill="#4080A8"/>
+            <rect x="47" y="51" width="28" height="2.5" rx="1" fill="#95C9E3" opacity="0.6"/>
+            <rect x="47" y="56" width="28" height="2.5" rx="1" fill="#95C9E3" opacity="0.6"/>
+            <rect x="47" y="61" width="22" height="2.5" rx="1" fill="#95C9E3" opacity="0.6"/>
+          </svg>
+        </div>
+        <div class="size-label">16px</div>
+      </div>
+      <div class="favicon-demo">
+        <div class="favicon-demo-icon s32">
+          <svg viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg">
+            <rect width="96" height="96" rx="20" fill="#0F2C44"/>
+            <rect x="14" y="22" width="68" height="52" rx="5" fill="#F1F6F8"/>
+            <rect x="17" y="25" width="62" height="46" rx="3" fill="#1F4A6B"/>
+            <rect x="20" y="28" width="56" height="6" rx="1" fill="#95C9E3"/>
+            <rect x="20" y="28" width="18" height="6" rx="1" fill="#F1F6F8"/>
+            <rect x="20" y="38" width="42" height="4" rx="1" fill="#F1F6F8"/>
+            <rect x="20" y="44" width="34" height="3" rx="1" fill="#95C9E3" opacity="0.7"/>
+            <rect x="20" y="50" width="24" height="17" rx="1" fill="#4080A8"/>
+            <rect x="47" y="51" width="28" height="2.5" rx="1" fill="#95C9E3" opacity="0.6"/>
+            <rect x="47" y="56" width="28" height="2.5" rx="1" fill="#95C9E3" opacity="0.6"/>
+            <rect x="47" y="61" width="22" height="2.5" rx="1" fill="#95C9E3" opacity="0.6"/>
+          </svg>
+        </div>
+        <div class="size-label">32px</div>
+      </div>
+      <div class="favicon-demo">
+        <div class="favicon-demo-icon s64">
+          <svg viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg">
+            <rect width="96" height="96" rx="20" fill="#0F2C44"/>
+            <rect x="14" y="22" width="68" height="52" rx="5" fill="#F1F6F8"/>
+            <rect x="17" y="25" width="62" height="46" rx="3" fill="#1F4A6B"/>
+            <rect x="20" y="28" width="56" height="6" rx="1" fill="#95C9E3"/>
+            <rect x="20" y="28" width="18" height="6" rx="1" fill="#F1F6F8"/>
+            <rect x="20" y="38" width="42" height="4" rx="1" fill="#F1F6F8"/>
+            <rect x="20" y="44" width="34" height="3" rx="1" fill="#95C9E3" opacity="0.7"/>
+            <rect x="20" y="50" width="24" height="17" rx="1" fill="#4080A8"/>
+            <rect x="47" y="51" width="28" height="2.5" rx="1" fill="#95C9E3" opacity="0.6"/>
+            <rect x="47" y="56" width="28" height="2.5" rx="1" fill="#95C9E3" opacity="0.6"/>
+            <rect x="47" y="61" width="22" height="2.5" rx="1" fill="#95C9E3" opacity="0.6"/>
+          </svg>
+        </div>
+        <div class="size-label">64px</div>
+      </div>
+      <div class="favicon-demo">
+        <div class="favicon-demo-icon s128">
+          <svg viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg">
+            <rect width="96" height="96" rx="20" fill="#0F2C44"/>
+            <rect x="14" y="22" width="68" height="52" rx="5" fill="#F1F6F8"/>
+            <rect x="17" y="25" width="62" height="46" rx="3" fill="#1F4A6B"/>
+            <rect x="20" y="28" width="56" height="6" rx="1" fill="#95C9E3"/>
+            <rect x="20" y="28" width="18" height="6" rx="1" fill="#F1F6F8"/>
+            <rect x="20" y="38" width="42" height="4" rx="1" fill="#F1F6F8"/>
+            <rect x="20" y="44" width="34" height="3" rx="1" fill="#95C9E3" opacity="0.7"/>
+            <rect x="20" y="50" width="24" height="17" rx="1" fill="#4080A8"/>
+            <rect x="47" y="51" width="28" height="2.5" rx="1" fill="#95C9E3" opacity="0.6"/>
+            <rect x="47" y="56" width="28" height="2.5" rx="1" fill="#95C9E3" opacity="0.6"/>
+            <rect x="47" y="61" width="22" height="2.5" rx="1" fill="#95C9E3" opacity="0.6"/>
+          </svg>
+        </div>
+        <div class="size-label">128px</div>
+      </div>
+    </div>
+
+    <div class="palette-note" style="margin-top:18px;">
+      <strong>Construction rules.</strong> All icons share a 96×96 viewBox, a 20px corner radius, and an ink background (<code style="font-family:var(--ls-font-mono);">#0F2C44</code>) so they read as a coherent set across the group. Cream (<code style="font-family:var(--ls-font-mono);">#F1F6F8</code>) is the primary glyph color; Sky, Slate, and Deep build the secondary layer and signify brand, state, or depth. Each icon carries a visual metaphor aligned with its product — a reservation grid for Digital Bookings, a tablet-reading moment for lexpress.mu, an armored sentinel standing watch for lasentinelle.mu (literal "sentinel"), and stacked volumes with a clock for the archive. For favicons, export PNG at 16, 32, 48, 64, 128, 192, 256, 512 and generate an ICO bundle containing the first three sizes.
+    </div>
+
+  </div>
+</section>
+
+<!-- ==================== 4.1 TOP NAV ==================== -->
+<section class="doc-section" id="topnav">
+  <h2>4.1 Top navigation</h2>
+  <p class="section-intro">Primary ink-colored top nav for public-facing properties and external-user applications. Sky accent marks the active route and any primary CTA.</p>
+
+  <div class="ls-nav">
+    <div class="brand">La Sentinelle</div>
+    <div class="links">
+      <a class="active">Dashboard</a>
+      <a>Articles</a>
+      <a>Analytics</a>
+      <a>Team</a>
+    </div>
+    <input class="ls-nav-search" placeholder="Search..." />
+    <div class="ls-avatar" style="background: var(--ls-sky); color: var(--ls-ink);">IS</div>
+  </div>
+</section>
+
+<!-- ==================== 4.2 SIDEBAR ==================== -->
+<section class="doc-section" id="sidebar">
+  <h2>4.2 Sidebar navigation</h2>
+  <p class="section-intro">Internal application shell, as used in Digital Bookings. Full-height cream rail with branding block, inline search trigger, icon + label navigation with rounded-pill active state, and a contextual group pinned at the bottom.</p>
+
+  <div class="ls-app">
+    <aside class="ls-sidebar">
+      <div class="ls-brand-block">
+        <div class="ls-brand-logo">
+          <span></span><span></span><span></span>
+          <span></span><span></span><span></span>
+          <span></span><span></span><span></span>
+        </div>
+        <div class="ls-brand-text">
+          <div class="name">Digital Bookings</div>
+          <div class="sub">La Sentinelle</div>
+        </div>
+      </div>
+
+      <div class="ls-sb-search">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        Search<span class="kbd">⌘K</span>
+      </div>
+
+      <nav class="ls-sb-nav">
+        <button class="ls-sb-item active">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12 12 4l9 8"/><path d="M5 10v10h14V10"/></svg>
+          Dashboard
+        </button>
+        <button class="ls-sb-item">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3h8l4 4v14H4V3z"/><path d="M8 13h8M8 17h5"/></svg>
+          Reservations
+        </button>
+        <button class="ls-sb-item">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c0-3 3-5 6-5s6 2 6 5"/><path d="M15 20c0-2 2-4 4-4"/></svg>
+          Clients
+        </button>
+        <button class="ls-sb-item">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg>
+          Placements
+        </button>
+        <button class="ls-sb-item">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 20h8M12 17v3"/></svg>
+          Platforms
+        </button>
+        <button class="ls-sb-item">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.5 3-6 7-6s7 2.5 7 6"/></svg>
+          Salespersons
+        </button>
+        <button class="ls-sb-item">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="12" rx="2"/><circle cx="12" cy="13" r="2.5"/></svg>
+          Budget
+        </button>
+        <button class="ls-sb-item">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+          Calendar
+        </button>
+      </nav>
+
+      <div class="ls-sb-group">
+        <div class="ls-sb-group-title">Today's reservations</div>
+        <div class="ls-sb-reservation">Insurance Products<div class="client">Adams Group</div></div>
+        <div class="ls-sb-reservation">Automotive Launch<div class="client">Dare Inc</div></div>
+      </div>
+    </aside>
+
+    <main class="ls-main-preview">
+      <div class="ls-main-head">
+        <div>
+          <h2>Dashboard</h2>
+          <div style="font-size:13px;color:var(--ls-text-soft);margin-top:4px;font-weight:500;">lexpress.mu</div>
+        </div>
+        <div class="meta">Financial year 2025/2026</div>
+      </div>
+      <div class="kpi-grid">
+        <div class="kpi-card"><div class="lbl">Yearly budget</div><div class="val">MUR 5.6M</div><div class="sub">FY 2025/2026</div></div>
+        <div class="kpi-card"><div class="lbl">April sales</div><div class="val">MUR 268k</div><div class="sub">57.6% of target</div></div>
+        <div class="kpi-card"><div class="lbl">Yearly target</div><div class="val" style="color:var(--ls-warning);">53.9%</div><div class="sub warn">On track</div></div>
+      </div>
+    </main>
+  </div>
+</section>
+
+<!-- ==================== 4.3 BREADCRUMB & TABS ==================== -->
+<section class="doc-section" id="breadcrumb-tabs">
+  <h2>4.3 Breadcrumbs &amp; tabs</h2>
+  <p class="section-intro">Header-bar pattern combines a page title, breadcrumb navigation, and switchable content tabs.</p>
+
+  <div class="sub-block">
+    <div class="ls-header-bar">
+      <div class="title">Editorial overview</div>
+      <div class="ls-crumb">
+        <a>Home</a><span>/</span><a>Publications</a><span>/</span>Lexpress.mu
+      </div>
+    </div>
+  </div>
+
+  <div class="sub-block">
+    <div class="panel panel-flush">
+      <div class="ls-tabs">
+        <button class="ls-tab active">Overview</button>
+        <button class="ls-tab">Traffic</button>
+        <button class="ls-tab">Engagement</button>
+        <button class="ls-tab">Revenue</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 4. BUTTONS ==================== -->
+<section class="doc-section" id="buttons">
+  <h2>5. Buttons</h2>
+  <p class="section-intro">Primary on Deep for main actions. Secondary on Sky for supporting actions. Outline and ghost for tertiary and inline uses. Danger for destructive operations.</p>
+
+  <div class="panel">
+    <div class="group-label">Variants</div>
+    <div class="btn-row">
+      <button class="ls-btn ls-btn-primary">Publish article</button>
+      <button class="ls-btn ls-btn-secondary">Save draft</button>
+      <button class="ls-btn ls-btn-outline">Preview</button>
+      <button class="ls-btn ls-btn-ghost">Cancel</button>
+      <button class="ls-btn ls-btn-danger">Delete</button>
+      <button class="ls-btn ls-btn-primary" disabled>Disabled</button>
+    </div>
+
+    <div class="group-label" style="margin-top:18px;">Sizes</div>
+    <div class="btn-row">
+      <button class="ls-btn ls-btn-primary ls-btn-sm">Small</button>
+      <button class="ls-btn ls-btn-primary">Default</button>
+      <button class="ls-btn ls-btn-primary ls-btn-lg">Large</button>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 5. PILLS & TAGS ==================== -->
+<section class="doc-section" id="pills">
+  <h2>6. Pills, tags &amp; badges</h2>
+  <p class="section-intro">Pills communicate status with dot + label (rounded, ≤12px). Tags identify category or taxonomy (rectangular, 11px, uppercase).</p>
+
+  <div class="panel">
+    <div class="group-label">Status pills</div>
+    <div class="btn-row" style="margin-bottom:18px;">
+      <span class="ls-pill" style="background: var(--ls-success-bg); color: var(--ls-success-text);"><span class="ls-dot" style="background:var(--ls-success);"></span>Published</span>
+      <span class="ls-pill" style="background: var(--ls-accent-soft-bg); color: var(--ls-accent-soft-text);"><span class="ls-dot" style="background:var(--ls-deep);"></span>In review</span>
+      <span class="ls-pill" style="background: var(--ls-warning-bg); color: var(--ls-warning-text);"><span class="ls-dot" style="background:var(--ls-warning);"></span>Scheduled</span>
+      <span class="ls-pill" style="background: var(--ls-danger-bg); color: var(--ls-danger-text);"><span class="ls-dot" style="background:var(--ls-danger);"></span>Rejected</span>
+      <span class="ls-pill" style="background: var(--ls-neutral-tag-bg); color: var(--ls-neutral-tag-text);"><span class="ls-dot" style="background:var(--ls-slate);"></span>Draft</span>
+    </div>
+
+    <div class="group-label">Category tags</div>
+    <div class="btn-row">
+      <span class="ls-tag" style="background: var(--ls-accent-soft-bg); color: var(--ls-accent-soft-text);">Politics</span>
+      <span class="ls-tag" style="background: var(--ls-neutral-tag-bg); color: var(--ls-neutral-tag-text);">Economy</span>
+      <span class="ls-tag" style="background: var(--ls-sky); color: var(--ls-ink);">Sport</span>
+      <span class="ls-tag" style="background: var(--ls-slate); color: #fff;">Culture</span>
+      <span class="ls-tag" style="background: var(--ls-deep); color: #fff;">Breaking</span>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 6. FORMS ==================== -->
+<section class="doc-section" id="forms">
+  <h2>7. Form controls</h2>
+  <p class="section-intro">Inputs, textareas, selects, checkboxes, radios, toggles, and comboboxes — with validation states (success, error), hints, and focus rings.</p>
+
+  <div class="panel">
+    <div class="two-col">
+      <div class="ls-field">
+        <label>Article title</label>
+        <input class="ls-input" value="Mauritius doubles down on renewable energy" />
+        <span class="hint">60 characters max for SEO optimisation.</span>
+      </div>
+      <div class="ls-field">
+        <label>Slug</label>
+        <input class="ls-input success" value="mauritius-renewable-energy-2026" />
+        <span class="hint" style="color: var(--ls-success);">Slug is available.</span>
+      </div>
+      <div class="ls-field">
+        <label>Author email</label>
+        <input class="ls-input error" value="ish@@lexpress" />
+        <span class="hint" style="color: var(--ls-danger);">Please enter a valid email.</span>
+      </div>
+      <div class="ls-field">
+        <label>Section</label>
+        <select class="ls-select">
+          <option>Politics</option>
+          <option selected>Economy</option>
+          <option>Culture</option>
+          <option>Sport</option>
+        </select>
+      </div>
+    </div>
+
+    <div style="height:14px;"></div>
+
+    <div class="ls-field">
+      <label>Excerpt</label>
+      <textarea class="ls-textarea">The island nation accelerates its shift to solar and wind, with new capacity coming online in Q2.</textarea>
+    </div>
+
+    <div style="height:18px;"></div>
+
+    <div class="three-col">
+      <div>
+        <div class="group-label">Checkboxes</div>
+        <label class="ls-check"><input type="checkbox" checked /> Feature on homepage</label>
+        <label class="ls-check"><input type="checkbox" /> Send push notification</label>
+        <label class="ls-check"><input type="checkbox" checked /> Enable comments</label>
+      </div>
+      <div>
+        <div class="group-label">Radio group</div>
+        <label class="ls-check"><input type="radio" name="vis" checked /> Public</label>
+        <label class="ls-check"><input type="radio" name="vis" /> Subscribers only</label>
+        <label class="ls-check"><input type="radio" name="vis" /> Draft only</label>
+      </div>
+      <div>
+        <div class="group-label">Toggles</div>
+        <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--ls-text);margin-bottom:8px;"><label class="ls-toggle"><input type="checkbox" checked /><span class="slider"></span></label>Paywall</div>
+        <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--ls-text);margin-bottom:8px;"><label class="ls-toggle"><input type="checkbox" /><span class="slider"></span></label>Newsletter</div>
+        <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--ls-text);"><label class="ls-toggle"><input type="checkbox" checked /><span class="slider"></span></label>Auto-translate</div>
+      </div>
+    </div>
+
+    <div style="height:18px;"></div>
+
+    <div class="two-col">
+      <div class="ls-field">
+        <label>Combobox (searchable)</label>
+        <div class="ls-combo">
+          <input class="ls-input" value="Port Louis" />
+          <div class="ls-combo-menu">
+            <div class="ls-combo-item selected">Port Louis</div>
+            <div class="ls-combo-item active">Curepipe</div>
+            <div class="ls-combo-item">Quatre Bornes</div>
+            <div class="ls-combo-item">Rose Hill</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="group-label">Radio cards</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div class="ls-radio-card selected">
+            <div class="rc-label">Free</div>
+            <div class="rc-desc">Access to headlines</div>
+          </div>
+          <div class="ls-radio-card">
+            <div class="rc-label">Premium</div>
+            <div class="rc-desc">Full archive + ePaper</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 7. ALERTS ==================== -->
+<section class="doc-section" id="alerts">
+  <h2>8. Alerts &amp; feedback</h2>
+  <p class="section-intro">Left-border accent with tinted background. Four semantic levels — info, success, warning, danger.</p>
+
+  <div class="panel">
+    <div class="ls-alert ls-alert-info"><div><strong>Heads up —</strong> Deployment window opens at 02:00 UTC.</div></div>
+    <div class="ls-alert ls-alert-success"><div><strong>Saved.</strong> Your article was published to lexpress.mu.</div></div>
+    <div class="ls-alert ls-alert-warning"><div><strong>Warning —</strong> Image is below the recommended 1200px width.</div></div>
+    <div class="ls-alert ls-alert-danger"><div><strong>Error —</strong> Database connection to primary failed. Falling back to GCP replica.</div></div>
+  </div>
+</section>
+
+<!-- ==================== 8. PROGRESS & STATS ==================== -->
+<section class="doc-section" id="progress">
+  <h2>9. Progress &amp; statistics</h2>
+  <p class="section-intro">Rounded progress bars filled with Deep (primary metric) or Slate (supporting metric). Stat cards for KPI dashboards.</p>
+
+  <div class="panel">
+    <div class="two-col" style="margin-bottom:18px;">
+      <div>
+        <div style="font-size:12px;color:var(--ls-text-muted);margin-bottom:6px;">Article completion — 72%</div>
+        <div class="ls-progress"><div style="width:72%;"></div></div>
+      </div>
+      <div>
+        <div style="font-size:12px;color:var(--ls-text-muted);margin-bottom:6px;">Storage — 4.2 / 10 GB</div>
+        <div class="ls-progress thick"><div style="width:42%;background:var(--ls-slate);"></div></div>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card"><div class="lbl">Page views</div><div class="val">1.2M</div><div class="delta">+12.4%</div></div>
+      <div class="stat-card"><div class="lbl">Subscribers</div><div class="val">48.3k</div><div class="delta">+3.1%</div></div>
+      <div class="stat-card"><div class="lbl">Avg. time</div><div class="val">3:42</div><div class="delta neg">−0.6%</div></div>
+      <div class="stat-card"><div class="lbl">Bounce</div><div class="val">34%</div><div class="delta">−2.8%</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 9. CHARTS ==================== -->
+<section class="doc-section" id="charts">
+  <h2>10. Charts</h2>
+  <p class="section-intro">Sky → Slate → Deep progression for categorical series. Area fills use Deep with alpha; bars use the full ramp for sorting emphasis.</p>
+
+  <div class="panel">
+    <div class="two-col">
+      <div class="chart-card">
+        <div class="title">Traffic by section — Q1 2026</div>
+        <svg viewBox="0 0 320 160" style="width:100%;">
+          <rect x="20" y="90" width="28" height="55" fill="#C8E2EE" rx="2" />
+          <rect x="60" y="60" width="28" height="85" fill="#95C9E3" rx="2" />
+          <rect x="100" y="40" width="28" height="105" fill="#7298BD" rx="2" />
+          <rect x="140" y="25" width="28" height="120" fill="#4080A8" rx="2" />
+          <rect x="180" y="55" width="28" height="90" fill="#5B80A3" rx="2" />
+          <rect x="220" y="75" width="28" height="70" fill="#95C9E3" rx="2" />
+          <rect x="260" y="95" width="28" height="50" fill="#C8E2EE" rx="2" />
+          <text x="34" y="155" text-anchor="middle" font-size="9" fill="#5B80A3">Pol</text>
+          <text x="74" y="155" text-anchor="middle" font-size="9" fill="#5B80A3">Eco</text>
+          <text x="114" y="155" text-anchor="middle" font-size="9" fill="#5B80A3">Cul</text>
+          <text x="154" y="155" text-anchor="middle" font-size="9" fill="#5B80A3">Spo</text>
+          <text x="194" y="155" text-anchor="middle" font-size="9" fill="#5B80A3">Tec</text>
+          <text x="234" y="155" text-anchor="middle" font-size="9" fill="#5B80A3">Opi</text>
+          <text x="274" y="155" text-anchor="middle" font-size="9" fill="#5B80A3">Int</text>
+        </svg>
+      </div>
+
+      <div class="chart-card">
+        <div class="title">Subscribers — trailing 12 months</div>
+        <svg viewBox="0 0 320 160" style="width:100%;">
+          <defs>
+            <linearGradient id="fillA" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stop-color="#4080A8" stop-opacity="0.25" />
+              <stop offset="100%" stop-color="#4080A8" stop-opacity="0" />
+            </linearGradient>
+          </defs>
+          <path d="M 10,130 L 40,118 L 70,115 L 100,100 L 130,88 L 160,92 L 190,75 L 220,62 L 250,55 L 280,38 L 310,30 L 310,150 L 10,150 Z" fill="url(#fillA)" />
+          <path d="M 10,130 L 40,118 L 70,115 L 100,100 L 130,88 L 160,92 L 190,75 L 220,62 L 250,55 L 280,38 L 310,30" fill="none" stroke="#4080A8" stroke-width="2" />
+          <circle cx="310" cy="30" r="4" fill="#4080A8" />
+          <line x1="10" y1="150" x2="310" y2="150" stroke="#DDE6EA" stroke-width="1" />
+        </svg>
+        <div class="chart-legend">
+          <div class="k"><div class="sw" style="background:#4080A8;"></div>Paid subscribers</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="height:14px;"></div>
+
+    <div class="chart-card">
+      <div class="title">Stacked area — traffic sources</div>
+      <svg viewBox="0 0 640 140" style="width:100%;">
+        <path d="M 0,140 L 0,100 L 80,95 L 160,85 L 240,80 L 320,70 L 400,65 L 480,55 L 560,50 L 640,42 L 640,140 Z" fill="#4080A8" opacity="0.9" />
+        <path d="M 0,100 L 80,85 L 160,72 L 240,65 L 320,55 L 400,48 L 480,40 L 560,35 L 640,28 L 640,42 L 560,50 L 480,55 L 400,65 L 320,70 L 240,80 L 160,85 L 80,95 L 0,100 Z" fill="#7298BD" opacity="0.9" />
+        <path d="M 0,70 L 80,58 L 160,50 L 240,42 L 320,35 L 400,30 L 480,24 L 560,20 L 640,15 L 640,28 L 560,35 L 480,40 L 400,48 L 320,55 L 240,65 L 160,72 L 80,85 L 0,100 Z" fill="#95C9E3" opacity="0.9" />
+      </svg>
+      <div class="chart-legend">
+        <div class="k"><div class="sw" style="background:#4080A8;"></div>Direct</div>
+        <div class="k"><div class="sw" style="background:#7298BD;"></div>Search</div>
+        <div class="k"><div class="sw" style="background:#95C9E3;"></div>Social</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 10. TIMELINE & STEPPER ==================== -->
+<section class="doc-section" id="timeline">
+  <h2>11. Timeline &amp; stepper</h2>
+  <p class="section-intro">Stepper for linear workflows (creation, approval chains). Timeline for chronological event lists (audit logs, reservation history).</p>
+
+  <div class="panel">
+    <div class="ls-stepper" style="margin-bottom:24px;">
+      <div class="ls-step done"><div class="circle">✓</div><div>Draft</div></div>
+      <div class="step-line done"></div>
+      <div class="ls-step done"><div class="circle">✓</div><div>Review</div></div>
+      <div class="step-line done"></div>
+      <div class="ls-step active"><div class="circle">3</div><div>Legal check</div></div>
+      <div class="step-line"></div>
+      <div class="ls-step"><div class="circle">4</div><div>Publish</div></div>
+    </div>
+
+    <div class="ls-timeline">
+      <div class="ls-timeline-item done">
+        <div class="t-title">Article submitted by correspondent</div>
+        <div class="t-meta">09:12 · Apr 21, 2026</div>
+      </div>
+      <div class="ls-timeline-item done">
+        <div class="t-title">First editorial pass completed</div>
+        <div class="t-meta">10:48 · Apr 21, 2026</div>
+      </div>
+      <div class="ls-timeline-item">
+        <div class="t-title">Awaiting legal review</div>
+        <div class="t-meta">Assigned to Priya — due 14:00</div>
+      </div>
+      <div class="ls-timeline-item pending">
+        <div class="t-title">Publish to lexpress.mu</div>
+        <div class="t-meta">Scheduled 16:00</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 11. CARDS ==================== -->
+<section class="doc-section" id="cards">
+  <h2>12. Cards</h2>
+  <p class="section-intro">Three card treatments — accent (top border on Deep, for featured content), neutral (plain white), and tinted (cream background for contextual framing).</p>
+
+  <div class="three-col">
+    <div class="ls-card ls-card-accent">
+      <div style="font-size:11px;color:var(--ls-deep);text-transform:uppercase;letter-spacing:0.4px;font-weight:500;">Featured</div>
+      <div style="font-size:14px;font-weight:500;color:var(--ls-text);margin-top:6px;">Port Louis port expansion approved</div>
+      <div style="font-size:12px;color:var(--ls-text-muted);margin-top:6px;line-height:1.5;">Government greenlights Phase II container terminal, adding 180,000 TEU capacity.</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:12px;">
+        <div class="ls-avatar" style="width:22px;height:22px;font-size:10px;">AR</div>
+        <span style="font-size:11px;color:var(--ls-text-muted);">Ananya R. · 3h ago</span>
+      </div>
+    </div>
+    <div class="ls-card">
+      <div style="font-size:14px;font-weight:500;color:var(--ls-text);">New monetary policy signals</div>
+      <div style="font-size:12px;color:var(--ls-text-muted);margin-top:6px;line-height:1.5;">Bank of Mauritius holds repo rate steady at 4.5% amid stable inflation.</div>
+      <div style="margin-top:10px;"><span class="ls-tag" style="background: var(--ls-neutral-tag-bg); color: var(--ls-neutral-tag-text);">Economy</span></div>
+    </div>
+    <div class="ls-card" style="background: var(--ls-surface-muted); border-color: transparent;">
+      <div style="font-size:14px;font-weight:500;color:var(--ls-text);">Mauritius Open tees off Friday</div>
+      <div style="font-size:12px;color:var(--ls-text-muted);margin-top:6px;line-height:1.5;">Field of 144 including four DP World Tour regulars heads to Mont Choisy.</div>
+      <div style="margin-top:10px;"><span class="ls-tag" style="background: var(--ls-sky); color: var(--ls-ink);">Sport</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 12. DATA TABLES ==================== -->
+<section class="doc-section" id="tables">
+  <h2>13. Data tables</h2>
+  <p class="section-intro">Uppercase column headers on cream background. Row hover on cream. Status pills and category tags render cleanly inside cells. Pagination uses square buttons with active-state fill.</p>
+
+  <div class="panel panel-flush">
+    <table class="ls-table">
+      <thead>
+        <tr><th>Title</th><th>Author</th><th>Section</th><th>Status</th><th>Views</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Port expansion approved</td>
+          <td>Ananya R.</td>
+          <td><span class="ls-tag" style="background: var(--ls-accent-soft-bg); color: var(--ls-accent-soft-text);">Politics</span></td>
+          <td><span class="ls-pill" style="background: var(--ls-success-bg); color: var(--ls-success-text);"><span class="ls-dot" style="background:var(--ls-success);"></span>Published</span></td>
+          <td>12,483</td>
+        </tr>
+        <tr>
+          <td>Rupee holds steady vs USD</td>
+          <td>Jean-Marc L.</td>
+          <td><span class="ls-tag" style="background: var(--ls-neutral-tag-bg); color: var(--ls-neutral-tag-text);">Economy</span></td>
+          <td><span class="ls-pill" style="background: var(--ls-accent-soft-bg); color: var(--ls-accent-soft-text);"><span class="ls-dot" style="background:var(--ls-deep);"></span>In review</span></td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>Mauritius Open preview</td>
+          <td>Priya S.</td>
+          <td><span class="ls-tag" style="background: var(--ls-sky); color: var(--ls-ink);">Sport</span></td>
+          <td><span class="ls-pill" style="background: var(--ls-warning-bg); color: var(--ls-warning-text);"><span class="ls-dot" style="background:var(--ls-warning);"></span>Scheduled</span></td>
+          <td>—</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="table-footer">
+      <span>Showing 1–3 of 142</span>
+      <div class="ls-page">
+        <button>‹</button>
+        <button class="active">1</button>
+        <button>2</button>
+        <button>3</button>
+        <button>…</button>
+        <button>48</button>
+        <button>›</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 13. HERO ==================== -->
+<section class="doc-section" id="hero">
+  <h2>14. Hero sections</h2>
+  <p class="section-intro">Cream background with asymmetric 1.4fr/1fr grid — content left, visual right. Visual panel uses the palette banding from the brand reference.</p>
+
+  <div class="ls-hero">
+    <div>
+      <span class="ls-tag" style="background: var(--ls-deep); color: #fff;">La Sentinelle Group</span>
+      <h2>One platform for every newsroom</h2>
+      <p>Publishing, analytics, subscriptions, and ad operations in a single stack — built in Mauritius, deployed across the group.</p>
+      <div class="btn-row">
+        <button class="ls-btn ls-btn-primary">Get started</button>
+        <button class="ls-btn ls-btn-outline">Book a demo</button>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="band b1"></div>
+      <div class="band b2"></div>
+      <div class="band b3"></div>
+      <div class="band b4"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 14. AUX ==================== -->
+<section class="doc-section" id="aux">
+  <h2>15. Auxiliary components</h2>
+  <p class="section-intro">Avatars, avatar stacks, tooltips, and code surfaces.</p>
+
+  <div class="panel">
+    <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;">
+      <div style="display:flex;align-items:center;">
+        <div class="ls-avatar" style="background:var(--ls-deep);margin-right:-8px;border:2px solid var(--ls-surface);">IS</div>
+        <div class="ls-avatar" style="background:var(--ls-slate);margin-right:-8px;border:2px solid var(--ls-surface);">SR</div>
+        <div class="ls-avatar" style="background:var(--ls-sky-deep);margin-right:-8px;border:2px solid var(--ls-surface);color:var(--ls-text);">YK</div>
+        <div class="ls-avatar" style="background:var(--ls-cream-dark);border:2px solid var(--ls-surface);color:var(--ls-text);">+4</div>
+      </div>
+      <div class="ls-tooltip">Saved just now</div>
+      <div class="ls-code"><span class="tk-prop">--ls-deep</span>: <span class="tk-val">#4080A8</span>;</div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 15. FOOTER ==================== -->
+<section class="doc-section" id="footer">
+  <h2>16. Footer</h2>
+  <p class="section-intro">Ink background matches the top-nav treatment. Four-column grid — identity, link groups — with Sky-colored group headings.</p>
+
+  <div class="ls-footer">
+    <div>
+      <div style="font-size:14px;font-weight:500;color:var(--ls-cream);margin-bottom:8px;">La Sentinelle</div>
+      <div style="color:rgba(245,241,232,0.6);line-height:1.6;">Mauritius' leading media group — publishing lexpress.mu, 5-Plus Dimanche, and more since 1963.</div>
+    </div>
+    <div>
+      <h5>Publications</h5>
+      <a>lexpress.mu</a>
+      <a>5-Plus Dimanche</a>
+      <a>Turf Magazine</a>
+    </div>
+    <div>
+      <h5>Company</h5>
+      <a>About</a>
+      <a>Careers</a>
+      <a>Press kit</a>
+    </div>
+    <div>
+      <h5>Legal</h5>
+      <a>Terms</a>
+      <a>Privacy</a>
+      <a>Cookies</a>
+    </div>
+    <div class="copyright">© 2026 La Sentinelle Ltd · Port Louis, Mauritius</div>
+  </div>
+</section>
+
+<!-- ==================== 16. COMMAND PALETTE ==================== -->
+<section class="doc-section" id="palette-search">
+  <h2>17. Command palette (pop-up search)</h2>
+  <p class="section-intro">Triggered from the sidebar search tile or ⌘K / Ctrl+K globally. Grouped by entity type (Clients, Reservations, Actions) with icons, shortcuts, and metadata on the right.</p>
+
+  <div class="overlay-mock">
+    <div class="cmd-palette">
+      <div class="cmd-input">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5B80A3" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        <input placeholder="Search reservations, clients, placements..." value="adams" />
+        <span class="cmd-esc">esc</span>
+      </div>
+
+      <div class="cmd-group-title">Clients</div>
+      <div class="cmd-item active">
+        <div class="pi-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.5 3-6 7-6s7 2.5 7 6"/></svg></div>
+        <div>Adams Group</div>
+        <div class="pi-desc">14 active reservations</div>
+        <span class="pi-kbd">↵</span>
+      </div>
+      <div class="cmd-item">
+        <div class="pi-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.5 3-6 7-6s7 2.5 7 6"/></svg></div>
+        <div>Adams Media Ltd</div>
+        <div class="pi-desc">Archived</div>
+      </div>
+
+      <div class="cmd-group-title">Reservations</div>
+      <div class="cmd-item">
+        <div class="pi-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3h8l4 4v14H4V3z"/></svg></div>
+        <div>RES-2026-0418 — Insurance Products</div>
+        <div class="pi-desc">Adams Group · today</div>
+      </div>
+
+      <div class="cmd-group-title">Actions</div>
+      <div class="cmd-item">
+        <div class="pi-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></div>
+        <div>Create new reservation for Adams Group</div>
+        <span class="pi-kbd">⌘N</span>
+      </div>
+      <div class="cmd-item">
+        <div class="pi-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg></div>
+        <div>Export Adams Group statement</div>
+      </div>
+
+      <div class="cmd-foot">
+        <div><span class="kbd">↑↓</span>navigate</div>
+        <div><span class="kbd">↵</span>select</div>
+        <div><span class="kbd">esc</span>close</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 17. CONFIRMATION DIALOGS ==================== -->
+<section class="doc-section" id="dialogs">
+  <h2>18. Destructive action confirmations</h2>
+  <p class="section-intro">Every destructive action across the backoffice goes through this modal — never a native <code>confirm()</code> prompt, never a bare button. Two tiers by reversibility: amber warn for reversible operations (cancel, soft-delete, status change), red danger with typed-match gate for permanent deletes and cascades.</p>
+
+  <div class="dialog-row">
+    <div class="dialog-mock">
+      <div class="ls-dialog">
+        <div class="dialog-icon warn">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3 2 20h20L12 3z"/><path d="M12 10v5M12 18v.5"/></svg>
+        </div>
+        <h4>Archive this author?</h4>
+        <p>Existing articles keep the byline, but the author can no longer be assigned to new pieces.</p>
+        <div class="dialog-target">
+          <strong>Marie Claire</strong><br>
+          <span style="color:var(--ls-text-muted);">Senior reporter, politics desk · 142 articles</span>
+        </div>
+        <div class="dialog-actions">
+          <button class="btn-cancel">Cancel</button>
+          <button class="btn-warn">Archive permanently</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="dialog-mock">
+      <div class="ls-dialog">
+        <div class="dialog-icon danger">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M6 6l1 14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-14"/><path d="M10 11v6M14 11v6"/></svg>
+        </div>
+        <h4>Remove this user?</h4>
+        <p>They will lose access immediately. Any articles or photos they own remain in place but they will no longer be able to sign in. This action <strong>cannot be undone</strong>.</p>
+        <div class="dialog-target">
+          <strong>Jean Dupont</strong> (jean@lexpress.mu)
+        </div>
+        <div style="font-size:11px;color:var(--ls-text-soft);margin-bottom:6px;">Type <strong style="font-family:var(--ls-font-mono);background:var(--ls-surface-muted);padding:1px 5px;border-radius:3px;">jean@lexpress.mu</strong> to confirm.</div>
+        <input class="dialog-confirm-input" placeholder="jean@lexpress.mu" />
+        <div class="dialog-actions">
+          <button class="btn-cancel">Cancel</button>
+          <button class="btn-destructive" disabled>Remove user</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sub-block" style="margin-top:32px;">
+    <h3>Implementation</h3>
+    <div class="sb-desc">Use the <code>&lt;x-confirm-delete&gt;</code> Blade component anywhere a row or detail view exposes a delete action. Each instance gets its own scoped Alpine modal state and teleports to <code>&lt;body&gt;</code>, so it overlays correctly even from inside a table cell. Production overlays wrap the dialog in <code>.ls-overlay</code> (fixed-position scrim that fills the viewport); the <code>.dialog-mock</code> wrapper above is a documentation-only container that lets the doc page show two dialogs side-by-side.</div>
+    <div class="ls-code"><span class="tk-prop">&lt;x-confirm-delete</span>
+    <span class="tk-prop">:action=</span><span class="tk-val">"route('articles.destroy', $article)"</span>
+    <span class="tk-prop">:name=</span><span class="tk-val">"$article-&gt;title"</span>
+    <span class="tk-prop">title=</span><span class="tk-val">"Delete article?"</span>
+    <span class="tk-prop">description=</span><span class="tk-val">"Comments and updates attached to this article will be removed too."</span>
+    <span class="tk-prop">:requireTyping=</span><span class="tk-val">"$article-&gt;slug"</span>
+<span class="tk-prop">/&gt;</span></div>
+  </div>
+
+  <div class="sub-block">
+    <h3>When to require typing</h3>
+    <div class="sb-desc">Reach for <code>:requireTyping</code> only when the action's blast radius warrants the extra friction. Default to a plain confirm for routine deletes — over-using the gate trains users to ignore it.</div>
+    <table class="ls-table" style="margin-top:12px;">
+      <thead>
+        <tr>
+          <th style="width:24%;">Action</th>
+          <th style="width:18%;">Variant</th>
+          <th>Type-to-confirm phrase</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Delete category, tag, photographer</td>
+          <td><span class="ls-pill" style="background:var(--ls-danger-bg);color:var(--ls-danger-text);"><span class="ls-dot" style="background:var(--ls-danger);"></span>danger</span></td>
+          <td><span style="color:var(--ls-text-muted);">none — name in <code>dialog-target</code> is enough</span></td>
+        </tr>
+        <tr>
+          <td>Soft-delete an author or briefing</td>
+          <td><span class="ls-pill" style="background:var(--ls-warning-bg);color:var(--ls-warning-text);"><span class="ls-dot" style="background:var(--ls-warning);"></span>warn</span></td>
+          <td><span style="color:var(--ls-text-muted);">none</span></td>
+        </tr>
+        <tr>
+          <td>Remove a user account</td>
+          <td><span class="ls-pill" style="background:var(--ls-danger-bg);color:var(--ls-danger-text);"><span class="ls-dot" style="background:var(--ls-danger);"></span>danger</span></td>
+          <td>email address</td>
+        </tr>
+        <tr>
+          <td>Delete a published article</td>
+          <td><span class="ls-pill" style="background:var(--ls-danger-bg);color:var(--ls-danger-text);"><span class="ls-dot" style="background:var(--ls-danger);"></span>danger</span></td>
+          <td>article slug</td>
+        </tr>
+        <tr>
+          <td>Bulk delete (any cascade &gt; 10 rows)</td>
+          <td><span class="ls-pill" style="background:var(--ls-danger-bg);color:var(--ls-danger-text);"><span class="ls-dot" style="background:var(--ls-danger);"></span>danger</span></td>
+          <td>"DELETE" literal</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="sub-block">
+    <h3>Copy guidelines</h3>
+    <ul style="font-size:13px;color:var(--ls-text);line-height:1.7;padding-left:18px;margin:0;">
+      <li><strong>Title</strong> is a question (<em>"Delete category?"</em>) — not a statement. Forces the user to answer.</li>
+      <li><strong>Description</strong> states the consequence in plain terms. Always include "<em>cannot be undone</em>" (in <code>&lt;strong&gt;</code>) for hard deletes.</li>
+      <li><strong>Confirm label</strong> is a verb that matches the title's intent (<em>"Delete permanently"</em>, <em>"Archive permanently"</em>, <em>"Remove user"</em>) — never a generic "OK" or "Yes".</li>
+      <li><strong>Cancel label</strong> stays "Cancel". Don't get cute.</li>
+      <li><strong>Don't apologise</strong>. The user asked for this; tell them what will happen and let them decide.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ==================== 18.1 MONTH ==================== -->
+<section class="doc-section" id="cal-month">
+  <h2>19.1 Calendar — month view</h2>
+  <p class="section-intro">Editorial calendar, reservation overviews, content planning. Events render as colored pills with left-border accent. Cap at 3 visible per day; overflow collapses to "+N more" affordance.</p>
+
+  <div class="panel panel-flush">
+    <div class="cal-head">
+      <div class="cal-nav-btns"><button>‹</button><button>›</button></div>
+      <button class="cal-today-btn">Today</button>
+      <h4>April 2026</h4>
+      <div class="cal-view-toggle">
+        <button class="active">Month</button>
+        <button>Week</button>
+        <button>Day</button>
+        <button>Agenda</button>
+      </div>
+    </div>
+
+    <div class="cal-month-weekdays">
+      <div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div><div>Sun</div>
+    </div>
+
+    <div class="cal-month">
+      <div class="cal-day outside"><span class="cal-day-num">30</span></div>
+      <div class="cal-day outside"><span class="cal-day-num">31</span></div>
+      <div class="cal-day"><span class="cal-day-num">1</span><div class="cal-event primary">Lexpress editorial</div></div>
+      <div class="cal-day"><span class="cal-day-num">2</span></div>
+      <div class="cal-day"><span class="cal-day-num">3</span><div class="cal-event warning">Scheduled</div></div>
+      <div class="cal-day weekend"><span class="cal-day-num">4</span></div>
+      <div class="cal-day weekend"><span class="cal-day-num">5</span></div>
+
+      <div class="cal-day"><span class="cal-day-num">6</span><div class="cal-event slate">Adams Group</div></div>
+      <div class="cal-day"><span class="cal-day-num">7</span><div class="cal-event primary">Insurance prod.</div><div class="cal-event slate">Dare Inc</div></div>
+      <div class="cal-day"><span class="cal-day-num">8</span></div>
+      <div class="cal-day"><span class="cal-day-num">9</span><div class="cal-event success">Published</div></div>
+      <div class="cal-day"><span class="cal-day-num">10</span></div>
+      <div class="cal-day weekend"><span class="cal-day-num">11</span></div>
+      <div class="cal-day weekend"><span class="cal-day-num">12</span></div>
+
+      <div class="cal-day"><span class="cal-day-num">13</span><div class="cal-event primary">Sprint review</div></div>
+      <div class="cal-day"><span class="cal-day-num">14</span><div class="cal-event slate">Automotive</div><div class="cal-event warning">Legal check</div></div>
+      <div class="cal-day"><span class="cal-day-num">15</span><div class="cal-event danger">Deadline</div></div>
+      <div class="cal-day"><span class="cal-day-num">16</span></div>
+      <div class="cal-day"><span class="cal-day-num">17</span><div class="cal-event primary">DevCon CfP</div></div>
+      <div class="cal-day weekend"><span class="cal-day-num">18</span></div>
+      <div class="cal-day weekend"><span class="cal-day-num">19</span></div>
+
+      <div class="cal-day"><span class="cal-day-num">20</span><div class="cal-event slate">Rancher training</div></div>
+      <div class="cal-day today">
+        <span class="cal-day-num">21</span>
+        <div class="cal-event primary">Insurance prod.</div>
+        <div class="cal-event slate">Adams Group</div>
+        <div class="cal-event warning">Automotive</div>
+        <div class="cal-more">+2 more</div>
+      </div>
+      <div class="cal-day"><span class="cal-day-num">22</span><div class="cal-event primary">Board meeting</div></div>
+      <div class="cal-day"><span class="cal-day-num">23</span></div>
+      <div class="cal-day"><span class="cal-day-num">24</span><div class="cal-event success">Launch</div></div>
+      <div class="cal-day weekend"><span class="cal-day-num">25</span></div>
+      <div class="cal-day weekend"><span class="cal-day-num">26</span></div>
+
+      <div class="cal-day"><span class="cal-day-num">27</span><div class="cal-event slate">Salesperson sync</div></div>
+      <div class="cal-day"><span class="cal-day-num">28</span></div>
+      <div class="cal-day"><span class="cal-day-num">29</span><div class="cal-event primary">Monthly close</div></div>
+      <div class="cal-day"><span class="cal-day-num">30</span><div class="cal-event warning">FY review</div></div>
+      <div class="cal-day outside"><span class="cal-day-num">1</span></div>
+      <div class="cal-day outside weekend"><span class="cal-day-num">2</span></div>
+      <div class="cal-day outside weekend"><span class="cal-day-num">3</span></div>
+    </div>
+
+    <div class="cal-legend">
+      <div class="k"><div class="sw" style="background:var(--ls-deep);"></div>Reservation</div>
+      <div class="k"><div class="sw" style="background:var(--ls-slate);"></div>Client meeting</div>
+      <div class="k"><div class="sw" style="background:var(--ls-warning);"></div>Scheduled / pending</div>
+      <div class="k"><div class="sw" style="background:var(--ls-success);"></div>Published / live</div>
+      <div class="k"><div class="sw" style="background:var(--ls-danger);"></div>Deadline</div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 18.2 WEEK ==================== -->
+<section class="doc-section" id="cal-week">
+  <h2>19.2 Calendar — week view</h2>
+  <p class="section-intro">Time-boxed layout for bookings, meetings, and placements. Red now-line on today's column only; events position absolute within hour cells with top/height derived from start time and duration.</p>
+
+  <div class="panel panel-flush">
+    <div class="cal-head">
+      <div class="cal-nav-btns"><button>‹</button><button>›</button></div>
+      <button class="cal-today-btn">Today</button>
+      <h4>Apr 20 — Apr 26, 2026</h4>
+      <div class="cal-view-toggle">
+        <button>Month</button>
+        <button class="active">Week</button>
+        <button>Day</button>
+        <button>Agenda</button>
+      </div>
+    </div>
+
+    <div class="cal-week-head">
+      <div></div>
+      <div><div class="day-name">Mon</div><div class="day-num">20</div></div>
+      <div><div class="day-name">Tue</div><div class="day-num today">21</div></div>
+      <div><div class="day-name">Wed</div><div class="day-num">22</div></div>
+      <div><div class="day-name">Thu</div><div class="day-num">23</div></div>
+      <div><div class="day-name">Fri</div><div class="day-num">24</div></div>
+      <div><div class="day-name">Sat</div><div class="day-num" style="color:var(--ls-text-muted);">25</div></div>
+      <div><div class="day-name">Sun</div><div class="day-num" style="color:var(--ls-text-muted);">26</div></div>
+    </div>
+
+    <div class="cal-week">
+      <div class="cal-hour-label">09:00</div>
+      <div class="cal-hour-cell"><div class="cal-week-event slate" style="top:4px;height:56px;"><div>Adams Group</div><div class="t">09:00 – 10:30</div></div></div>
+      <div class="cal-hour-cell"><div class="cal-week-event primary" style="top:12px;height:70px;"><div>Insurance prod.</div><div class="t">09:30 – 11:15</div></div></div>
+      <div class="cal-hour-cell"></div>
+      <div class="cal-hour-cell"><div class="cal-week-event warning" style="top:20px;height:34px;"><div>Legal check</div></div></div>
+      <div class="cal-hour-cell"></div>
+      <div class="cal-hour-cell weekend"></div>
+      <div class="cal-hour-cell weekend"></div>
+
+      <div class="cal-hour-label">10:00</div>
+      <div class="cal-hour-cell"></div>
+      <div class="cal-hour-cell"></div>
+      <div class="cal-hour-cell"><div class="cal-week-event primary" style="top:8px;height:50px;"><div>Board prep</div><div class="t">10:15 – 11:15</div></div></div>
+      <div class="cal-hour-cell"></div>
+      <div class="cal-hour-cell"><div class="cal-week-event slate" style="top:4px;height:42px;"><div>Dare Inc sync</div></div></div>
+      <div class="cal-hour-cell weekend"></div>
+      <div class="cal-hour-cell weekend"></div>
+
+      <div class="cal-hour-label">11:00</div>
+      <div class="cal-hour-cell"></div>
+      <div class="cal-hour-cell"><div class="cal-now-line" style="top:20px;"></div></div>
+      <div class="cal-hour-cell"></div>
+      <div class="cal-hour-cell"></div>
+      <div class="cal-hour-cell"></div>
+      <div class="cal-hour-cell weekend"></div>
+      <div class="cal-hour-cell weekend"></div>
+
+      <div class="cal-hour-label">12:00</div>
+      <div class="cal-hour-cell"></div>
+      <div class="cal-hour-cell"><div class="cal-week-event warning" style="top:4px;height:42px;"><div>Lunch review</div></div></div>
+      <div class="cal-hour-cell"></div>
+      <div class="cal-hour-cell"></div>
+      <div class="cal-hour-cell"></div>
+      <div class="cal-hour-cell weekend"></div>
+      <div class="cal-hour-cell weekend"></div>
+
+      <div class="cal-hour-label">13:00</div>
+      <div class="cal-hour-cell"></div>
+      <div class="cal-hour-cell"></div>
+      <div class="cal-hour-cell"></div>
+      <div class="cal-hour-cell"><div class="cal-week-event primary" style="top:4px;height:78px;"><div>Automotive launch</div><div class="t">13:00 – 15:00</div></div></div>
+      <div class="cal-hour-cell"></div>
+      <div class="cal-hour-cell weekend"></div>
+      <div class="cal-hour-cell weekend"></div>
+
+      <div class="cal-hour-label">14:00</div>
+      <div class="cal-hour-cell"><div class="cal-week-event slate" style="top:8px;height:58px;"><div>Salesperson sync</div><div class="t">14:15 – 15:30</div></div></div>
+      <div class="cal-hour-cell"></div>
+      <div class="cal-hour-cell"></div>
+      <div class="cal-hour-cell"></div>
+      <div class="cal-hour-cell"></div>
+      <div class="cal-hour-cell weekend"></div>
+      <div class="cal-hour-cell weekend"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 18.3 AGENDA ==================== -->
+<section class="doc-section" id="cal-agenda">
+  <h2>19.3 Calendar — agenda view</h2>
+  <p class="section-intro">Compact list for mobile or sidebar context. Groups events by hour; empty slots remain visible (muted italic) rather than collapsing, so operators can scan for gaps.</p>
+
+  <div class="panel panel-flush">
+    <div class="cal-head">
+      <h4>Tuesday, April 21, 2026</h4>
+      <div class="cal-view-toggle">
+        <button>Week</button>
+        <button>Day</button>
+        <button class="active">Agenda</button>
+      </div>
+    </div>
+
+    <div class="cal-agenda">
+      <div class="cal-agenda-time">09:00</div>
+      <div class="cal-agenda-content">
+        <div class="cal-agenda-item primary">
+          <div style="flex:1;">
+            <div class="title">Insurance Products</div>
+            <div class="meta">Adams Group · RES-2026-0418 · MUR 84,500</div>
+          </div>
+          <div style="font-size:11px;color:var(--ls-text-muted);">09:30 – 11:15</div>
+        </div>
+      </div>
+
+      <div class="cal-agenda-time">12:00</div>
+      <div class="cal-agenda-content">
+        <div class="cal-agenda-item warning">
+          <div style="flex:1;">
+            <div class="title">Editorial legal review</div>
+            <div class="meta">Priya S. · lexpress.mu</div>
+          </div>
+          <div style="font-size:11px;color:var(--ls-text-muted);">12:00 – 13:00</div>
+        </div>
+      </div>
+
+      <div class="cal-agenda-time">13:00</div>
+      <div class="cal-agenda-content">
+        <div class="cal-agenda-item slate">
+          <div style="flex:1;">
+            <div class="title">Automotive launch placement</div>
+            <div class="meta">Dare Inc · 3 salespersons</div>
+          </div>
+          <div style="font-size:11px;color:var(--ls-text-muted);">13:00 – 15:00</div>
+        </div>
+      </div>
+
+      <div class="cal-agenda-time">16:00</div>
+      <div class="cal-agenda-content empty">No events scheduled</div>
+
+      <div class="cal-agenda-time">17:00</div>
+      <div class="cal-agenda-content">
+        <div class="cal-agenda-item primary">
+          <div style="flex:1;">
+            <div class="title">Board weekly sync</div>
+            <div class="meta">Remote · Google Meet</div>
+          </div>
+          <div style="font-size:11px;color:var(--ls-text-muted);">17:00 – 17:30</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 18.4 DATE PICKER ==================== -->
+<section class="doc-section" id="date-picker">
+  <h2>19.4 Date picker &amp; range picker</h2>
+  <p class="section-intro">Single-date picker for reservation forms, range picker with preset shortcuts for reporting filters. In-range cells use flat rectangles (no border-radius) so endpoints visibly anchor the selection.</p>
+
+  <div class="panel">
+    <div class="picker-row">
+      <div>
+        <div class="date-input-group" style="margin-bottom:12px;max-width:260px;">
+          <label style="font-size:12px;font-weight:500;color:var(--ls-text);">Reservation date</label>
+          <div class="date-input-wrap">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+            <input value="Apr 24, 2026" readonly />
+          </div>
+        </div>
+
+        <div class="date-picker">
+          <div class="date-picker-head">
+            <div class="title">April 2026</div>
+            <div class="date-picker-nav"><button>‹</button><button>›</button></div>
+          </div>
+          <div class="date-picker-weekdays">
+            <div>M</div><div>T</div><div>W</div><div>T</div><div>F</div><div>S</div><div>S</div>
+          </div>
+          <div class="date-picker-grid">
+            <button class="outside">30</button><button class="outside">31</button>
+            <button>1</button><button>2</button><button>3</button><button>4</button><button>5</button>
+            <button>6</button><button>7</button><button>8</button><button>9</button><button>10</button><button>11</button><button>12</button>
+            <button>13</button><button>14</button><button>15</button><button>16</button><button>17</button><button>18</button><button>19</button>
+            <button>20</button><button class="today">21</button><button>22</button><button>23</button>
+            <button class="selected">24</button>
+            <button>25</button><button>26</button>
+            <button>27</button><button>28</button><button>29</button><button>30</button>
+            <button class="outside">1</button><button class="outside">2</button><button class="outside">3</button>
+          </div>
+          <div class="date-picker-foot">
+            <button>Clear</button>
+            <button class="primary">Apply</button>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="date-input-group" style="margin-bottom:12px;">
+          <label style="font-size:12px;font-weight:500;color:var(--ls-text);">Reporting period</label>
+          <div class="date-input-wrap">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+            <input value="Apr 14 – Apr 24, 2026" readonly />
+          </div>
+        </div>
+
+        <div style="display:flex;gap:10px;align-items:flex-start;">
+          <div class="date-preset-list">
+            <div class="title">Presets</div>
+            <button>Today</button>
+            <button>Yesterday</button>
+            <button>Last 7 days</button>
+            <button class="active">Last 14 days</button>
+            <button>This month</button>
+            <button>Last month</button>
+            <button>This quarter</button>
+            <button>FY 2025/2026</button>
+            <button>Custom</button>
+          </div>
+
+          <div class="date-picker" style="max-width:240px;">
+            <div class="date-picker-head">
+              <div class="title">April 2026</div>
+              <div class="date-picker-nav"><button>‹</button><button>›</button></div>
+            </div>
+            <div class="date-picker-weekdays">
+              <div>M</div><div>T</div><div>W</div><div>T</div><div>F</div><div>S</div><div>S</div>
+            </div>
+            <div class="date-picker-grid">
+              <button class="outside">30</button><button class="outside">31</button>
+              <button>1</button><button>2</button><button>3</button><button>4</button><button>5</button>
+              <button>6</button><button>7</button><button>8</button><button>9</button><button>10</button><button>11</button><button>12</button>
+              <button>13</button>
+              <button class="range-start">14</button>
+              <button class="in-range">15</button>
+              <button class="in-range">16</button>
+              <button class="in-range">17</button>
+              <button class="in-range">18</button>
+              <button class="in-range">19</button>
+              <button class="in-range">20</button>
+              <button class="in-range">21</button>
+              <button class="in-range">22</button>
+              <button class="in-range">23</button>
+              <button class="range-end">24</button>
+              <button>25</button><button>26</button>
+              <button>27</button><button>28</button><button>29</button><button>30</button>
+              <button class="outside">1</button><button class="outside">2</button><button class="outside">3</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== SIGN-OFF ==================== -->
+<div class="doc-signoff">
+  <div class="signature-block">
+    <div class="signature-avatar">IS</div>
+    <div class="signature-meta">
+      <div class="name">Ish Sookun</div>
+      <div class="role">Systems Architect · La Sentinelle Ltd</div>
+    </div>
+  </div>
+  <div class="signoff-date">
+    Port Louis, Mauritius<br>
+    April 21, 2026
+  </div>
+</div>
+
+</main>
+</div>
+
+<script>
+  (function() {
+    var root = document.documentElement;
+    var toggle = document.getElementById('themeToggle');
+
+    function currentTheme() {
+      var explicit = root.getAttribute('data-theme');
+      if (explicit) return explicit;
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+
+    function setTheme(theme) {
+      root.setAttribute('data-theme', theme);
+      try { localStorage.setItem('ls-theme', theme); } catch (e) {}
+    }
+
+    if (toggle) {
+      toggle.addEventListener('click', function() {
+        setTheme(currentTheme() === 'dark' ? 'light' : 'dark');
+      });
+    }
+
+    // Keyboard shortcut: Cmd/Ctrl + J
+    document.addEventListener('keydown', function(e) {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'j') {
+        e.preventDefault();
+        setTheme(currentTheme() === 'dark' ? 'light' : 'dark');
+      }
+    });
+  })();
+</script>
+
+</body>
+</html>
