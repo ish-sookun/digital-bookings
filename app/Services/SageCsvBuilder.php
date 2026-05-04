@@ -13,17 +13,25 @@ use Illuminate\Support\Collection;
 /**
  * Build the SAGE-formatted CSV rows for a date range.
  *
- * The Credit export produces, per client:
+ * The Credit export emits, per reservation:
  *   V;LG01;INV;1;{sage_client_code};{YYYYMMDD today};{dd-Mon-yyyy} To {dd-Mon-yyyy}
- * followed by, per reservation (one pair per line item):
- *   D;MUTLTIM;1;{gross_in_range};{commission_pct};{discount_pct};{sage_salesperson_code};{product} | Ref. No {reference}
+ *
+ * followed by one D + one LC pair per booked day that falls inside the range:
+ *   D;MUTLTIM;1;{daily_gross};{commission_pct};{discount_pct};{salesperson_code};{description}
  *   LC;DPT;PRD;SNM;MUL
  *
- * Rules:
+ * The 8th column of the D row is a `||`-separated description that includes
+ * the booked date in DD-MM-YYYY form so the line item is self-describing.
+ *
+ * Cost of Artwork reservations are billed as a single line item (1 V + 1 D +
+ * 1 LC per reservation, regardless of how many dates fall in the range) using
+ * the user-entered `gross_amount`.
+ *
+ * Filter rules:
  * - Only Confirmed reservations are included.
- * - Only the days within [start, end] count towards the gross.
- * - If bill_at_end_of_campaign is set and the campaign ends after the range, the reservation is excluded entirely.
- * - For Cost of Artwork reservations, gross = reservation.gross_amount (no daily-rate × days math).
+ * - If bill_at_end_of_campaign is set and the campaign ends after the range,
+ *   the reservation is excluded entirely.
+ * - Reservations whose booked dates do not intersect the range are excluded.
  */
 class SageCsvBuilder
 {
@@ -52,41 +60,64 @@ class SageCsvBuilder
 
                 return $r;
             })
-            ->filter(fn (Reservation $r) => $this->hasChargeableDates($r));
-
-        $grouped = $eligible
-            ->sortBy(fn (Reservation $r) => [$r->client?->sage_client_code ?? 'zzz', $r->client?->company_name ?? ''])
-            ->groupBy('client_id');
+            ->filter(fn (Reservation $r) => $this->hasChargeableDates($r))
+            ->sortBy(fn (Reservation $r) => [
+                $r->client?->sage_client_code ?? 'zzz',
+                $r->client?->company_name ?? '',
+                $r->reference ?? '',
+            ])
+            ->values();
 
         $rows = [];
-        foreach ($grouped as $clientReservations) {
-            /** @var Collection<int, Reservation> $clientReservations */
-            $client = $clientReservations->first()->client;
-
+        foreach ($eligible as $reservation) {
             $rows[] = [
                 'V',
                 'LG01',
                 'INV',
                 '1',
-                (string) ($client?->sage_client_code ?? ''),
+                (string) ($reservation->client?->sage_client_code ?? ''),
                 $now->format('Ymd'),
                 $this->start->format('d-M-Y').' To '.$this->end->format('d-M-Y'),
             ];
 
-            foreach ($clientReservations as $reservation) {
-                $gross = $this->grossInRange($reservation);
-                $commissionPct = $this->commissionPercent($reservation, $gross);
-                $discountPct = $this->discountPercent($reservation, $gross);
+            if ($reservation->type === ReservationType::CostOfArtwork) {
+                /** @var Collection<int, Carbon> $datesInRange */
+                $datesInRange = $reservation->getAttribute('__dates_in_range');
+                $primaryDate = $datesInRange->first();
 
                 $rows[] = [
                     'D',
                     'MUTLTIM',
                     '1',
-                    $this->formatNumber($gross),
+                    $this->formatNumber((float) $reservation->gross_amount),
+                    '0',
+                    '0',
+                    (string) ($reservation->salesperson?->sage_salesperson_code ?? ''),
+                    $this->description($reservation, $primaryDate),
+                ];
+
+                $rows[] = ['LC', 'DPT', 'PRD', 'SNM', 'MUL'];
+
+                continue;
+            }
+
+            /** @var Collection<int, Carbon> $datesInRange */
+            $datesInRange = $reservation->getAttribute('__dates_in_range');
+            $totalGross = $this->grossInRange($reservation);
+            $commissionPct = $this->commissionPercent($reservation, $totalGross);
+            $discountPct = $this->discountPercent($reservation, $totalGross);
+            $dailyGross = (float) ($reservation->placement?->price ?? 0);
+
+            foreach ($datesInRange as $date) {
+                $rows[] = [
+                    'D',
+                    'MUTLTIM',
+                    '1',
+                    $this->formatNumber($dailyGross),
                     $this->formatNumber($commissionPct),
                     $this->formatNumber($discountPct),
                     (string) ($reservation->salesperson?->sage_salesperson_code ?? ''),
-                    trim(($reservation->product ?? '').' | Ref. No '.($reservation->reference ?? '')),
+                    $this->description($reservation, $date),
                 ];
 
                 $rows[] = ['LC', 'DPT', 'PRD', 'SNM', 'MUL'];
@@ -97,6 +128,29 @@ class SageCsvBuilder
     }
 
     /**
+     * Build the `||`-separated description for the D row's 8th column.
+     *
+     * Segments (in order): product, platform name, booked date (DD-MM-YYYY),
+     * placement name, and the reservation reference.
+     */
+    private function description(Reservation $reservation, ?Carbon $date): string
+    {
+        $platformName = $reservation->placement?->platform?->name
+            ?? $reservation->platform?->name
+            ?? '';
+
+        $segments = [
+            (string) ($reservation->product ?? ''),
+            (string) $platformName,
+            $date?->format('d-m-Y') ?? '',
+            (string) ($reservation->placement?->name ?? ''),
+            'Ref. No '.($reservation->reference ?? ''),
+        ];
+
+        return implode('|| ', $segments);
+    }
+
+    /**
      * @return Collection<int, Carbon>
      */
     private function datesInRange(Reservation $reservation): Collection
@@ -104,6 +158,7 @@ class SageCsvBuilder
         return collect($reservation->dates_booked ?? [])
             ->map(fn ($date) => $date instanceof Carbon ? $date : Carbon::parse((string) $date))
             ->filter(fn (Carbon $date) => $date->betweenIncluded($this->start, $this->end))
+            ->sort()
             ->values();
     }
 
