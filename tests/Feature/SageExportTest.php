@@ -39,12 +39,12 @@ it('forbids non-admin users from exporting', function () {
         ->get(route('reservations.sage-export', [
             'start_date' => '2026-04-01',
             'end_date' => '2026-04-30',
-            'payment_mode' => 'credit',
+            'export_type' => 'sage',
         ]))
         ->assertForbidden();
 });
 
-it('streams a CSV download for credit mode as an admin', function () {
+it('streams a CSV download for the sage export type as an admin', function () {
     $admin = User::factory()->admin()->create();
 
     $client = Client::factory()->create([
@@ -67,7 +67,7 @@ it('streams a CSV download for credit mode as an admin', function () {
     $response = $this->actingAs($admin)->get(route('reservations.sage-export', [
         'start_date' => '2026-04-01',
         'end_date' => '2026-04-30',
-        'payment_mode' => 'credit',
+        'export_type' => 'sage',
     ]));
 
     $response->assertSuccessful();
@@ -75,7 +75,7 @@ it('streams a CSV download for credit mode as an admin', function () {
 
     $disposition = $response->headers->get('Content-Disposition');
     expect($disposition)->toContain('attachment');
-    expect($disposition)->toContain('sage-export-credit-20260401-20260430.csv');
+    expect($disposition)->toContain('sage-export-20260401-20260430.csv');
 });
 
 it('builds one V plus a D+LC pair for each booked day of a confirmed reservation', function () {
@@ -105,7 +105,7 @@ it('builds one V plus a D+LC pair for each booked day of a confirmed reservation
     $response = $this->actingAs($admin)->get(route('reservations.sage-export', [
         'start_date' => '2026-04-01',
         'end_date' => '2026-04-30',
-        'payment_mode' => 'credit',
+        'export_type' => 'sage',
     ]));
 
     $response->assertSuccessful();
@@ -160,7 +160,7 @@ it('emits one V per reservation with D+LC pairs for each booked day', function (
     $response = $this->actingAs($admin)->get(route('reservations.sage-export', [
         'start_date' => '2026-04-01',
         'end_date' => '2026-04-30',
-        'payment_mode' => 'credit',
+        'export_type' => 'sage',
     ]));
 
     $rows = parseSageCsv($response->streamedContent());
@@ -222,7 +222,7 @@ it('orders reservations by sage_client_code ascending', function () {
     $response = $this->actingAs($admin)->get(route('reservations.sage-export', [
         'start_date' => '2026-04-01',
         'end_date' => '2026-04-30',
-        'payment_mode' => 'credit',
+        'export_type' => 'sage',
     ]));
 
     $rows = parseSageCsv($response->streamedContent());
@@ -271,7 +271,7 @@ it('emits in-range dates only for a Standard reservation that spans into the pre
     $response = $this->actingAs($admin)->get(route('reservations.sage-export', [
         'start_date' => '2026-04-01',
         'end_date' => '2026-04-30',
-        'payment_mode' => 'credit',
+        'export_type' => 'sage',
     ]));
 
     $rows = parseSageCsv($response->streamedContent());
@@ -324,7 +324,7 @@ it('emits in-range dates only for a Standard reservation that spans into the nex
     $response = $this->actingAs($admin)->get(route('reservations.sage-export', [
         'start_date' => '2026-04-01',
         'end_date' => '2026-04-30',
-        'payment_mode' => 'credit',
+        'export_type' => 'sage',
     ]));
 
     $rows = parseSageCsv($response->streamedContent());
@@ -374,7 +374,7 @@ it('splits the same Standard reservation across two monthly exports', function (
     $mayResponse = $this->actingAs($admin)->get(route('reservations.sage-export', [
         'start_date' => '2026-05-01',
         'end_date' => '2026-05-31',
-        'payment_mode' => 'credit',
+        'export_type' => 'sage',
     ]));
     $mayRows = parseSageCsv($mayResponse->streamedContent());
 
@@ -387,7 +387,7 @@ it('splits the same Standard reservation across two monthly exports', function (
     $juneResponse = $this->actingAs($admin)->get(route('reservations.sage-export', [
         'start_date' => '2026-06-01',
         'end_date' => '2026-06-30',
-        'payment_mode' => 'credit',
+        'export_type' => 'sage',
     ]));
     $juneRows = parseSageCsv($juneResponse->streamedContent());
 
@@ -428,7 +428,7 @@ it('still bills a bill_at_end_of_campaign reservation in full when its last date
     $response = $this->actingAs($admin)->get(route('reservations.sage-export', [
         'start_date' => '2026-04-01',
         'end_date' => '2026-04-30',
-        'payment_mode' => 'credit',
+        'export_type' => 'sage',
     ]));
 
     $rows = parseSageCsv($response->streamedContent());
@@ -461,7 +461,7 @@ it('excludes bill_at_end_of_campaign reservations whose campaign ends after the 
     $response = $this->actingAs($admin)->get(route('reservations.sage-export', [
         'start_date' => '2026-04-01',
         'end_date' => '2026-04-30',
-        'payment_mode' => 'credit',
+        'export_type' => 'sage',
     ]));
 
     $rows = parseSageCsv($response->streamedContent());
@@ -493,7 +493,7 @@ it('includes bill_at_end_of_campaign reservations whose campaign ends inside the
     $response = $this->actingAs($admin)->get(route('reservations.sage-export', [
         'start_date' => '2026-04-01',
         'end_date' => '2026-04-30',
-        'payment_mode' => 'credit',
+        'export_type' => 'sage',
     ]));
 
     $rows = parseSageCsv($response->streamedContent());
@@ -553,7 +553,7 @@ it('excludes option and canceled reservations from the export', function () {
     $response = $this->actingAs($admin)->get(route('reservations.sage-export', [
         'start_date' => '2026-04-01',
         'end_date' => '2026-04-30',
-        'payment_mode' => 'credit',
+        'export_type' => 'sage',
     ]));
 
     $rows = parseSageCsv($response->streamedContent());
@@ -588,7 +588,7 @@ it('emits an empty sage code column when the client has no sage_client_code', fu
     $response = $this->actingAs($admin)->get(route('reservations.sage-export', [
         'start_date' => '2026-04-01',
         'end_date' => '2026-04-30',
-        'payment_mode' => 'credit',
+        'export_type' => 'sage',
     ]));
 
     $rows = parseSageCsv($response->streamedContent());
@@ -632,7 +632,7 @@ it('uses the billing client sage code when the reservation represents another cl
     $response = $this->actingAs($admin)->get(route('reservations.sage-export', [
         'start_date' => '2026-04-01',
         'end_date' => '2026-04-30',
-        'payment_mode' => 'credit',
+        'export_type' => 'sage',
     ]));
 
     $rows = parseSageCsv($response->streamedContent());
@@ -642,61 +642,20 @@ it('uses the billing client sage code when the reservation represents another cl
     expect($rows[0][4])->toBe('BILL01');
 });
 
-it('streams a cash CSV containing only is_cash=true reservations', function () {
+it('redirects with a not-yet-available notice when export_type is sales', function () {
     $admin = User::factory()->admin()->create();
-
-    $client = Client::factory()->create([
-        'sage_client_code' => 'CLI001',
-        'commission_amount' => null,
-        'discount' => null,
-    ]);
-    $salesperson = Salesperson::factory()->create(['sage_salesperson_code' => 'SP01']);
-    $placement = Placement::factory()->create(['price' => 1000]);
-
-    // One credit reservation — should NOT appear in the cash export.
-    Reservation::factory()->create([
-        'client_id' => $client->id,
-        'salesperson_id' => $salesperson->id,
-        'placement_id' => $placement->id,
-        'type' => ReservationType::Standard,
-        'status' => ReservationStatus::Confirmed,
-        'is_cash' => false,
-        'dates_booked' => ['2026-04-05'],
-        'bill_at_end_of_campaign' => false,
-    ]);
-
-    // One cash reservation — should be the only one in the cash export.
-    Reservation::factory()->create([
-        'client_id' => $client->id,
-        'salesperson_id' => $salesperson->id,
-        'placement_id' => $placement->id,
-        'type' => ReservationType::Standard,
-        'status' => ReservationStatus::Confirmed,
-        'is_cash' => true,
-        'dates_booked' => ['2026-04-05'],
-        'bill_at_end_of_campaign' => false,
-    ]);
 
     $response = $this->actingAs($admin)->get(route('reservations.sage-export', [
         'start_date' => '2026-04-01',
         'end_date' => '2026-04-30',
-        'payment_mode' => 'cash',
+        'export_type' => 'sales',
     ]));
 
-    $response->assertSuccessful();
-    expect($response->headers->get('Content-Type'))->toContain('text/csv');
-    expect($response->headers->get('Content-Disposition'))->toContain('sage-export-cash-20260401-20260430.csv');
-
-    $rows = parseSageCsv($response->streamedContent());
-
-    // 1 V + 1 D + 1 LC = 3 rows for the single cash reservation.
-    expect($rows)->toHaveCount(3);
-    expect($rows[0][0])->toBe('V');
-    expect($rows[1][0])->toBe('D');
-    expect($rows[2][0])->toBe('LC');
+    $response->assertRedirect(route('reservations.index'));
+    expect(session('error'))->toContain('Sales export is not yet available');
 });
 
-it('credit mode excludes is_cash=true reservations', function () {
+it('sage export excludes is_cash=true reservations', function () {
     $admin = User::factory()->admin()->create();
 
     $client = Client::factory()->create(['sage_client_code' => 'CLI001']);
@@ -715,7 +674,7 @@ it('credit mode excludes is_cash=true reservations', function () {
     $response = $this->actingAs($admin)->get(route('reservations.sage-export', [
         'start_date' => '2026-04-01',
         'end_date' => '2026-04-30',
-        'payment_mode' => 'credit',
+        'export_type' => 'sage',
     ]));
 
     $rows = parseSageCsv($response->streamedContent());
@@ -723,17 +682,17 @@ it('credit mode excludes is_cash=true reservations', function () {
     expect($rows)->toBeEmpty();
 });
 
-it('rejects requests missing start_date, end_date, or payment_mode', function () {
+it('rejects requests missing start_date, end_date, or export_type', function () {
     $admin = User::factory()->admin()->create();
 
     $response = $this->actingAs($admin)->get(route('reservations.sage-export', [
         'start_date' => '',
         'end_date' => '',
-        'payment_mode' => 'bogus',
+        'export_type' => 'bogus',
     ]));
 
     $response->assertRedirect();
-    $response->assertSessionHasErrors(['start_date', 'end_date', 'payment_mode']);
+    $response->assertSessionHasErrors(['start_date', 'end_date', 'export_type']);
 });
 
 it('converts a fixed-amount (MUR) client commission into a percentage of the in-range gross', function () {
@@ -761,7 +720,7 @@ it('converts a fixed-amount (MUR) client commission into a percentage of the in-
     $response = $this->actingAs($admin)->get(route('reservations.sage-export', [
         'start_date' => '2026-04-01',
         'end_date' => '2026-04-30',
-        'payment_mode' => 'credit',
+        'export_type' => 'sage',
     ]));
 
     $rows = parseSageCsv($response->streamedContent());
@@ -805,7 +764,7 @@ it('formats the D row description with || separators including the booked date',
     $response = $this->actingAs($admin)->get(route('reservations.sage-export', [
         'start_date' => '2026-03-01',
         'end_date' => '2026-03-31',
-        'payment_mode' => 'credit',
+        'export_type' => 'sage',
     ]));
 
     $rows = parseSageCsv($response->streamedContent());
@@ -845,7 +804,7 @@ it('emits a different booked date in each per-day D row description', function (
     $response = $this->actingAs($admin)->get(route('reservations.sage-export', [
         'start_date' => '2026-04-01',
         'end_date' => '2026-04-30',
-        'payment_mode' => 'credit',
+        'export_type' => 'sage',
     ]));
 
     $rows = parseSageCsv($response->streamedContent());
@@ -882,7 +841,7 @@ it('uses gross_amount and zeroes commission/discount for cost-of-artwork reserva
     $response = $this->actingAs($admin)->get(route('reservations.sage-export', [
         'start_date' => '2026-04-01',
         'end_date' => '2026-04-30',
-        'payment_mode' => 'credit',
+        'export_type' => 'sage',
     ]));
 
     $rows = parseSageCsv($response->streamedContent());

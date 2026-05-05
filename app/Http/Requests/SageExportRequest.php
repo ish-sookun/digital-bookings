@@ -25,7 +25,7 @@ class SageExportRequest extends FormRequest
         return [
             'start_date' => ['required', 'date'],
             'end_date' => ['required', 'date', 'after_or_equal:start_date'],
-            'payment_mode' => ['required', 'in:cash,credit'],
+            'export_type' => ['required', 'in:sage,sales'],
         ];
     }
 
@@ -38,8 +38,8 @@ class SageExportRequest extends FormRequest
             'start_date.required' => 'Please select a start date.',
             'end_date.required' => 'Please select an end date.',
             'end_date.after_or_equal' => 'The end date must be on or after the start date.',
-            'payment_mode.required' => 'Please select an export type.',
-            'payment_mode.in' => 'The selected export type is invalid.',
+            'export_type.required' => 'Please select an export type.',
+            'export_type.in' => 'The selected export type is invalid.',
         ];
     }
 }

@@ -14,8 +14,8 @@ The toolbar is a small inline `GET` form with three controls:
 |---|---|---|
 | Start date | `start_date` | Native `<input type="date">` |
 | End date | `end_date` | Must be `>= start_date` |
-| Payment mode | `payment_mode` | `credit` (default — exports `is_cash = false` reservations) or `cash` (exports `is_cash = true`) |
-| **SAGE Export** button | — | Submits the form |
+| Export type | `export_type` | `sage` (default — exports the SAGE accounting CSV) or `sales` (placeholder — not yet implemented) |
+| **Export** button | — | Submits the form |
 
 Pressing the button submits to `GET /reservations/sage-export`.
 
@@ -48,16 +48,15 @@ The two rules together mean:
 | Apr 20 – May 10 | yes | Apr 1–30 | ❌ (campaign not yet ended) | 0 |
 | Mar 28 – Apr 1 | yes | Apr 1–30 | ✅ (last date inside range) | 4 (incl. the three March dates) |
 
-## Cash vs Credit
+## Sage vs Sales
 
-- **Credit mode** (`payment_mode=credit`): exports reservations where `is_cash = false` (the default for any reservation). A "credit" reservation is one billed against a client account.
-- **Cash mode** (`payment_mode=cash`): exports reservations where `is_cash = true`. A "cash" reservation is one paid up front.
+- **Sage** (`export_type=sage`, the default): exports Confirmed reservations where `is_cash = false`. This is the SAGE accounting CSV — the format described throughout this document.
+- **Sales** (`export_type=sales`): **not yet implemented**. The controller redirects back to `/reservations` with an error flash so the user knows the format is pending. The Sales spec will be defined separately.
 
-The CSV row format is identical between the two modes — only the underlying reservation set differs. The downloaded filename embeds the mode for clarity:
+The Sage download filename is:
 
 ```
-sage-export-credit-20260401-20260430.csv
-sage-export-cash-20260401-20260430.csv
+sage-export-20260401-20260430.csv
 ```
 
 ## End-to-end flow
@@ -70,7 +69,7 @@ sage-export-cash-20260401-20260430.csv
                                        │
                                        ▼
                           query Confirmed reservations
-                          where is_cash matches mode
+                            where is_cash = false
                                        │
                                        ▼
                             ┌──────────────────────┐
@@ -102,7 +101,7 @@ Validation rules:
 ```php
 'start_date'   => ['required', 'date'],
 'end_date'     => ['required', 'date', 'after_or_equal:start_date'],
-'payment_mode' => ['required', 'in:cash,credit'],
+'export_type' => ['required', 'in:sage,sales'],
 ```
 
 ## Controller
@@ -110,12 +109,16 @@ Validation rules:
 `App\Http\Controllers\SageExportController` is invokable.
 
 ```php
-$isCash = $paymentMode === 'cash';
+if ($exportType === 'sales') {
+    return redirect()
+        ->route('reservations.index')
+        ->with('error', 'Sales export is not yet available — the format is pending.');
+}
 
 $reservations = Reservation::query()
     ->with(['client', 'placement.platform', 'salesperson', 'representedClient', 'platform'])
     ->where('status', ReservationStatus::Confirmed)
-    ->where('is_cash', $isCash)
+    ->where('is_cash', false)
     ->get();
 
 $builder = new SageCsvBuilder($start, $end);
@@ -124,7 +127,7 @@ $rows = $builder->build($reservations);
 return response()->streamDownload(/* writes ;-delimited CSV with fputcsv */);
 ```
 
-The status filter (`Confirmed`) and the cash filter (`is_cash`) are applied at the query level; everything downstream is the responsibility of the builder.
+The Confirmed-status filter and the `is_cash = false` filter are both applied at the query level; everything downstream is the responsibility of the builder.
 
 ## CSV builder
 
@@ -289,7 +292,7 @@ bill_at_end_of_campaign            = false
 dates_booked                       = ["2026-04-15", "2026-04-16", "2026-04-17"]
 ```
 
-Run with `start=2026-04-01`, `end=2026-04-30`, `payment_mode=credit`. The CSV emits **7 rows** — 1 V + 3 (D + LC):
+Run with `start=2026-04-01`, `end=2026-04-30`, `export_type=sage`. The CSV emits **7 rows** — 1 V + 3 (D + LC):
 
 ```
 V;LG01;INV;1;ART-0009;20260504;01-Apr-2026 To 30-Apr-2026
@@ -316,8 +319,8 @@ If the same reservation had `dates_booked = ["2026-04-28", "2026-04-29", "2026-0
 | `bill_at_end_of_campaign = true`, last date after range | **Excluded** — campaign not yet finished. |
 | `bill_at_end_of_campaign = true`, last date before range | **Excluded** — already billed when the campaign ended. |
 | `Option` or `Canceled` status | Excluded. Only `Confirmed` is exported. |
-| `is_cash = true` and `payment_mode = credit` | Excluded. |
-| `is_cash = false` and `payment_mode = cash` | Excluded. |
+| `is_cash = true` reservation and `export_type = sage` | Excluded. The Sage CSV is for `is_cash = false` Confirmed reservations only. |
+| `export_type = sales` | No CSV; redirects to `/reservations` with a "not yet available" flash. |
 | Client acting as agency (has `represented_client_id`) | V row uses the **billing** client's SAGE code (`client_id`). The represented brand is informational only and does not appear in the CSV. |
 | `Cost of Artwork` reservation | Eligible exactly **once**, in the export whose window contains its billing date (first booked date, or last when `bill_at_end_of_campaign` is set). Emits 1 V + 1 D + 1 LC. The D row uses the full `gross_amount` and the billing date in the description. |
 | Empty result (no reservations match) | An empty CSV is streamed (no V/D/LC rows). |
@@ -337,8 +340,8 @@ If the same reservation had `dates_booked = ["2026-04-28", "2026-04-29", "2026-0
 - `bill_at_end_of_campaign` true + last date after range → excluded
 - `bill_at_end_of_campaign` true + last date inside range with all dates in range → included
 - `Option` / `Canceled` reservations → excluded
-- Credit mode excludes `is_cash = true` reservations
-- Cash mode includes `is_cash = true` reservations and excludes credit ones
+- Sage export excludes `is_cash = true` reservations
+- Sales export type redirects with a "not yet available" notice (no CSV)
 - Client acting as agency → V row uses the billing client's SAGE code
 - Missing `sage_client_code` → row still emitted with empty 5th column
 - D row description format → `||`-separated with the booked date in DD-MM-YYYY
@@ -349,7 +352,7 @@ If the same reservation had `dates_booked = ["2026-04-28", "2026-04-29", "2026-0
 
 | Path | Role |
 |---|---|
-| `app/Http/Controllers/SageExportController.php` | Invokable controller; queries Confirmed reservations filtered by `is_cash` and streams CSV |
+| `app/Http/Controllers/SageExportController.php` | Invokable controller; routes `sales` to a flash redirect, otherwise queries Confirmed `is_cash = false` reservations and streams the Sage CSV |
 | `app/Http/Requests/SageExportRequest.php` | Authorisation + validation |
 | `app/Services/SageCsvBuilder.php` | Pure builder — eligibility, sort, format |
 | `routes/web.php` | Route declared before `Route::resource('reservations', ...)` |
