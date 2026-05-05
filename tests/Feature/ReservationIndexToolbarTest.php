@@ -26,7 +26,7 @@ it('hides the export form for users who cannot sage-export', function () {
 
     $response->assertOk()
         ->assertDontSee('name="export_type"', false)
-        ->assertSee('Add Reservation');
+        ->assertSee('Create Reservation');
 });
 
 it('shows the Sales TBD error flash when the controller redirects back with error', function () {

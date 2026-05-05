@@ -19,7 +19,7 @@
             </button>
           </form>
         @endcan
-        <x-ls.button :href="route('reservations.create')" variant="primary">Add Reservation</x-ls.button>
+        <x-ls.button :href="route('reservations.create')" variant="primary">Create Reservation</x-ls.button>
       </x-slot>
     </x-ls.page-header>
 
@@ -87,7 +87,7 @@
           @empty
             <tr>
               <td colspan="8" class="text-center" style="padding: 40px 12px; color: var(--ls-text-muted);">
-                No reservations found. Click "Add Reservation" to create one.
+                No reservations found. Click "Create Reservation" to create one.
               </td>
             </tr>
           @endforelse
