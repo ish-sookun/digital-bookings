@@ -315,7 +315,7 @@
 
       {{-- Documents --}}
       <x-ls.section title="Documents">
-        <div class="grid grid-cols-2 gap-6">
+        <div class="grid grid-cols-3 gap-6">
           <div class="ls-field">
             <label for="purchase_order_no">Purchase Order No.</label>
             <input type="text" name="purchase_order_no" id="purchase_order_no" value="{{ old('purchase_order_no') }}"
@@ -348,6 +348,24 @@
                 </svg>
                 Upload Invoice
                 <input type="file" name="invoice_file" class="hidden" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.webp" />
+              </label>
+            </div>
+          </div>
+
+          <div class="ls-field">
+            <label for="receipt_no">Receipt No.</label>
+            <input type="text" name="receipt_no" id="receipt_no" value="{{ old('receipt_no') }}"
+              class="ls-input @error('receipt_no') error @enderror" />
+            @error('receipt_no')
+              <span class="hint" style="color: var(--ls-danger-text);">{{ $message }}</span>
+            @enderror
+            <div class="mt-2">
+              <label class="ls-btn ls-btn-outline ls-btn-sm cursor-pointer">
+                <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+                </svg>
+                Upload Receipt
+                <input type="file" name="receipt_file" class="hidden" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.webp" />
               </label>
             </div>
           </div>

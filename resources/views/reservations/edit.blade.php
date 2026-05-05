@@ -356,7 +356,7 @@
         </div>
 
         {{-- Reference Numbers with Upload --}}
-        <div class="grid grid-cols-2 gap-6">
+        <div class="grid grid-cols-3 gap-6">
           <div class="ls-field">
             <label for="purchase_order_no">Purchase Order No.</label>
             <input type="text" name="purchase_order_no" id="purchase_order_no" value="{{ old('purchase_order_no', $reservation->purchase_order_no) }}"
@@ -404,6 +404,37 @@
               </button>
               <input type="file" x-ref="fileInput" @change="upload($event)" class="hidden" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.webp" />
               <a x-show="downloadUrl" :href="downloadUrl" class="ls-btn ls-btn-outline ls-btn-sm" title="Download Invoice">
+                <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                </svg>
+              </a>
+              <div x-show="uploading" class="flex items-center gap-2 text-xs text-ls-text-muted">
+                <div class="h-1.5 w-24 overflow-hidden rounded-full bg-ls-surface-muted">
+                  <div class="h-full rounded-full bg-ls-deep transition-all" :style="'width: ' + progress + '%'"></div>
+                </div>
+                <span x-text="progress + '%'"></span>
+              </div>
+              <span x-show="success" class="text-xs text-ls-success" x-transition>Saved</span>
+              <span x-show="error" class="text-xs text-ls-danger" x-text="error" x-transition></span>
+            </div>
+          </div>
+
+          <div class="ls-field">
+            <label for="receipt_no">Receipt No.</label>
+            <input type="text" name="receipt_no" id="receipt_no" value="{{ old('receipt_no', $reservation->receipt_no) }}"
+              class="ls-input @error('receipt_no') error @enderror" />
+            @error('receipt_no')
+              <span class="hint" style="color: var(--ls-danger-text);">{{ $message }}</span>
+            @enderror
+            <div class="mt-2 flex items-center gap-2" x-data="documentUploader('receipt', '{{ route('reservations.upload-document', $reservation) }}', '{{ $reservation->receipt_path ? route('reservations.document', [$reservation, 'receipt']) : '' }}')">
+              <button type="button" @click="$refs.fileInput.click()" class="ls-btn ls-btn-outline ls-btn-sm">
+                <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+                </svg>
+                Upload Receipt
+              </button>
+              <input type="file" x-ref="fileInput" @change="upload($event)" class="hidden" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.webp" />
+              <a x-show="downloadUrl" :href="downloadUrl" class="ls-btn ls-btn-outline ls-btn-sm" title="Download Receipt">
                 <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
                 </svg>

@@ -191,6 +191,7 @@ it('returns 404 for an invalid document type download', function () {
 it('uploads documents via the reservation update form', function () {
     $poFile = UploadedFile::fake()->create('po.pdf', 512, 'application/pdf');
     $invoiceFile = UploadedFile::fake()->create('invoice.pdf', 512, 'application/pdf');
+    $receiptFile = UploadedFile::fake()->create('receipt.pdf', 512, 'application/pdf');
 
     $data = [
         'client_id' => $this->reservation->client_id,
@@ -206,6 +207,8 @@ it('uploads documents via the reservation update form', function () {
         'status' => $this->reservation->status->value,
         'purchase_order_file' => $poFile,
         'invoice_file' => $invoiceFile,
+        'receipt_no' => 'RCPT-001',
+        'receipt_file' => $receiptFile,
     ];
 
     $response = $this->put(route('reservations.update', $this->reservation), $data);
@@ -214,6 +217,34 @@ it('uploads documents via the reservation update form', function () {
     $this->reservation->refresh();
     expect($this->reservation->purchase_order_path)->not->toBeNull();
     expect($this->reservation->invoice_path)->not->toBeNull();
+    expect($this->reservation->receipt_path)->not->toBeNull();
+    expect($this->reservation->receipt_no)->toBe('RCPT-001');
+});
+
+it('uploads a receipt via the async endpoint', function () {
+    $file = UploadedFile::fake()->create('receipt.pdf', 512, 'application/pdf');
+
+    $response = $this->postJson(route('reservations.upload-document', $this->reservation), [
+        'file' => $file,
+        'type' => 'receipt',
+    ]);
+
+    $response->assertOk()->assertJsonStructure(['success', 'download_url']);
+    $this->reservation->refresh();
+    expect($this->reservation->receipt_path)->not->toBeNull();
+    Storage::disk('local')->assertExists($this->reservation->receipt_path);
+});
+
+it('downloads an uploaded receipt', function () {
+    $file = UploadedFile::fake()->create('receipt.pdf', 512, 'application/pdf');
+
+    $this->postJson(route('reservations.upload-document', $this->reservation), [
+        'file' => $file,
+        'type' => 'receipt',
+    ]);
+
+    $this->get(route('reservations.document', [$this->reservation, 'receipt']))
+        ->assertOk();
 });
 
 it('uploads a webp image via the async endpoint', function () {

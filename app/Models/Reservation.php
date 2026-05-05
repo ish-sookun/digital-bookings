@@ -49,6 +49,8 @@ class Reservation extends Model
         'purchase_order_path',
         'invoice_no',
         'invoice_path',
+        'receipt_no',
+        'receipt_path',
         'signed_ro_path',
         'remark',
     ];
