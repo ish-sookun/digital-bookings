@@ -112,7 +112,7 @@
       {{-- Dates --}}
       <x-ls.section title="Reservation Dates">
         <div>
-          <p class="text-sm font-medium text-ls-text">Dates Booked</p>
+          <p class="text-sm font-medium text-ls-text">Dates Published</p>
           <div class="mt-2 flex flex-wrap gap-2">
             @foreach($reservation->dates_booked as $date)
               <x-ls.pill variant="neutral">{{ \Carbon\Carbon::parse($date)->format('d M Y') }}</x-ls.pill>
