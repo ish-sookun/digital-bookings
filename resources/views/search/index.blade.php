@@ -53,7 +53,7 @@
             @foreach($results as $row)
               <tr>
                 @if($type === 'reservation')
-                  <td class="font-mono text-ls-text-muted">{{ $row->reference }}</td>
+                  <td class="font-mono text-ls-text-muted">{{ $row->id }}</td>
                   <td class="text-ls-text">{{ $row->client->company_name }}</td>
                   <td class="text-ls-text-muted">{{ $row->product }}</td>
                   <td class="text-ls-text-muted">{{ $row->platform?->name ?? '—' }}</td>

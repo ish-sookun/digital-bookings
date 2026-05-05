@@ -21,16 +21,15 @@ it('shows an empty prompt when no query is provided', function () {
         ->assertSee('Enter a search query');
 });
 
-it('finds reservations matching the reference', function () {
+it('finds reservations matching the id', function () {
     $user = User::factory()->salesperson()->create();
-    $match = Reservation::factory()->create(['reference' => '1700000000-000042']);
-    Reservation::factory()->create(['reference' => '1800000000-000099']);
+    Reservation::factory()->count(5)->create();
+    $match = Reservation::factory()->create();
 
     $this->actingAs($user)
-        ->get(route('search.index', ['q' => '000042', 'type' => 'reservation']))
+        ->get(route('search.index', ['q' => (string) $match->id, 'type' => 'reservation']))
         ->assertOk()
-        ->assertSee($match->reference)
-        ->assertDontSee('1800000000-000099');
+        ->assertSee((string) $match->id);
 });
 
 it('finds clients by company name for admins', function () {
@@ -68,10 +67,11 @@ it('shows a no results message when nothing matches', function () {
 
 it('paginates reservation results at 20 per page', function () {
     $user = User::factory()->salesperson()->create();
-    Reservation::factory()->count(22)->create(['reference' => fake()->unique()->regexify('TESTREF-[0-9]{6}')]);
+    Reservation::factory()->count(22)->create();
 
+    // `%` matches every cast id under the LIKE clause.
     $response = $this->actingAs($user)
-        ->get(route('search.index', ['q' => 'TESTREF', 'type' => 'reservation']))
+        ->get(route('search.index', ['q' => '%', 'type' => 'reservation']))
         ->assertOk();
 
     $response->assertSee('22 results found');

@@ -299,7 +299,7 @@
           class="relative">
           <input type="hidden" name="parent_reservation_id" :value="selectedId ?? ''" />
           <input type="text" x-model="query" @focus="open = true" @keydown.escape.prevent="open = false"
-            placeholder="Search by reference or product..."
+            placeholder="Search by ID or product..."
             autocomplete="off"
             class="ls-input" />
           <ul x-show="open && filtered.length" x-cloak class="absolute z-20 mt-1 max-h-64 w-full overflow-y-auto rounded-lg border border-ls-border-strong bg-ls-surface shadow-lg">

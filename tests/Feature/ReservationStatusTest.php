@@ -126,14 +126,11 @@ it('shows the status select on the edit form pre-selected with the current statu
 });
 
 it('shows the status pill on the index page', function () {
-    Reservation::factory()->create([
-        'reference' => 'TEST-REF-1',
-        'status' => ReservationStatus::Confirmed,
-    ]);
+    $reservation = Reservation::factory()->create(['status' => ReservationStatus::Confirmed]);
 
     $this->get(route('reservations.index'))
         ->assertOk()
-        ->assertSee('TEST-REF-1')
+        ->assertSee((string) $reservation->id)
         ->assertSee('bg-green-50', false)
         ->assertSee('bg-green-500', false);
 });

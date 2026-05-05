@@ -383,7 +383,7 @@
       </div>
       <div style="display: table-cell; vertical-align: top; width: 50%; text-align: right;">
         <div class="doc-date">Date: {{ $reservation->created_at->format('d/m/Y') }}</div>
-        <div class="doc-date">Ref: {{ $reservation->reference }}</div>
+        <div class="doc-date">Ref: {{ $reservation->id }}</div>
         @if($reservation->purchase_order_no)
           <div class="doc-date">PO #: {{ $reservation->purchase_order_no }}</div>
         @endif
@@ -551,7 +551,7 @@
     @if($reservation->parent)
       <div style="margin-top: 12px; font-size: 10px; color: #1a365d;">
         <strong>Linked to parent reservation:</strong>
-        <span style="font-family: 'Courier New', monospace;">{{ $reservation->parent->reference }}</span>
+        <span style="font-family: 'Courier New', monospace;">{{ $reservation->parent->id }}</span>
         — {{ $reservation->parent->product }}
       </div>
     @endif

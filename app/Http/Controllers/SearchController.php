@@ -43,7 +43,7 @@ class SearchController extends Controller
         return match ($type) {
             'reservation' => Reservation::query()
                 ->with(['client', 'representedClient', 'platform', 'placement'])
-                ->where('reference', 'like', $like)
+                ->whereRaw('CAST(id AS TEXT) LIKE ?', [$like])
                 ->latest()
                 ->paginate(self::PER_PAGE)
                 ->withQueryString(),

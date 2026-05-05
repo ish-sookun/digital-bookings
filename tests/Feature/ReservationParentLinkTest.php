@@ -66,16 +66,13 @@ it('rejects a non-existent parent_reservation_id', function () {
 });
 
 it('shows the parent reservation link on the child show page', function () {
-    $parent = Reservation::factory()->create([
-        'reference' => 'PARENT-REF-1',
-        'product' => 'Parent Campaign',
-    ]);
+    $parent = Reservation::factory()->create(['product' => 'Parent Campaign']);
     $child = Reservation::factory()->create(['parent_reservation_id' => $parent->id]);
 
     $this->get(route('reservations.show', $child))
         ->assertOk()
         ->assertSee('Parent Reservation')
-        ->assertSee('PARENT-REF-1')
+        ->assertSee((string) $parent->id)
         ->assertSee('Parent Campaign');
 });
 

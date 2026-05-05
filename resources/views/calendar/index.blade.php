@@ -186,7 +186,7 @@
                           <li>
                             <a :href="reservation.url" class="block rounded-lg border border-ls-border-strong px-3 py-2 hover:bg-ls-surface-muted">
                               <div class="flex items-center justify-between gap-3">
-                                <span class="font-mono text-xs text-ls-text-muted" x-text="reservation.reference"></span>
+                                <span class="font-mono text-xs text-ls-text-muted" x-text="reservation.id"></span>
                                 <span class="inline-flex items-center gap-1.5 text-xs text-ls-text">
                                   <span class="inline-block h-2 w-2 rounded-full" :class="reservation.status_dot_class"></span>
                                   <span x-text="reservation.status_label"></span>
