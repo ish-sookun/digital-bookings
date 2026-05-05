@@ -21,27 +21,32 @@ Pressing the button submits to `GET /reservations/sage-export`.
 
 ## Billing model
 
-Each reservation is billed in **exactly one** export — the one whose date window covers the reservation's *billing date*:
+Eligibility and the dates that produce `D + LC` pairs depend on the reservation type and the `bill_at_end_of_campaign` flag:
 
-| Reservation kind | Billing date |
-|---|---|
-| Standard (default) | First booked date |
-| `bill_at_end_of_campaign` enabled | Last booked date |
+| Reservation kind | Eligibility | Dates emitted (D + LC pairs) |
+|---|---|---|
+| **Standard, `bill_at_end = false`** | At least one booked date inside the export window | Only the booked dates **inside** the window |
+| **Standard, `bill_at_end = true`** | The **last** booked date is inside the export window | **All** booked dates of the reservation, including any that fall outside the window |
+| **Cost of Artwork** | The billing date is inside the window — first booked date by default, last booked date if `bill_at_end = true` | A single `D + LC` pair (artwork is a flat charge, not a daily rate) |
 
-When a reservation is included, **all** its booked dates produce a `D` + `LC` pair, including dates outside the export window. So a campaign that starts in April but extends into May is billed in full in April's export, and won't reappear in May's.
+The two rules together mean:
 
-A reservation whose billing date falls **before** the export's start is therefore **excluded** — it was billed in a previous export. A reservation whose billing date falls **after** the export's end is also excluded — it'll be billed in a future export.
+- A normal multi-day campaign that crosses month boundaries is **split across exports** — May's export emits the May dates, June's export emits the June dates. The same reservation appears (with different dates) in both runs, never double-counted.
+- A `bill_at_end_of_campaign` reservation is invoiced **exactly once**, in the export that contains its last booked date — including any earlier dates from previous months.
+- A Cost of Artwork is invoiced **exactly once**, in the export that contains its billing date.
 
 ### Worked scenarios
 
 | Reservation dates | bill_at_end | Export range | Included? | D rows |
 |---|---|---|---|---|
 | Apr 5–7 | no | Apr 1–30 | ✅ | 3 |
-| Apr 28 – May 2 | no | Apr 1–30 | ✅ | 5 (incl. May dates) |
-| Mar 30 – Apr 3 | no | Apr 1–30 | ❌ (already billed in March) | 0 |
+| Apr 28 – May 2 | no | Apr 1–30 | ✅ — only the April dates | 3 (May 1–2 will appear in May's export) |
+| Apr 28 – May 2 | no | May 1–31 | ✅ — only the May dates | 2 (April dates were already in April's export) |
+| Mar 30 – Apr 3 | no | Apr 1–30 | ✅ — only the April dates | 3 (March dates were in March's export) |
+| All dates outside the range | no | — | ❌ | 0 |
 | Apr 5–7 | yes | Apr 1–30 | ✅ (last date inside range) | 3 |
 | Apr 20 – May 10 | yes | Apr 1–30 | ❌ (campaign not yet ended) | 0 |
-| Mar 15 – Apr 15 | yes | Apr 1–30 | ✅ (last date inside range) | 32 (incl. all March dates) |
+| Mar 28 – Apr 1 | yes | Apr 1–30 | ✅ (last date inside range) | 4 (incl. the three March dates) |
 
 ## Cash vs Credit
 
@@ -127,17 +132,33 @@ The status filter (`Confirmed`) and the cash filter (`is_cash`) are applied at t
 
 ### Eligibility
 
+A single helper returns the set of booked dates to emit `D + LC` pairs for. An empty result means the reservation is excluded from this export entirely.
+
 ```php
-private function isBillableInRange(Reservation $reservation): bool
+private function datesToEmit(Reservation $reservation): Collection
 {
-    $dates = $this->allDatesSorted($reservation);
-    if ($dates->isEmpty()) return false;
+    $allDates = $this->allDatesSorted($reservation);
+    if ($allDates->isEmpty()) return collect();
 
-    $billingDate = $reservation->bill_at_end_of_campaign
-        ? $dates->last()
-        : $dates->first();
+    if ($reservation->type === ReservationType::CostOfArtwork) {
+        $billingDate = $reservation->bill_at_end_of_campaign
+            ? $allDates->last()
+            : $allDates->first();
 
-    return $billingDate->betweenIncluded($this->start, $this->end);
+        return $billingDate->betweenIncluded($this->start, $this->end)
+            ? collect([$billingDate])
+            : collect();
+    }
+
+    if ($reservation->bill_at_end_of_campaign) {
+        return $allDates->last()->betweenIncluded($this->start, $this->end)
+            ? $allDates                         // bill the whole campaign at the end
+            : collect();
+    }
+
+    return $allDates                            // standard: only in-range dates
+        ->filter(fn (Carbon $date) => $date->betweenIncluded($this->start, $this->end))
+        ->values();
 }
 ```
 
@@ -155,9 +176,9 @@ Multiple reservations belonging to the same client therefore appear consecutivel
 For each eligible reservation:
 
 - **One V row** — voucher header
-- **One D + one LC pair per booked date** — every date of the reservation (sorted chronologically), regardless of whether it falls inside the export window
+- **One D + one LC pair per emitted date** — see *Billing model* above for which dates are emitted
 
-For a reservation with 5 booked dates, that's 1 V + 5 D + 5 LC = **11 rows**.
+So for a Standard reservation (no `bill_at_end_of_campaign`) with 5 booked dates of which 3 fall inside the export window, that's 1 V + 3 D + 3 LC = **7 rows**. A `bill_at_end_of_campaign` reservation with the same 5 booked dates whose last date is in range emits 1 V + 5 D + 5 LC = **11 rows**.
 
 #### V row — voucher header
 
@@ -224,13 +245,13 @@ For **standard** reservations (`type === ReservationType::Standard`):
 ```
 daily_gross = placement.price
 ```
-The same `placement.price` is emitted for every per-day D row. Total revenue per reservation is therefore `placement.price × number_of_booked_dates` distributed across N D rows.
+The same `placement.price` is emitted for every per-day D row. The total revenue **for this export** is `placement.price × number_of_emitted_dates`, where the number of emitted dates depends on the billing rule (in-range count for `bill_at_end = false`; full booked-date count for `bill_at_end = true`).
 
 For **Cost of Artwork** reservations (`type === ReservationType::CostOfArtwork`):
 ```
 gross = reservation.gross_amount   // user-entered flat amount
 ```
-These are billed as a **single line item** — exactly **one V + one D + one LC** per Cost of Artwork reservation, regardless of how many dates the reservation has. The single D row uses the first booked date for the description's date segment. The user-entered `gross_amount` is emitted as-is (no daily-rate maths).
+These are billed as a **single line item** — exactly **one V + one D + one LC** per Cost of Artwork reservation, regardless of how many dates the reservation has. The single D row uses the **billing date** for the description's date segment (first booked date by default, or last booked date when `bill_at_end_of_campaign` is set). The user-entered `gross_amount` is emitted as-is (no daily-rate maths).
 
 ### Percentage normalisation
 
@@ -280,7 +301,7 @@ D;MULTIM-LSL;1;5000;10;0;GINO;Spring promo|| lexpress.mu|| 17-04-2026|| Run of s
 LC;DPT;PRD;SNM;MUL
 ```
 
-If the same reservation had `dates_booked = ["2026-04-28", "2026-04-29", "2026-04-30", "2026-05-01", "2026-05-02"]`, the same April export would emit **11 rows** — D + LC pairs for **all five** dates including the two May dates, since the reservation begins inside the export window.
+If the same reservation had `dates_booked = ["2026-04-28", "2026-04-29", "2026-04-30", "2026-05-01", "2026-05-02"]`, the April export would emit only **7 rows** — D + LC pairs for the three April dates only. A separate May export over `2026-05-01 to 2026-05-31` would emit the remaining 2 D + LC pairs for the May dates of the same reservation.
 
 ## Edge-case matrix
 
@@ -288,8 +309,9 @@ If the same reservation had `dates_booked = ["2026-04-28", "2026-04-29", "2026-0
 |---|---|
 | Client missing `sage_client_code` | V row 5th column is empty (`""`) — the row is still emitted. |
 | Reservation missing salesperson | D row 7th column is empty. |
-| Reservation crossing the previous-month boundary (first date < `start_date`) | **Excluded** entirely — was billed in a previous export. |
-| Reservation crossing the next-month boundary (first date in range, last date > `end_date`) | **Included**, with D rows for every booked date including the future ones. |
+| Standard reservation crossing the previous-month boundary (first date < `start_date`) | **Included**, but only the in-range dates emit D rows. Earlier dates were emitted by the previous export. |
+| Standard reservation crossing the next-month boundary (first date in range, last date > `end_date`) | **Included**, but only the in-range dates emit D rows. Later dates will be emitted by the next export. |
+| Standard reservation with no booked date inside the range | **Excluded** entirely. |
 | `bill_at_end_of_campaign = true`, last date inside range | **Included**, with D rows for every booked date (including past ones). |
 | `bill_at_end_of_campaign = true`, last date after range | **Excluded** — campaign not yet finished. |
 | `bill_at_end_of_campaign = true`, last date before range | **Excluded** — already billed when the campaign ended. |
@@ -297,21 +319,23 @@ If the same reservation had `dates_booked = ["2026-04-28", "2026-04-29", "2026-0
 | `is_cash = true` and `payment_mode = credit` | Excluded. |
 | `is_cash = false` and `payment_mode = cash` | Excluded. |
 | Client acting as agency (has `represented_client_id`) | V row uses the **billing** client's SAGE code (`client_id`). The represented brand is informational only and does not appear in the CSV. |
-| `Cost of Artwork` reservation | Always emits exactly 1 V + 1 D + 1 LC per reservation regardless of date count. The D row uses the full `gross_amount` and the first booked date in the description. |
+| `Cost of Artwork` reservation | Eligible exactly **once**, in the export whose window contains its billing date (first booked date, or last when `bill_at_end_of_campaign` is set). Emits 1 V + 1 D + 1 LC. The D row uses the full `gross_amount` and the billing date in the description. |
 | Empty result (no reservations match) | An empty CSV is streamed (no V/D/LC rows). |
 | Multiple reservations from the same client | They appear consecutively in the output (sorted by reference) but each gets its **own** V header. |
 
 ## Test coverage
 
-`tests/Feature/SageExportTest.php` covers ~19 scenarios including:
+`tests/Feature/SageExportTest.php` covers ~21 scenarios including:
 
-- Single reservation with N booked dates → `1×V + N×(D+LC)`
+- Single Standard reservation with all dates in range → `1×V + N×(D+LC)`
 - Two reservations same client → 2 separate `V` blocks
 - Two clients → V blocks ordered by SAGE code
-- Reservation that starts before the range → **excluded**
-- Reservation that starts in the range and ends in the future → **included with all dates**
-- `bill_at_end_of_campaign` true + ends outside range → excluded
-- `bill_at_end_of_campaign` true + ends inside range → included
+- Standard reservation crossing into the previous month → only the in-range dates emit D rows
+- Standard reservation crossing into the next month → only the in-range dates emit D rows
+- Same Standard reservation across two monthly exports → May dates only in May export, June dates only in June export
+- `bill_at_end_of_campaign` true + last date in range, with earlier dates spanning the previous month → all dates emitted (including the previous month's)
+- `bill_at_end_of_campaign` true + last date after range → excluded
+- `bill_at_end_of_campaign` true + last date inside range with all dates in range → included
 - `Option` / `Canceled` reservations → excluded
 - Credit mode excludes `is_cash = true` reservations
 - Cash mode includes `is_cash = true` reservations and excludes credit ones
@@ -319,6 +343,7 @@ If the same reservation had `dates_booked = ["2026-04-28", "2026-04-29", "2026-0
 - Missing `sage_client_code` → row still emitted with empty 5th column
 - D row description format → `||`-separated with the booked date in DD-MM-YYYY
 - Multi-day reservation → consecutive D rows each with their own date
+- MUR commission normalised against total reservation gross
 
 ## File map
 
