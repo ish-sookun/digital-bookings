@@ -31,7 +31,7 @@ use Illuminate\Support\Collection;
  * ------------
  * For each eligible reservation:
  *   V;LG01;INV;1;{sage_client_code};{YYYYMMDD today};{dd-Mon-yyyy} To {dd-Mon-yyyy}
- *   D;MUTLTIM;1;{daily_gross};{commission_pct};{discount_pct};{salesperson_code};{description}   <-- one per booked day
+ *   D;MULTIM-LSL;1;{daily_gross};{commission_pct};{discount_pct};{salesperson_code};{description}   <-- one per booked day
  *   LC;DPT;PRD;SNM;MUL                                                                            <-- one after each D
  *
  * Cost of Artwork reservations are billed as a single line item (1 V + 1 D +
@@ -86,7 +86,7 @@ class SageCsvBuilder
 
                 $rows[] = [
                     'D',
-                    'MUTLTIM',
+                    'MULTIM-LSL',
                     '1',
                     $this->formatNumber((float) $reservation->gross_amount),
                     '0',
@@ -108,7 +108,7 @@ class SageCsvBuilder
             foreach ($allDates as $date) {
                 $rows[] = [
                     'D',
-                    'MUTLTIM',
+                    'MULTIM-LSL',
                     '1',
                     $this->formatNumber($dailyGross),
                     $this->formatNumber($commissionPct),

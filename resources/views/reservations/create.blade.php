@@ -165,7 +165,7 @@
       <div x-show="type !== 'cost_of_artwork'" x-cloak>
         <x-ls.section title="Reservation Dates">
           <div x-data="datePicker()" x-init="init()" class="ls-field">
-            <label for="dates_display">Dates Booked <span class="text-ls-danger">*</span></label>
+            <label for="dates_display">Dates Published <span class="text-ls-danger">*</span></label>
             <input type="text" id="dates_display" x-ref="datepicker" readonly
               class="ls-input cursor-pointer @error('dates_booked') error @enderror"
               placeholder="Click to select dates" />

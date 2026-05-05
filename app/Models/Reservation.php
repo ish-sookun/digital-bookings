@@ -87,7 +87,7 @@ class Reservation extends Model
     }
 
     /**
-     * Format booked dates into consecutive ranges.
+     * Format published dates into consecutive ranges.
      *
      * @return list<string>
      */

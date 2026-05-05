@@ -122,7 +122,7 @@ it('builds one V plus a D+LC pair for each booked day of a confirmed reservation
 
     // Each D row carries the daily rate (placement.price), not the summed gross
     expect($rows[1][0])->toBe('D');
-    expect($rows[1][1])->toBe('MUTLTIM');
+    expect($rows[1][1])->toBe('MULTIM-LSL');
     expect($rows[1][2])->toBe('1');
     expect($rows[1][3])->toBe('1000');
     expect($rows[2])->toBe(['LC', 'DPT', 'PRD', 'SNM', 'MUL']);

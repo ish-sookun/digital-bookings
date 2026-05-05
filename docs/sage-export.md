@@ -178,13 +178,13 @@ V;LG01;INV;1;{client.sage_client_code};{today YYYYMMDD};{startDate} To {endDate}
 #### D row — line item (one per booked date)
 
 ```
-D;MUTLTIM;1;{daily_gross};{commissionPct};{discountPct};{salesperson.sage_salesperson_code};{description}
+D;MULTIM-LSL;1;{daily_gross};{commissionPct};{discountPct};{salesperson.sage_salesperson_code};{description}
 ```
 
 | Field | Value |
 |---|---|
 | 1 | `D` (literal) |
-| 2 | `MUTLTIM` (literal — accounting analytics axis) |
+| 2 | `MULTIM-LSL` (literal — accounting analytics axis) |
 | 3 | `1` (literal — line quantity) |
 | 4 | Daily gross — `placement.price` (or `gross_amount` for Cost of Artwork — see below) |
 | 5 | Commission percentage (see "Percentage normalisation") |
@@ -272,11 +272,11 @@ Run with `start=2026-04-01`, `end=2026-04-30`, `payment_mode=credit`. The CSV em
 
 ```
 V;LG01;INV;1;ART-0009;20260504;01-Apr-2026 To 30-Apr-2026
-D;MUTLTIM;1;5000;10;0;GINO;Spring promo|| lexpress.mu|| 15-04-2026|| Run of site|| Ref. No 1745234567-20260015
+D;MULTIM-LSL;1;5000;10;0;GINO;Spring promo|| lexpress.mu|| 15-04-2026|| Run of site|| Ref. No 1745234567-20260015
 LC;DPT;PRD;SNM;MUL
-D;MUTLTIM;1;5000;10;0;GINO;Spring promo|| lexpress.mu|| 16-04-2026|| Run of site|| Ref. No 1745234567-20260015
+D;MULTIM-LSL;1;5000;10;0;GINO;Spring promo|| lexpress.mu|| 16-04-2026|| Run of site|| Ref. No 1745234567-20260015
 LC;DPT;PRD;SNM;MUL
-D;MUTLTIM;1;5000;10;0;GINO;Spring promo|| lexpress.mu|| 17-04-2026|| Run of site|| Ref. No 1745234567-20260015
+D;MULTIM-LSL;1;5000;10;0;GINO;Spring promo|| lexpress.mu|| 17-04-2026|| Run of site|| Ref. No 1745234567-20260015
 LC;DPT;PRD;SNM;MUL
 ```
 
