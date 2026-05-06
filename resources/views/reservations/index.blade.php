@@ -10,12 +10,12 @@
           <form method="GET" action="{{ route('reservations.sage-export') }}" class="flex flex-wrap items-center gap-2" x-data="{ start: '', end: '' }">
             <input type="date" name="start_date" x-model="start" required class="ls-input" style="width: auto;">
             <input type="date" name="end_date" x-model="end" required class="ls-input" style="width: auto;">
-            <select name="payment_mode" class="ls-select" style="width: auto;">
-              <option value="credit">Credit</option>
-              <option value="cash">Cash</option>
+            <select name="export_type" class="ls-select" style="width: auto;">
+              <option value="sage" selected>Sage</option>
+              <option value="sales">Sales</option>
             </select>
             <button type="submit" class="ls-btn ls-btn-primary cursor-pointer">
-              SAGE Export
+              Export
             </button>
           </form>
         @endcan
