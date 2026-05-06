@@ -75,6 +75,8 @@ class ReservationRequest extends FormRequest
             'purchase_order_file' => ['nullable', 'file', 'mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png,gif,webp', 'max:10240'],
             'invoice_no' => ['nullable', 'string', 'max:255'],
             'invoice_file' => ['nullable', 'file', 'mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png,gif,webp', 'max:10240'],
+            'receipt_no' => ['nullable', 'string', 'max:255'],
+            'receipt_file' => ['nullable', 'file', 'mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png,gif,webp', 'max:10240'],
             'signed_ro_file' => ['nullable', 'file', 'mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png,gif,webp', 'max:10240'],
             'reservation_date' => ['nullable', 'date'],
             'remark' => ['nullable', 'string'],

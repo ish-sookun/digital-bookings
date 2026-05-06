@@ -208,6 +208,7 @@ class ReservationController extends Controller
         $pathField = match ($type) {
             'purchase-order' => 'purchase_order_path',
             'invoice' => 'invoice_path',
+            'receipt' => 'receipt_path',
             'signed-ro' => 'signed_ro_path',
             default => abort(404),
         };
@@ -230,6 +231,7 @@ class ReservationController extends Controller
             'signed_ro' => ['field' => 'signed_ro_path', 'download_type' => 'signed-ro'],
             'purchase_order' => ['field' => 'purchase_order_path', 'download_type' => 'purchase-order'],
             'invoice' => ['field' => 'invoice_path', 'download_type' => 'invoice'],
+            'receipt' => ['field' => 'receipt_path', 'download_type' => 'receipt'],
         ];
 
         $type = $request->input('type');
@@ -275,6 +277,7 @@ class ReservationController extends Controller
         $fileMap = [
             'purchase_order_file' => 'purchase_order_path',
             'invoice_file' => 'invoice_path',
+            'receipt_file' => 'receipt_path',
             'signed_ro_file' => 'signed_ro_path',
         ];
 
