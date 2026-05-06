@@ -48,9 +48,9 @@
           </a>
         </div>
 
-        {{-- Add reservation button --}}
+        {{-- Create reservation button --}}
         <x-ls.button :href="route('reservations.create')" variant="primary">
-          Add reservation
+          Create reservation
         </x-ls.button>
       </x-slot>
     </x-ls.page-header>

@@ -1,10 +1,10 @@
 @extends('layouts.main')
 
-@section('title', 'Add Reservation • Digital Bookings')
+@section('title', 'Create Reservation • Digital Bookings')
 
 @section('content')
   <x-ls.page>
-    <x-ls.page-header title="Add Reservation" :back="route('reservations.index')" />
+    <x-ls.page-header title="Create Reservation" :back="route('reservations.index')" />
 
     <form action="{{ route('reservations.store') }}" method="POST" enctype="multipart/form-data" class="mt-8 max-w-2xl space-y-8"
       x-data="reservationForm()" x-init="init()"
