@@ -187,70 +187,41 @@ php artisan route:cache
 php artisan view:cache
 ```
 
-### 6. Configure Nginx
+### 6. Run with FrankenPHP + Laravel Octane
 
-Create a new Nginx configuration file:
+The app is served in production by **FrankenPHP** (a single-binary application server with embedded Caddy) running **Laravel Octane** in worker mode. There is no separate Nginx, php-fpm, or Certbot — FrankenPHP terminates HTTPS itself via Caddy's automatic Let's Encrypt integration.
 
-```bash
-sudo nano /etc/nginx/sites-available/digital-bookings
-```
-
-Add the following configuration:
-
-```nginx
-server {
-    listen 80;
-    listen [::]:80;
-    server_name your-domain.com;
-    root /var/www/digital-bookings/public;
-
-    add_header X-Frame-Options "SAMEORIGIN";
-    add_header X-Content-Type-Options "nosniff";
-
-    index index.php;
-
-    charset utf-8;
-
-    location / {
-        try_files $uri $uri/ /index.php?$query_string;
-    }
-
-    location = /favicon.ico { access_log off; log_not_found off; }
-    location = /robots.txt  { access_log off; log_not_found off; }
-
-    error_page 404 /index.php;
-
-    location ~ \.php$ {
-        fastcgi_pass unix:/var/run/php/php8.5-fpm.sock;
-        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
-        include fastcgi_params;
-        fastcgi_hide_header X-Powered-By;
-    }
-
-    location ~ /\.(?!well-known).* {
-        deny all;
-    }
-}
-```
-
-Enable the site and restart Nginx:
+Quick install:
 
 ```bash
-sudo ln -s /etc/nginx/sites-available/digital-bookings /etc/nginx/sites-enabled/
-sudo nginx -t
-sudo systemctl restart nginx
+# Download the FrankenPHP binary (ships its own PHP 8.5 + Caddy)
+sudo curl -L https://github.com/php/frankenphp/releases/latest/download/frankenphp-linux-x86_64 \
+     -o /usr/local/bin/frankenphp
+sudo chmod +x /usr/local/bin/frankenphp
+
+# Allow it to bind to 80 / 443 without running as root
+sudo setcap CAP_NET_BIND_SERVICE=+eip /usr/local/bin/frankenphp
 ```
 
-### 7. Configure SSL (Recommended)
+In `.env`, set:
 
-Install Certbot and obtain an SSL certificate:
+```env
+OCTANE_SERVER=frankenphp
+OCTANE_HTTPS=true
+```
+
+Create a systemd unit (`/etc/systemd/system/digital-bookings.service`) that calls `php artisan octane:start --server=frankenphp --host=0.0.0.0 --port=443 --https --workers=8 --max-requests=500`, then:
 
 ```bash
-sudo apt install -y certbot python3-certbot-nginx
-sudo certbot --nginx -d your-domain.com
+sudo systemctl daemon-reload
+sudo systemctl enable --now digital-bookings
 ```
 
-### 8. Set Up Queue Worker (Optional)
+The first request triggers Caddy auto-TLS — within ~10 seconds Let's Encrypt issues a certificate and HTTPS becomes live. Renewals happen automatically.
+
+For the full unit file, deployment workflow, zero-downtime reload signal, worker-mode caveats, and rollback procedure, see [`docs/deployment-frankenphp.md`](./docs/deployment-frankenphp.md).
+
+### 7. Set Up Queue Worker (Optional)
 
 For background job processing, create a systemd service:
 
@@ -282,7 +253,7 @@ sudo systemctl enable digital-bookings-worker
 sudo systemctl start digital-bookings-worker
 ```
 
-### 9. Set Up Scheduler (Optional)
+### 8. Set Up Scheduler (Optional)
 
 Add Laravel scheduler to crontab:
 
