@@ -41,7 +41,6 @@ beforeEach(function () {
 
 it('exposes a per-day booking map keyed by date', function () {
     Reservation::factory()->create([
-        'reference' => 'LEX-WEB-1',
         'product' => 'Lexpress Web Banner Campaign',
         'client_id' => $this->client->id,
         'platform_id' => $this->lexpress->id,
@@ -65,8 +64,7 @@ it('exposes a per-day booking map keyed by date', function () {
 });
 
 it('groups bookings by platform and placement type for a clicked day', function () {
-    Reservation::factory()->create([
-        'reference' => 'LEX-WEB-1',
+    $lexWeb = Reservation::factory()->create([
         'product' => 'Lexpress Web Banner',
         'client_id' => $this->client->id,
         'platform_id' => $this->lexpress->id,
@@ -74,8 +72,7 @@ it('groups bookings by platform and placement type for a clicked day', function 
         'dates_booked' => [$this->date],
         'status' => ReservationStatus::Confirmed,
     ]);
-    Reservation::factory()->create([
-        'reference' => 'LEX-SOC-1',
+    $lexSoc = Reservation::factory()->create([
         'product' => 'Lexpress FB Promo',
         'client_id' => $this->client->id,
         'platform_id' => $this->lexpress->id,
@@ -83,8 +80,7 @@ it('groups bookings by platform and placement type for a clicked day', function 
         'dates_booked' => [$this->date],
         'status' => ReservationStatus::Option,
     ]);
-    Reservation::factory()->create([
-        'reference' => '5P-WEB-1',
+    $fivePlusWeb = Reservation::factory()->create([
         'product' => '5plus Homepage Banner',
         'client_id' => $this->client->id,
         'platform_id' => $this->fivePlus->id,
@@ -92,8 +88,7 @@ it('groups bookings by platform and placement type for a clicked day', function 
         'dates_booked' => [$this->date],
         'status' => ReservationStatus::Confirmed,
     ]);
-    Reservation::factory()->create([
-        'reference' => '5P-SOC-1',
+    $fivePlusSoc = Reservation::factory()->create([
         'product' => '5plus IG Story',
         'client_id' => $this->client->id,
         'platform_id' => $this->fivePlus->id,
@@ -110,27 +105,26 @@ it('groups bookings by platform and placement type for a clicked day', function 
 
     expect($lexpressSection['groups'][0]['type'])->toBe('Web')
         ->and($lexpressSection['groups'][0]['reservations'])->toHaveCount(1)
-        ->and($lexpressSection['groups'][0]['reservations'][0]['reference'])->toBe('LEX-WEB-1')
+        ->and($lexpressSection['groups'][0]['reservations'][0]['id'])->toBe($lexWeb->id)
         ->and($lexpressSection['groups'][0]['reservations'][0]['product'])->toBe('Lexpress Web Banner')
         ->and($lexpressSection['groups'][0]['reservations'][0]['placement'])->toBe('Lexpress Top Banner');
 
     expect($lexpressSection['groups'][1]['type'])->toBe('Social Media')
         ->and($lexpressSection['groups'][1]['reservations'])->toHaveCount(1)
-        ->and($lexpressSection['groups'][1]['reservations'][0]['reference'])->toBe('LEX-SOC-1')
+        ->and($lexpressSection['groups'][1]['reservations'][0]['id'])->toBe($lexSoc->id)
         ->and($lexpressSection['groups'][1]['reservations'][0]['placement'])->toBe('Lexpress Facebook Post');
 
     expect($fivePlusSection['groups'][0]['type'])->toBe('Web')
         ->and($fivePlusSection['groups'][0]['reservations'])->toHaveCount(1)
-        ->and($fivePlusSection['groups'][0]['reservations'][0]['reference'])->toBe('5P-WEB-1');
+        ->and($fivePlusSection['groups'][0]['reservations'][0]['id'])->toBe($fivePlusWeb->id);
 
     expect($fivePlusSection['groups'][1]['type'])->toBe('Social Media')
         ->and($fivePlusSection['groups'][1]['reservations'])->toHaveCount(1)
-        ->and($fivePlusSection['groups'][1]['reservations'][0]['reference'])->toBe('5P-SOC-1');
+        ->and($fivePlusSection['groups'][1]['reservations'][0]['id'])->toBe($fivePlusSoc->id);
 });
 
 it('still shows both platform sections when only one has bookings on a day', function () {
     Reservation::factory()->create([
-        'reference' => 'LEX-ONLY',
         'product' => 'Lexpress Solo',
         'client_id' => $this->client->id,
         'platform_id' => $this->lexpress->id,
@@ -150,8 +144,7 @@ it('still shows both platform sections when only one has bookings on a day', fun
 });
 
 it('renders the day modal markup with platform and category headings', function () {
-    Reservation::factory()->create([
-        'reference' => 'LEX-WEB-1',
+    $reservation = Reservation::factory()->create([
         'product' => 'Lexpress Banner',
         'client_id' => $this->client->id,
         'platform_id' => $this->lexpress->id,
@@ -167,13 +160,12 @@ it('renders the day modal markup with platform and category headings', function 
         ->assertSee('lexpress.mu')
         ->assertSee('5plus.mu')
         ->assertSee('Lexpress Banner')
-        ->assertSee('LEX-WEB-1')
+        ->assertSee((string) $reservation->id)
         ->assertSee('Acme Corp');
 });
 
 it('respects the platform filter in the day booking map', function () {
     Reservation::factory()->create([
-        'reference' => 'LEX-WEB-1',
         'product' => 'Lexpress Web',
         'client_id' => $this->client->id,
         'platform_id' => $this->lexpress->id,
@@ -182,7 +174,6 @@ it('respects the platform filter in the day booking map', function () {
         'status' => ReservationStatus::Confirmed,
     ]);
     Reservation::factory()->create([
-        'reference' => '5P-WEB-1',
         'product' => '5plus Web',
         'client_id' => $this->client->id,
         'platform_id' => $this->fivePlus->id,

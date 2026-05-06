@@ -21,7 +21,6 @@ class Reservation extends Model
      * @var list<string>
      */
     protected $fillable = [
-        'reference',
         'client_id',
         'represented_client_id',
         'salesperson_id',
@@ -52,16 +51,6 @@ class Reservation extends Model
         'signed_ro_path',
         'remark',
     ];
-
-    protected static function booted(): void
-    {
-        static::creating(function (Reservation $reservation): void {
-            if (empty($reservation->reference)) {
-                $now = Carbon::now();
-                $reservation->reference = $now->timestamp.'-'.$now->format('Ymd');
-            }
-        });
-    }
 
     /**
      * @return array<string, string>

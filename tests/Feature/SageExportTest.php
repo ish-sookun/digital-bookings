@@ -749,8 +749,7 @@ it('formats the D row description with || separators including the booked date',
         'platform_id' => $platform->id,
     ]);
 
-    Reservation::factory()->create([
-        'reference' => '1700000000-20260055',
+    $reservation = Reservation::factory()->create([
         'product' => 'SIMLA NOTICE',
         'client_id' => $client->id,
         'salesperson_id' => $salesperson->id,
@@ -772,10 +771,10 @@ it('formats the D row description with || separators including the booked date',
     $description = $rows[1][7];
 
     // Items separated by `|| `, includes the booked date in DD-MM-YYYY format
-    expect($description)->toBe('SIMLA NOTICE|| lexpress.mu|| 25-03-2026|| Run of site|| Ref. No 1700000000-20260055');
+    expect($description)->toBe('SIMLA NOTICE|| lexpress.mu|| 25-03-2026|| Run of site|| Ref. No '.$reservation->id);
     expect($description)->toContain('||');
     expect($description)->toContain('25-03-2026');
-    expect($description)->toContain('Ref. No 1700000000-20260055');
+    expect($description)->toContain('Ref. No '.$reservation->id);
 });
 
 it('emits a different booked date in each per-day D row description', function () {
@@ -790,7 +789,6 @@ it('emits a different booked date in each per-day D row description', function (
     $placement = Placement::factory()->create(['price' => 1000]);
 
     Reservation::factory()->create([
-        'reference' => 'REF-MULTI',
         'product' => 'Multi-day campaign',
         'client_id' => $client->id,
         'salesperson_id' => $salesperson->id,

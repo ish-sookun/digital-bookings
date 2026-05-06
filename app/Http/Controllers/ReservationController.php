@@ -73,10 +73,10 @@ class ReservationController extends Controller
             ->with('placement')
             ->latest()
             ->limit(100)
-            ->get(['id', 'reference', 'product', 'placement_id', 'client_id']);
+            ->get(['id', 'product', 'placement_id', 'client_id']);
         $linkableReservationsJson = $linkableReservations->map(fn (Reservation $r) => [
             'id' => $r->id,
-            'label' => $r->reference.' — '.($r->product ?? ''),
+            'label' => $r->id.' — '.($r->product ?? ''),
         ]);
 
         return view('reservations.create', compact('clients', 'platforms', 'placements', 'salespeople', 'channels', 'scopes', 'statuses', 'reservationTypes', 'foreignCurrencies', 'placementsJson', 'clientsJson', 'linkableReservationsJson'));
@@ -152,10 +152,10 @@ class ReservationController extends Controller
             ->where('id', '!=', $reservation->id)
             ->latest()
             ->limit(100)
-            ->get(['id', 'reference', 'product', 'placement_id', 'client_id']);
+            ->get(['id', 'product', 'placement_id', 'client_id']);
         $linkableReservationsJson = $linkableReservations->map(fn (Reservation $r) => [
             'id' => $r->id,
-            'label' => $r->reference.' — '.($r->product ?? ''),
+            'label' => $r->id.' — '.($r->product ?? ''),
         ]);
 
         return view('reservations.edit', compact('reservation', 'clients', 'platforms', 'placements', 'salespeople', 'channels', 'scopes', 'statuses', 'reservationTypes', 'foreignCurrencies', 'placementsJson', 'clientsJson', 'linkableReservationsJson'));

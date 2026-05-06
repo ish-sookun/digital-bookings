@@ -174,7 +174,6 @@ class CalendarController extends Controller
 
             $serialized[] = [
                 'id' => $reservation->id,
-                'reference' => $reservation->reference,
                 'product' => $reservation->product,
                 'client' => $reservation->client?->company_name,
                 'placement' => $reservation->placement?->name,

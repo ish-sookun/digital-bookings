@@ -74,7 +74,7 @@ class SageCsvBuilder
             ->sortBy(fn (Reservation $r) => [
                 $r->client?->sage_client_code ?? 'zzz',
                 $r->client?->company_name ?? '',
-                $r->reference ?? '',
+                $r->id ?? 0,
             ])
             ->values();
 
@@ -193,7 +193,7 @@ class SageCsvBuilder
             (string) $platformName,
             $date?->format('d-m-Y') ?? '',
             (string) ($reservation->placement?->name ?? ''),
-            'Ref. No '.($reservation->reference ?? ''),
+            'Ref. No '.($reservation->id ?? ''),
         ];
 
         return implode('|| ', $segments);

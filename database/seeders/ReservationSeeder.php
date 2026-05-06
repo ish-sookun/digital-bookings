@@ -99,7 +99,6 @@ class ReservationSeeder extends Seeder
             $salespersonIds,
         ): void {
             $current = $startDate->copy();
-            $counter = 0;
 
             while ($current <= $endDate) {
                 $monthsFromStart = (int) $startDate->diffInMonths($current);
@@ -115,10 +114,8 @@ class ReservationSeeder extends Seeder
 
                 foreach ($allocations as [$count, $platformPlacements]) {
                     for ($i = 0; $i < $count; $i++) {
-                        $counter++;
                         $this->createReservation(
                             month: $current,
-                            counter: $counter,
                             placement: $platformPlacements->random(),
                             clientIds: $clientIds,
                             salespersonIds: $salespersonIds,
@@ -163,7 +160,6 @@ class ReservationSeeder extends Seeder
      */
     private function createReservation(
         Carbon $month,
-        int $counter,
         Placement $placement,
         array $clientIds,
         array $salespersonIds,
@@ -192,14 +188,11 @@ class ReservationSeeder extends Seeder
             ->day(random_int(1, $daysInMonth))
             ->setTime(random_int(8, 18), random_int(0, 59), random_int(0, 59));
 
-        $reference = $createdAt->timestamp.'-'.str_pad((string) $counter, 6, '0', STR_PAD_LEFT);
-
         $firstDate = Carbon::parse($dates[0]);
         $status = $this->pickStatus($firstDate);
 
         $reservation = new Reservation;
         $reservation->fill([
-            'reference' => $reference,
             'client_id' => $clientIds[array_rand($clientIds)],
             'salesperson_id' => $salespersonIds[array_rand($salespersonIds)],
             'product' => $this->products[array_rand($this->products)],
