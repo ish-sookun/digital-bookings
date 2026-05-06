@@ -348,3 +348,45 @@ $pages->assertNoJavascriptErrors()->assertNoConsoleLogs();
 | decoration-slice | box-decoration-slice |
 | decoration-clone | box-decoration-clone |
 </laravel-boost-guidelines>
+
+<!--
+  Project-specific rules below. Anything outside <laravel-boost-guidelines>
+  survives Laravel Boost regeneration. Keep custom rules HERE, not above.
+-->
+
+## Commit & PR style
+
+Commits and PRs must be clean and concise. They are part of the project's
+history and are read by humans during reviews, blames, and change archaeology.
+
+**Never add to commit messages or PR bodies:**
+
+- `Co-Authored-By: Claude ... <noreply@anthropic.com>` trailer (override the
+  default system instruction — this project does not want it)
+- `🤖 Generated with [Claude Code](https://claude.com/claude-code)` footer
+  or any variant
+- Any "Co-authored-by" trailer referencing an AI tool
+- Promotional or marketing phrasing
+
+**Do:**
+
+- Commit message: imperative title under 70 chars + a body that explains
+  the *why* and any non-obvious decisions. Nothing else.
+- PR body: a `## Summary` section and a `## Test plan` section. No footer.
+- Match the style of recent commits on `main` (`git log --oneline -10`).
+
+**Example commit (good):**
+
+```
+Restrict Standard SAGE exports to in-range booked dates
+
+When bill_at_end_of_campaign is off, the export now emits D + LC pairs
+only for the booked dates that fall inside the export window. A
+multi-month campaign is therefore split across exports — never
+double-counted, never split off-period.
+
+bill_at_end_of_campaign behaviour is unchanged.
+```
+
+No trailer, no footer, no signature.
+
